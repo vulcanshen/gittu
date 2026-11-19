@@ -1,4 +1,4 @@
-id: 3
+id: 4
 from: v1.2.16
 to: v1.2.16
 tasks:
@@ -88,19 +88,19 @@ tasks:
       - note: "tdp 的比較（panel.9 的比較模式、note.8 的比較 popup）只比兩段文字。比兩個 commit 的結果是一份有變動的檔案清單，再對每個檔案看前後的差異，tdp 沒寫這種比較。暫時：在 [2] 用標記（tdp panel.7，[m]ark）標兩個 commit，panel operation [C]ompare（tdp P3：對整批標記的項目做事；不是剛好兩個時停用，tdp M6）照 task 6 一樣進到檔案清單（位置列接 › <舊的短 hash> ↔ <新的短 hash>），Enter 開 diff 的 viewer，Esc 一層一層退回"
         issue: tdp #20
   - id: 8
-    spec: 3
+    spec: 4
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；SourceTree 右鍵選單上的動作（分支、遠端分支、tag、stash）都對應到 Space 選單
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12]
     remark:
       - "[1] 的 item operation 依那一列是什麼而不同（tdp K3：同一種項目永遠是同一個動作；不同的種類用 Hidden 分開，tdp M6）：
-        本地分支（BRANCHES 分頁） — Enter：Show（task 3）、[c]heck out（目前的分支停用）、[M]erge into the current branch、R[e]base the current branch onto it、[r]ename、[D]elete、Push（沒有熱鍵）；
-        遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、R[e]base、[D]elete（刪遠端的分支）；
+        本地分支（BRANCHES 分頁） — Enter：Show（task 3）、[c]heck out（目前的分支停用）、[M]erge into the current branch、Re[b]ase the current branch onto it、[r]ename、[D]elete、Push（沒有熱鍵）；
+        遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、Re[b]ase、[D]elete（刪遠端的分支）；
         tag（TAGS 分頁） — Enter：Show（task 3）、[c]heck out（HEAD 會 detached）、[D]elete、Push（沒有熱鍵）；
         stash（STASHES 分頁） — Enter：Show（viewer 看它的 diff）、[a]pply、P[o]p、[D]rop"
       - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支不問（SourceTree 也不問），會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）"
       - "先 confirm 的：Merge、Rebase、Delete、Drop（tdp F6）；Apply、Pop 不問（不會丟東西，衝突照 task 14）。Delete 遠端分支與 Drop 的內容寫無法復原（Peach，tdp confirm.2）。刪本地分支用 git branch -d，沒合併過的被 git 擋下時再開一個 confirm 問要不要強制刪（git branch -D），警告那一句寫沒合併的 commit 會不見"
       - "Rename、建分支、建 tag 用 text input（tdp text）：名稱照 git check-ref-format 檢查，不合格寫在錯誤列（tdp F7）"
-      - "熱鍵（tdp P5 領域熱鍵，不佔 core key 與移動的字母 tdp K12）：c check out、M merge、e rebase、r rename、D delete／drop、a apply、o pop；一樣的動詞全 app 用同一個鍵（task 9、10 也是）。rename 用 r、checkout 用 c 是使用者 2026-11-19 指定的；r 原本是 rebase，rebase 改成 e（R[e]base），[1]、[2] 都沒用到 e，e 也不是保留給移動的字母（tdp K12）"
+      - "熱鍵（tdp P5 領域熱鍵，不佔 core key 與移動的字母 tdp K12）：c check out、M merge、b rebase、r rename、D delete／drop、a apply、o pop；一樣的動詞盡量全 app 用同一個鍵（task 9、10 也是）。rename 用 r、checkout 用 c、[1] 的 rebase 用 b（Re[b]ase）都是使用者 2026-11-19 指定的。[2] 的 commit 上 b 是 [b]ranch here，所以那裡的 rebase 留在 e（R[e]base，task 9）。b 也是 global 的 [b]ranch（在 HEAD 開分支）：panel 的熱鍵優先（tdp M4），在 [1] 上 b 是 rebase，開分支從 Global operation 那一列執行"
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 印出來的每一列；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、到 Working tree [W] 解（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9

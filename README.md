@@ -107,8 +107,8 @@ the App Log, what gitreu did and what went wrong.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, R`[e]`base the current branch onto it, `[r]`ename, `[D]`elete, Push |
-| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, R`[e]`base, `[D]`elete it on the remote |
+| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[D]`elete, Push |
+| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[D]`elete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
 | `[2]` a commit | Its files | `[m]`ark, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
@@ -135,7 +135,8 @@ file of a commit opens its diff; `Esc` goes back to the files, and again to the 
 In every `Space` menu, `Global operation` lists what SourceTree's toolbar does: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
-does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations.
+does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,
+`b` rebases, and Branch is in the global operations.
 
 gitreu reads the repository again every 3 seconds, so what you change outside it shows.
 

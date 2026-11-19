@@ -81,16 +81,16 @@ tasks:
       git diff --name-status -M <舊> <新>，跟 task 6 一樣進到檔案清單，位置列 All branches › <舊的短 hash> ↔ <新的短 hash>；Enter 開 diff 的 viewer，Esc 一層一層退回；標記留著
     test: [TestCompareMarked]
   - id: 8
-    spec: 3
+    spec: 4
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
       本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
-      R[e]base（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、[r]ename（text input RENAME: <分支>，舊名是灰字提議，
+      Re[b]ase（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、[r]ename（text input RENAME: <分支>，舊名是灰字提議，
       檢查 git check-ref-format --branch 與同名分支，錯誤列 Not a valid branch name／There is a branch <名> already；git branch -m）、[D]elete（confirm「Delete <分支>?」；git branch -d，
       沒合併時再開 confirm「Delete <分支> anyway?」，內容 <分支> is not merged: … are lost.（Peach），Enter 用 git branch -D）、Push（沒有熱鍵；git push <upstream 的 remote 或 origin> refs/heads/<分支>）；
       merge、rebase、delete 在目前的分支上停用
       遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
-      [M]erge、R[e]base（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
+      [M]erge、Re[b]ase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
       tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
       stash（STASHES 那一頁）：[Enter] Show（git stash show -p，開 Viewer STASH — stash@{N}，Lang diff；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）

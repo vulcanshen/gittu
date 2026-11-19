@@ -61,6 +61,7 @@ user 照原話：
 1. 「check out 熱鍵用 c」
 2. 「rename 熱鍵用 r」
 3. 「REMOTE 和 TAG 用分頁作，不要都擠在一個 panel」
+4. 「history [1] panel：R[e]base -> Re[b]ase」
 
 ## 後續可擴充
 

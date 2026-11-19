@@ -97,8 +97,8 @@ gitreu
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| `[1]` BRANCHES：本地分支 | 到 `[2]` 它的 commit | `[c]`heck out、`[M]erge` 進目前的分支、把目前的分支 R`[e]`base 到它上面、`[r]`ename、`[D]`elete、Push |
-| `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、R`[e]`base、`[D]`elete 遠端的分支 |
+| `[1]` BRANCHES：本地分支 | 到 `[2]` 它的 commit | `[c]`heck out、`[M]erge` 進目前的分支、把目前的分支 Re`[b]`ase 到它上面、`[r]`ename、`[D]`elete、Push |
+| `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[D]`elete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
 | `[2]` commit | 它改了的檔案 | `[m]`ark、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
@@ -123,7 +123,7 @@ gitreu
 
 每個 `Space` 選單裡的 `Global operation`，列出 SourceTree 工具列上的動作：`[c]`ommit、Amend、`[p]`ull、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
-revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行。
+revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[1]` 上 `b` 是 rebase，Branch 從 global operation 執行。
 
 gitreu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變。
 
