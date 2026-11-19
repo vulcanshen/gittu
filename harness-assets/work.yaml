@@ -67,25 +67,29 @@ tasks:
       預設 All，不存檔
     test: [TestAllOrCurrentBranch, TestGraphMainLine]
   - id: 6
-    spec: 1
+    spec: 7
     implementation: |
-      [2] 的 commit 上 Enter（Space menu：[Enter] Files — this commit changed；hint Enter:files）：git diff --name-status -M <第一個 parent> <commit>（第一個 commit 用 git diff-tree --root），
-      [2] 的 body 換成檔案清單（tgo List，Flags，一欄 PATH，Path 從前面截）：標記欄是改了什麼，M Peach、A Green、D Red、R Blue；改名寫 舊 → 新；
-      位置列 All branches › <短 hash> <標題>；Panel.OnEsc 設好（? 列出 Esc one level up）
-      檔案上 Enter（[Enter] Diff — of this file, before and after；hint Enter:diff）：git diff --no-color --no-ext-diff -M <from> <to> -- <路徑>，
-      開 tgo Viewer：標題 DIFF — <路徑>，glyph nf-md-compare，Lang diff（語法顏色），不畫行號；有 tgo 的搜尋與選取模式；App Log 記 Info：Opened the diff of <路徑> in <那一層>
-      Esc：viewer 先關（tgo）；檔案清單上 Esc 回到分支圖，cursor 回到剛剛的 commit，OnEsc 拿掉
-      git 失敗時開 error popup：FILES FAILED: <短 hash>、DIFF FAILED: <路徑>，內容是 git 印的每一列
+      [2] 的 commit 上 Enter（Space menu：[Enter] Files — this commit changed, each before and after；hint Enter:files）：
+      tgo App.OpenDiff(histP, DiffItem{Anchor: <第一個 parent 的短 hash>（第一個 commit 是 empty）, Other: <commit 的短 hash>, Items})；
+      Items 是 git diff --name-status -M -z <parent> <commit>（第一個 commit 用 git diff-tree --root），加 --numstat 認出二進位檔：
+      每一項 DiffItem{Mark, Name: <路徑>（改名寫 <舊> → <新>）, Anchor: <舊路徑> @ <parent>, Other: <路徑> @ <commit>}；
+      Mark：A（第一個 commit 的 C 也是）DiffAdded、D DiffRemoved、copy DiffAdded、其他（M、R、T）DiffChanged；
+      Text（不是二進位檔才有）：git show <parent>:<舊路徑> 與 git show <commit>:<路徑>，新增的左邊空、刪除的右邊空
+      tgo 畫：[2] 換成差異清單（標記欄是 + Green、- Red、~ Peach，一欄路徑），位置列 <parent> ↔ <commit>，Enter 打開比較（DIFF — <Anchor> ↔ <Other>，UNIFIED、SPLIT），
+      兩邊一樣時 Info toast「No differences between <Anchor> and <Other>」，Esc 一層一層退回，最後回到分支圖、cursor 在那個 commit；二進位檔的 Enter 停用
+      App Log 記 Info：Opened the changes of <短 hash> <標題>；git 失敗時 tgo 開 error popup COMPARE FAILED
     test: [TestCommitFilesAndDiff, TestFirstCommitFiles]
   - id: 7
-    spec: 1
+    spec: 7
     implementation: |
-      [2] 的 commit 上 [m]ark（Mark — it to compare, or take the mark off；hint m:mark）：tgo List.ToggleMark，標記欄畫 Green 的勾
-      panel operation [C]ompare（the two marked commits）：標起來的不是剛好兩個時停用（Disabled）；執行時照分支圖的順序，下面那個（比較舊的）在前，
-      git diff --name-status -M <舊> <新>，跟 task 6 一樣進到檔案清單，位置列 All branches › <舊的短 hash> ↔ <新的短 hash>；Enter 開 diff 的 viewer，Esc 一層一層退回；標記留著
-    test: [TestCompareMarked]
+      [2] 的 item operation [C]ompare（tgo App.CompareAction(histP, commits, Compare{Key: C, Many: 每一列都是, Name: 短 hash, Items})）：
+      進入比較模式（tgo：模式名 Compare，anchor 那一列 Yellow，j|k u|d gg|G 移動，C 或 Enter 比較，Esc 離開、拿掉 anchor，Tab 與數字鍵暫停）；
+      Items 跟 task 6 一樣（git diff --name-status -M <anchor> <另一個>），以 anchor 為基準：每一項 Anchor <路徑> @ <anchor>、Other <路徑> @ <另一個>；
+      tgo 畫差異清單（位置列 <anchor> ↔ <另一個>）、Enter 打開比較、Esc 一層一層退回，最後回到模式、anchor 留著；沒有差異時 Info toast
+      原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉
+    test: [TestCompareTwoCommits]
   - id: 8
-    spec: 4
+    spec: 7
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
       本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
@@ -96,7 +100,7 @@ tasks:
       遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
       [M]erge、Re[b]ase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
       tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
-      stash（STASHES 那一頁）：[Enter] Show（git stash show -p，開 Viewer STASH — stash@{N}，Lang diff；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
+      stash（STASHES 那一頁）：[Enter] Show（what it keeps, file by file：tgo App.OpenDiff(branchP, DiffItem{Anchor: base of stash@{N}, Other: stash@{N}, Items})，Items 跟 task 6 一樣是 <stash>^1 對 <stash> 的檔案；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
       merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
@@ -129,7 +133,7 @@ tasks:
       每 3 秒（tgo App.Tick）在背景重新讀一次 repo（沒有 git 指令在跑、上一次還沒讀完時不讀），換上畫面：cursor 留在同一列（SetRows），focus 不動，不記 App Log
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain]
   - id: 11
-    spec: 2
+    spec: 7
     implementation: |
       Working tree 畫面：[1] CHANGES 是 tgo List（Flags，一欄 PATH，Path 從前面截），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -137,9 +141,12 @@ tasks:
       [2] DIFF 是 tgo Pager（Follow），[1] 的 Details（panel.13）：[1] 的 cursor 一移動（List.OnMove）就換成那一列的 diff（SetLines），label DIFF: <路徑>（Panel.Name）：
       Staged 的是 git diff --cached -M、Unstaged 的是 git diff、沒追蹤的檔是 git diff --no-index /dev/null <檔>（沒追蹤的資料夾列出裡面的檔）；用 terminu.Syntax("diff") 上色
       每 3 秒重新讀時，同一列的內容變了用 Pager.ReadAgain（tdp note.9），換了一列用 SetLines
-      [2] 上的 Enter（[Enter] Open — this in a viewer, to search and copy；沒有內容時 Hidden）：用 tgo Viewer 打開同一份內容（DIFF — <路徑>），App Log 記 Opened the diff of <路徑>
+      [2] 上的 Enter（[Enter] Compare — its two versions side by side；hint Enter:compare；沒有內容或是二進位檔（diff 裡有 Binary files）時 Hidden）：
+      tgo App.OpenDiff(diffP, DiffItem{Anchor, Other, Text})：STAGED <舊路徑> @ HEAD ↔ <路徑> @ index（git show HEAD:<舊路徑>、git show :<路徑>）；
+      UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔；不在 index 的那一邊是空的）；衝突的檔 <路徑> @ HEAD ↔ <路徑>；
+      衝突區塊那一層 MINE · <標記> ↔ THEIRS · <標記>（那一塊兩邊的行）；tgo 打開比較（UNIFIED、SPLIT）或兩邊一樣時 Info toast；App Log 記 Info：Compared <左> with <右>
       沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
-    test: [TestFileGroups, TestDiffFollowsCursor, TestDiffOpensInViewer, TestFileStatusScreen, TestStatus]
+    test: [TestFileGroups, TestDiffFollowsCursor, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
     spec: 1
     implementation: |

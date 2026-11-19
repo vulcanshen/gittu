@@ -30,7 +30,6 @@ var icon []byte
 const (
 	glyphRefTag = "\U000F04F9" // nf-md-tag
 	glyphGone   = "\U000F0165" // nf-md-cloud_off_outline: a branch whose upstream is gone
-	glyphDiff   = "\U000F018A" // nf-md-compare
 	glyphBranch = ""          // nf-dev-git_branch
 	glyphTag    = ""          // nf-fa-tag
 	glyphCommit = ""          // nf-dev-git_commit

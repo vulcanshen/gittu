@@ -188,15 +188,15 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed the tag "+n+" to "+remote) })
 			}},
 		// A stash.
-		{Key: "Enter", Label: "Show", Desc: "what it keeps", Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: "what it keeps, file by file", Scope: item, Hint: "show",
 			Hidden: h.is(kindStash), Do: func() tea.Cmd {
+				// What it keeps is its change against the commit it was made
+				// on, which holds many: the files that differ (tdp note.8).
 				st, _ := h.stash()
-				lines, err := g.repo.StashDiff(st.Ref)
-				if err != nil {
-					return g.a.ErrorAbout("Show failed", st.Ref, errLines(err)...)
-				}
+				base, name := st.SHA+"^1", "base of "+st.Ref
 				g.a.Log(terminu.Info, "Opened "+st.Ref)
-				return g.a.Viewer(&terminu.Viewer{Title: "Stash", Subject: st.Ref, Glyph: glyphStash, Lines: lines, Lang: "diff", NoNumbers: true})
+				return g.a.OpenDiff(h.branchP, terminu.DiffItem{Anchor: name, Other: st.Ref,
+					Items: func() ([]terminu.DiffItem, error) { return h.commitItems(base, st.SHA, name, st.Ref) }})
 			}},
 		{Key: "a", Label: "Apply", Desc: "it to the working tree, keeping it", Scope: item,
 			Hidden: h.is(kindStash), Disabled: off, Do: func() tea.Cmd { return h.applyStash(false) }},
@@ -230,7 +230,9 @@ func (h *historyScreen) showRef() tea.Cmd {
 		return nil
 	}
 	name := r.ID[2:]
-	h.goOut()
+	// TODO(tgo, sent to the tdp session): [2] gone into the files of a commit (OpenDiff, the compare
+	// mode) is the lib's: the app can neither tell nor go back up, so Enter
+	// here shows that list while the cursor moves on the graph under it.
 	sha := h.shaOf(r.ID)
 	if sha != "" && !h.commits.Select(sha) && h.commits.Filtering() {
 		h.commits.ClearFilter() // the filter hides it: show it all the same
@@ -349,23 +351,12 @@ func (g *gitreu) rebase(onto string) tea.Cmd {
 func (h *historyScreen) commitActions() []terminu.Action {
 	g := h.g
 	onGraph := func() bool { _, ok := h.current(); return !ok }
-	inLevel := func() bool { _, ok := h.change(); return !ok }
 	off := h.busyOr(nil)
 	short := func() string { c, _ := h.current(); return git.Short(c.SHA) }
 	return []terminu.Action{
-		{Key: "Enter", Label: "Files", Desc: "this commit changed", Scope: item, Hint: "files",
-			Hidden: onGraph, Do: func() tea.Cmd {
-				c, _ := h.current()
-				from := ""
-				if len(c.Parents) > 0 {
-					from = c.Parents[0]
-				}
-				return h.goIn(from, c.SHA, git.Short(c.SHA)+" "+c.Subject)
-			}},
-		{Key: "Enter", Label: "Diff", Desc: "of this file, before and after", Scope: item, Hint: "diff",
-			Hidden: inLevel, Do: h.openDiff},
-		{Key: "m", Label: "Mark", Desc: "it to compare, or take the mark off", Scope: item, Hint: "mark",
-			Hidden: onGraph, Do: func() tea.Cmd { h.commits.ToggleMark(); return nil }},
+		{Key: "Enter", Label: "Files", Desc: "this commit changed, each before and after", Scope: item, Hint: "files",
+			Hidden: onGraph, Do: h.showCommit},
+		h.compareMode(),
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
 			Hidden: onGraph, Disabled: off,
 			AskFor: func() *terminu.Ask {
@@ -419,22 +410,19 @@ func (h *historyScreen) commitActions() []terminu.Action {
 				return g.a.Toast(terminu.Success, "Copied "+git.Short(c.SHA))
 			}},
 		{Key: "a", Label: "Current branch", Desc: "HEAD's line on the left", Scope: panel,
-			Hidden: func() bool { return h.in != nil || !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
+			Hidden: func() bool { return !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
 		{Key: "a", Label: "All branches", Desc: "main's line on the left", Scope: panel,
-			Hidden: func() bool { return h.in != nil || g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
+			Hidden: func() bool { return g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
 		{Key: "r", Label: "Show remote branches", Desc: "in the graph", Scope: panel,
-			Hidden: func() bool { return h.in != nil || g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
+			Hidden: func() bool { return g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
 		{Key: "r", Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
-			Hidden: func() bool { return h.in != nil || !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
+			Hidden: func() bool { return !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
 		{Key: "z", Label: "Zoom", Desc: "wider, [1] at its least", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},
 		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return !(h.zoom == 1 || h.zoom == 0 && h.narrowZoom()) }, Do: func() tea.Cmd { return h.zoomTo(2) }},
 		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
 			Hidden: func() bool { return h.zoom != 2 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
-		{Key: "C", Label: "Compare", Desc: "the two marked commits", Scope: panel,
-			Hidden: func() bool { return h.in != nil }, Disabled: func() bool { return len(h.commits.Marked()) != 2 },
-			Do: h.compare},
 	}
 }
 
@@ -467,27 +455,6 @@ func (h *historyScreen) setRemote(remote bool) tea.Cmd {
 		g.a.Log(terminu.Info, "Hiding remote branches")
 	}
 	return nil
-}
-
-// compare goes into the files that differ between the two marked commits,
-// the older one first (tdp panel.7, panel.10).
-//
-// TODO(tdp #20): tdp compares two texts only (panel.9, note.8); comparing two
-// commits, a list of files and then each file, is not in it yet. Meanwhile the
-// two commits are marked and compared as a batch (tdp P3).
-func (h *historyScreen) compare() tea.Cmd {
-	marked := h.commits.Marked()
-	if len(marked) != 2 {
-		return nil
-	}
-	// The graph lists newer commits first: the later row is the older one.
-	ia := slices.IndexFunc(h.g.snap.Commits, func(c git.Commit) bool { return c.SHA == marked[0] })
-	ib := slices.IndexFunc(h.g.snap.Commits, func(c git.Commit) bool { return c.SHA == marked[1] })
-	older, newer := marked[0], marked[1]
-	if ia < ib {
-		older, newer = newer, older
-	}
-	return h.goIn(older, newer, git.Short(older)+" ↔ "+git.Short(newer))
 }
 
 // reset asks how to reset the current branch to the commit under the cursor:

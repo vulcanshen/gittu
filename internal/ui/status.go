@@ -58,8 +58,8 @@ func newStatusScreen(g *gitreu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = s.fileActions()
 	s.diffP.Actions = []terminu.Action{
-		{Key: "Enter", Label: "Open", Desc: "this in a viewer, to search and copy", Scope: panel, Hint: "open",
-			Hidden: func() bool { return s.diff.Empty() }, Do: s.openDiff},
+		{Key: "Enter", Label: "Compare", Desc: "its two versions side by side", Scope: panel, Hint: "compare",
+			Hidden: func() bool { return s.diff.Empty() || s.binary() }, Do: s.openDiff},
 	}
 	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
 		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: oneToTwo}
@@ -256,16 +256,69 @@ func (s *statusScreen) hunkLines(h git.Hunk) []string {
 	return append(lines, h.Theirs...)
 }
 
-// openDiff opens what [2] shows in a viewer, to search and copy (tdp K3: Enter
-// on a panel with no items).
+// openDiff opens the two versions of what [2] shows, the older the anchor
+// (tdp note.8; tdp K3: Enter on a panel with no items): a staged change HEAD
+// against the index, an unstaged one the index against the working tree, a
+// conflicted file HEAD against the working tree, a conflict mine against
+// theirs.
 func (s *statusScreen) openDiff() tea.Cmd {
-	lines := s.diff.Lines()
-	title := "Diff"
-	if s.conflict != "" {
-		title = "Conflict"
+	repo := s.g.repo
+	var item terminu.DiffItem
+	if h, _, ok := s.hunk(); ok {
+		mine, theirs := strings.Join(h.Mine, "\n"), strings.Join(h.Theirs, "\n")
+		item = terminu.DiffItem{Anchor: "MINE · " + h.MineLabel, Other: "THEIRS · " + h.TheirsLabel,
+			Text: func() (string, string, error) { return mine, theirs, nil }}
+	} else if f, group, ok := s.file(); ok {
+		path := f.Path
+		switch group {
+		case inStaged:
+			old := path
+			if f.Orig != "" {
+				old = f.Orig
+			}
+			item = terminu.DiffItem{Anchor: old + " @ HEAD", Other: path + " @ index", Text: func() (string, string, error) {
+				a, err := repo.Show("HEAD", old)
+				if err != nil {
+					return "", "", err
+				}
+				b, err := repo.Show("", path)
+				return a, b, err
+			}}
+		case inUnstaged:
+			item = terminu.DiffItem{Anchor: path + " @ index", Other: path, Text: func() (string, string, error) {
+				a, err := repo.Show("", path)
+				if err != nil {
+					return "", "", err
+				}
+				b, err := repo.WorkFile(path)
+				return a, b, err
+			}}
+		default: // a conflict: what HEAD has against the file with its markers
+			item = terminu.DiffItem{Anchor: path + " @ HEAD", Other: path, Text: func() (string, string, error) {
+				a, err := repo.Show("HEAD", path)
+				if err != nil {
+					return "", "", err
+				}
+				b, err := repo.WorkFile(path)
+				return a, b, err
+			}}
+		}
+	} else {
+		return nil
 	}
-	s.g.a.Log(terminu.Info, "Opened the "+strings.ToLower(title)+" of "+s.diffP.Name)
-	return s.g.a.Viewer(&terminu.Viewer{Title: title, Subject: s.diffP.Name, Glyph: glyphDiff, Lines: lines, NoNumbers: true})
+	s.g.a.Log(terminu.Info, "Compared "+item.Anchor+" with "+item.Other)
+	return s.g.a.OpenDiff(s.diffP, item)
+}
+
+// binary reports [2] showing a binary file's change, which has no lines to
+// compare (tdp panel.9: not text, no comparison).
+func (s *statusScreen) binary() bool {
+	for _, l := range s.diff.Lines() {
+		if strings.HasPrefix(terminu.StripStyles(l), "Binary files ") {
+			return true
+		}
+	}
+	return false
 }
 
 // goIn shows a conflicted file's blocks in [1] (tdp panel.10).
@@ -392,4 +445,21 @@ func (g *gitreu) doCommit(msg string, amend bool) tea.Cmd {
 			}
 			return g.a.Toast(terminu.Success, "Committed "+sha+" "+firstLine(msg))
 		})
+}
+
+// changeFlag is a working tree change's letter in its colour, in [1]'s flag
+// column (tdp panel.7; tdp P5: the letters and colours are the app's).
+func changeFlag(status byte) terminu.Span {
+	c := terminu.Peach
+	switch status {
+	case 'A', 'C':
+		c = terminu.Green
+	case 'D', 'U':
+		c = terminu.Red
+	case 'R':
+		c = terminu.Blue
+	case '?':
+		c = terminu.Overlay0
+	}
+	return terminu.Span{Text: string(status), Style: terminu.Fg(c)}
 }

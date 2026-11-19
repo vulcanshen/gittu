@@ -1,4 +1,4 @@
-id: 6
+id: 7
 from: v1.2.16
 to: v1.2.16
 tasks:
@@ -47,6 +47,8 @@ tasks:
       - "/ 篩選（tdp panel.14）：分支多的 repo 找分支"
       - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。照 SourceTree：點側欄的分支，分支圖跳到那裡。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 進到某個 commit 裡時（task 6）不動"
       - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到（[2] 進到某個 commit 裡時先退回分支圖）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [r] on [2] to show remote branches"
+      - note: "[2] 進到 commit 的差異清單（task 6、7，tgo 的 App.OpenDiff 與比較模式）時，那一層是 tgo 管的，app 看不出 [2] 在那一層，也沒辦法從 app 的動作退回分支圖：[1] 上的 Enter 照樣把 focus 送到 [2]，看到的是那份差異清單，[2] 的 cursor 在底下的分支圖裡移到那個 commit，Esc 退回就看得到。要 tgo 給「在差異清單裡嗎」與「退回」"
+        issue: 送給 tdp session（2026-11-19，轉 terminu-go）
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
   - id: 4
     spec: 6
@@ -74,35 +76,34 @@ tasks:
       - "位置列寫目前是哪一種：All branches／Current branch（tdp panel.10：位置列寫目前的位置，要不要有 app 可以自行決定）"
       - "切換記 App Log（Info：Showing all branches, main on the left／Showing the current branch on the left；tdp note.7：只看不改的動作也記）"
   - id: 6
-    spec: 1
-    request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
-    tdp: [tdp panel.10, tdp K3, tdp K4, tdp T1, tdp note.1, tdp note.2, tdp note.3, tdp note.4, tdp F1, tdp panel.7, tdp note.7, tdp P5]
+    spec: 7
+    request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回；跟比較兩個 commit 一樣（使用者 2026-11-19）
+    tdp: [tdp note.8, tdp panel.9, tdp panel.10, tdp K3, tdp K4, tdp T1, tdp note.7, tdp P5]
     remark:
-      - "照 tdp panel.10 的「項目裡還有項目」一層一層進去（idea.md：裝著東西的項目一次只走一層，就像 filu 走資料夾）：[2] 的 commit 上按 Enter，[2] 換成這個 commit 改了的檔案；位置列接上 › <短 hash> <標題>；Esc 回到分支圖，cursor 停在剛剛那個 commit（tdp K4）"
-      - "檔案清單：標記欄畫改了什麼（M 修改 Peach、A 新增 Green、D 刪除 Red、R 改名 Blue；tdp panel.7 的旗標，glyph 與顏色 app 可以自行決定），一欄 PATH，太長從前面截；改名寫 舊 → 新。比的是這個 commit 與它的第一個 parent（merge commit 也是），第一個 commit 跟空的比"
-      - "檔案上按 Enter 開 viewer（tdp note.1）：標題 DIFF — <路徑>，內容是 git diff 的輸出（語法顏色用 diff，tdp note.2），有搜尋與選取模式（tgo 的 viewer）；Esc 關掉回到檔案清單。照 tdp T1：打開東西來看，source 保留"
+      - "tdp note.8 的「同一項的兩個版本」與 panel.9 的「裝著許多項目的列」（tdp main，還沒發版；tdp #20 定案，使用者在 tdp session 與這裡都選 A）：看同一項的兩個版本一律打開 note.8 的比較（UNIFIED 與 SPLIT），舊的當 anchor，標題 DIFF — <舊的> ↔ <新的>；一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列出有差異的項目"
+      - "[2] 的 commit 上按 Enter（[Enter] Files）：照 panel.10 一層一層進去，[2] 換成這個 commit 對它第一個 parent 有差異的檔案（第一個 commit 對空的），位置列是 <parent 的短 hash> ↔ <commit 的短 hash>（第一個 commit 的 parent 寫 empty）；每一項前面是 +（Green，新增）、-（Red，刪除）、~（Peach，修改），git 的 M／A／D／R 字母拿掉；一份平的路徑清單（panel.9：項目照 app 的叫法命名，檔案不裝東西，沒有再進一層）；改名是一列 ~ <舊> → <新>，比的是舊的對新的（panel.9）"
+      - "檔案上按 Enter 打開 note.8 的比較：標題 DIFF — <路徑> @ <parent> ↔ <路徑> @ <commit>，新增的檔左邊是空的、刪除的右邊是空的；兩邊一樣（只改名）時不打開，Info toast（panel.9）。二進位檔沒有比較（panel.9：不是文字的項目沒有比較）。Esc 一層一層退回，最後回到分支圖、cursor 在剛剛那個 commit（tdp K4）"
       - "從 Space menu 執行進去（drill-down）時 menu 收起（tdp T1 的表）"
-      - "進出不記 App Log（換 focus 與看的範圍，tdp note.7 的「進明細」同理）；開 diff 的 viewer 記 Info：Opened the diff of <路徑> in <短 hash>（只看不改的動作也記）"
-      - note: "2026-11-19 tdp 定案（使用者在 tdp session 與這裡都選 A；tdp main 85f15d9，note.8 的「同一項的兩個版本」）：看同一項兩個版本的動作一律打開 note.8 的比較（UNIFIED 與 SPLIT），不開顯示 patch 的 viewer，舊的當 anchor，標題 DIFF — <舊的> ↔ <新的>。一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列差異：+ Green、- Red、~ Peach，git 的 M／A／D／R 字母拿掉，改名是一列 ~ <舊> → <新>；檔案上 Enter 打開 parent ↔ commit 的比較。tgo 要新的 API（app 的動作打開 note.8 與差異清單），等 terminu-go 出 beta 再改；在那之前照舊"
-        issue: tdp #20
+      - "記 App Log：Opened the changes of <短 hash> <標題>（tdp note.7：只看不改的動作也記）；進出那一層不記（換看的範圍）"
+      - "清單、標記、比較 popup 都由 tgo 畫（App.OpenDiff；terminu-go v1.2.18-beta.1 起），gitreu 只給每一項的名字、兩邊的名字與兩邊的內容（tdp E8：用 lib 的 app 不另外做 lib 做到的）"
   - id: 7
-    spec: 1
+    spec: 7
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
-    tdp: [tdp panel.9, tdp panel.7, tdp P3, tdp panel.10, tdp T1, tdp note.1, tdp note.2, tdp M6]
+    tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5]
     remark:
-      - note: "tdp 的比較（panel.9 的比較模式、note.8 的比較 popup）原本只比兩段文字。比兩個 commit 的結果是一份有變動的檔案清單，再對每個檔案看前後的差異。暫時：在 [2] 用標記（tdp panel.7，[m]ark）標兩個 commit，panel operation [C]ompare（tdp P3：對整批標記的項目做事；不是剛好兩個時停用，tdp M6）照 task 6 一樣進到檔案清單（位置列接 › <舊的短 hash> ↔ <新的短 hash>），Enter 開 diff 的 viewer，Esc 一層一層退回。2026-11-19 tdp 定案（使用者選 A，在 tdp main，還沒發版；tdp session 告知）：比兩個 commit 走比較模式，不用標記：在一個 commit 上按比較鍵成為 anchor，移到另一個按 Enter 或比較鍵；裝著許多項目的列照 panel.10 進到一層差異清單（位置列最後 <anchor> ↔ <另一個>），每一項前面 + Green（只有另一個有）、- Red（只有 anchor 有）、~ Peach（兩邊都有但不一樣），一樣的不列；在一項上 Enter 打開 note.8 的比較（UNIFIED、SPLIT；只有一邊有的另一邊是空的），不開 git diff 的 viewer；Esc 一層一層退回，最後回到模式、anchor 留著；沒有差異時 Info toast。tgo 要新的 API，等 terminu-go 出 beta 再照這個改；在那之前暫時的做法留著，比較的功能才不會不見"
-        issue: tdp #20
-      - "tdp #20 的追問（tdp session 2026-11-19 回覆，tdp main 8c7ebcb，panel.9）：差異清單是一份平的路徑清單（internal/ui/ui.go），項目照 app 的叫法命名；檔案本身不裝東西，沒有再進一層。git 回報的改名算兩邊都有：一列 ~，寫 <舊> → <新>，Enter 比舊的對新的；所以比較清單裡不再有 git 的 R 與 Blue。看一個 commit 的檔案（task 6）與 Working tree 的 DIFF（task 11）要不要也改成 note.8 與 + - ~，還在等使用者決定，先照舊"
+      - "tdp #20 定案（使用者選 A；tdp main 的 panel.9「裝著許多項目的列」與 note.8，還沒發版）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
+      - "[2] 的 commit 上按 [C]ompare（比較鍵 app 可以自行決定，tdp panel.9；跟 kbu 一樣是 C）進入比較模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 C 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，標題 DIFF — <路徑> @ <anchor> ↔ <路徑> @ <另一個>；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
+      - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
   - id: 8
-    spec: 4
+    spec: 7
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；SourceTree 右鍵選單上的動作（分支、遠端分支、tag、stash）都對應到 Space 選單
-    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12]
+    tdp: [tdp note.8, tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12]
     remark:
       - "[1] 的 item operation 依那一列是什麼而不同（tdp K3：同一種項目永遠是同一個動作；不同的種類用 Hidden 分開，tdp M6）：
         本地分支（BRANCHES 分頁） — Enter：Show（task 3）、[c]heck out（目前的分支停用）、[M]erge into the current branch、Re[b]ase the current branch onto it、[r]ename、[D]elete、Push（沒有熱鍵）；
         遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、Re[b]ase、[D]elete（刪遠端的分支）；
         tag（TAGS 分頁） — Enter：Show（task 3）、[c]heck out（HEAD 會 detached）、[D]elete、Push（沒有熱鍵）；
-        stash（STASHES 分頁） — Enter：Show（viewer 看它的 diff）、[a]pply、P[o]p、[D]rop"
+        stash（STASHES 分頁） — Enter：Show（它存的改動對它的 base，照 tdp note.8 進到差異清單，跟 task 6 一樣）、[a]pply、P[o]p、[D]rop"
       - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支不問（SourceTree 也不問），會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）"
       - "先 confirm 的：Merge、Rebase、Delete、Drop（tdp F6）；Apply、Pop 不問（不會丟東西，衝突照 task 14）。Delete 遠端分支與 Drop 的內容寫無法復原（Peach，tdp confirm.2）。刪本地分支用 git branch -d，沒合併過的被 git 擋下時再開一個 confirm 問要不要強制刪（git branch -D），警告那一句寫沒合併的 commit 會不見"
       - "Rename、建分支、建 tag 用 text input（tdp text）：名稱照 git check-ref-format 檢查，不合格寫在錯誤列（tdp F7）"
@@ -130,9 +131,9 @@ tasks:
       - "Stash：text input 問訊息（可以空著，git 會自己寫一個）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；另外每 3 秒在背景重新讀一次（沒有 git 指令在跑時），在 app 外面改了檔案、下了 git 指令，畫面也跟著變（SourceTree 也會）：背景重新讀不移動 focus、cursor 留在同一列（tdp K3），不記 App Log；按 R 的記 Info"
   - id: 11
-    spec: 2
+    spec: 7
     request: 看工作區的檔案（SourceTree 的 File Status，git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
-    tdp: [tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2]
+    tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2]
     remark:
       - |
         Working tree 畫面（task 1 的第二個畫面）：
@@ -146,11 +147,10 @@ tasks:
         ┃ ? notes.txt          ┃│                                                     │
         ┗━ Enter:stage ━━━━━━━━┛└─────────────────────────────────────── 1-20 of 48 ─┘
       - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。標記欄是改了什麼（tdp panel.7 的旗標）：M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）；一欄 PATH，太長從前面截（tdp panel.5）。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
-      - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；內容是 git diff（STAGED 的是 git diff --cached，沒追蹤的檔整個當新增），diff 的語法顏色；沒有 cursor 的 panel（tgo Pager），j|k 捲動。[2] 上的 Enter 用 viewer 打開同一份 diff（tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事），有搜尋與選取模式"
+      - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；內容是 git diff（STAGED 的是 git diff --cached，沒追蹤的檔整個當新增），diff 的語法顏色；沒有 cursor 的 panel（tgo Pager），j|k 捲動"
+      - "[2] DIFF 上的 Enter（[Enter] Compare，hint Enter:compare；tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事）打開 tdp note.8 的比較（同一項的兩個版本，舊的當 anchor）：STAGED 的是 <路徑> @ HEAD ↔ <路徑> @ index，UNSTAGED 的是 <路徑> @ index ↔ <路徑>（工作區；沒追蹤的檔左邊是空的），衝突的檔是 <路徑> @ HEAD ↔ <路徑>（工作區、有衝突標記），進到衝突區塊時是 MINE · <標記> ↔ THEIRS · <標記>；二進位檔沒有比較（Enter 隱藏）。由 tgo 的 App.OpenDiff 畫，記 App Log：Compared <左> with <右>"
       - "沒有改動時是空狀態（tdp screen.8）：Nothing to commit / Press [H] to see the history"
       - "每 3 秒重新讀（task 10）時，[2] 的內容換了就重新放進去（tdp note.9 的重新讀進來；不算串流，失焦時變暗）"
-      - note: "2026-11-19 tdp 定案（同 task 6；tdp main 85f15d9，note.8）：[2] DIFF 上的 Enter 打開 note.8 的比較，STAGED 的是 HEAD ↔ index，UNSTAGED 的是 index ↔ 工作區（沒追蹤的檔，舊的那一邊是空的），不再開 viewer；明細 panel 本身顯示的不變。等 terminu-go 出 beta 再改；在那之前照舊"
-        issue: tdp #20
   - id: 12
     spec: 1
     request: stage、unstage、捨棄改動都在 app 裡做

@@ -299,14 +299,6 @@ func TestEnterShowsTheCommit(t *testing.T) {
 			t.Fatalf("%s: Enter checked out", ref.id)
 		}
 	}
-	// From a commit gone into, Enter on a branch comes back to the graph.
-	d.Press("Enter")
-	has(t, d, "All branches › ")
-	d.Press("1")
-	selectBranch(d, g, kindBranch+"topic")
-	d.Press("Enter")
-	hasNot(t, d, "All branches › ")
-	has(t, d, "Enter:files")
 	d.Press("!")
 	hasNot(t, d, "Checked out")
 }
@@ -441,48 +433,74 @@ func TestAllOrCurrentBranch(t *testing.T) {
 
 // --- task 6: a commit's files and their diffs ---
 
+// TestCommitFilesAndDiff is task 6 on tdp note.8 and panel.9: Enter on a
+// commit goes into the files that differ from its first parent, each with its
+// mark; Enter on one compares its two versions, UNIFIED and SPLIT; Esc goes
+// back up a level at a time.
 func TestCommitFilesAndDiff(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 100, 32)
-	c := selectCommit(t, d, g, "Grow the feature")
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Git("mv", "feature.txt", "renamed.txt")
+	r.Write("README.md", "# demo\n")
+	r.Write("added.txt", "new\n")
+	r.Git("add", "-A")
+	r.Git("commit", "-q", "-m", "Move, add and change")
+	g, d := start(t, r, 120, 32)
+	c := selectCommit(t, d, g, "Move, add and change")
+	parent := c.Parents[0]
 	d.Press("Tab", "Enter")
-	has(t, d, "All branches › "+git.Short(c.SHA)+" Grow the feature", "feature.txt", "Enter:diff")
+	has(t, d, git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:compare")
 	d.Press("Enter")
-	has(t, d, "DIFF — feature.txt", "+two")
+	has(t, d, "DIFF — README.md @ "+git.Short(parent)+" ↔ README.md @ "+git.Short(c.SHA), "UNIFIED", "SPLIT")
 	d.Press("Esc")
-	hasNot(t, d, "DIFF — feature.txt")
-	d.Press("Esc")
+	hasNot(t, d, "DIFF — ")
+	// A rename with nothing else changed: its two versions are the same.
+	d.Press("j", "j", "Enter")
+	has(t, d, "No differences between feature.txt @ "+git.Short(parent)+" and renamed.txt @ "+git.Short(c.SHA))
+	d.Press("Esc", "Esc")
 	has(t, d, "GRAPH")
 	if cur, _ := g.history.commits.Current(); cur.ID != c.SHA {
 		t.Error("back on the graph, the cursor is not on the commit gone into")
 	}
 	d.Press("!")
-	has(t, d, "Opened the diff of feature.txt")
+	has(t, d, "Opened the changes of "+git.Short(c.SHA))
 }
 
 func TestFirstCommitFiles(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 100, 32)
+	g, d := start(t, gittest.Sample(t), 120, 32)
 	selectCommit(t, d, g, "Start the demo")
 	d.Press("Tab", "Enter")
-	has(t, d, "README.md")
+	has(t, d, "empty ↔ ", "+ README.md")
 	d.Press("Enter")
-	has(t, d, "+# demo")
+	has(t, d, "DIFF — README.md @ empty ↔ README.md @ ", "+# demo")
 }
 
 // --- task 7: two commits compared ---
 
-func TestCompareMarked(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 100, 32)
+// TestCompareTwoCommits is task 7 on tdp panel.9: C on a commit makes it the
+// anchor of the compare mode, Enter on another goes into the files that differ,
+// the anchor the base; Esc goes back up to the mode, the anchor kept.
+func TestCompareTwoCommits(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
 	d.Press("Tab")
 	a := selectCommit(t, d, g, "Start the demo")
-	d.Press("m")
-	b := selectCommit(t, d, g, "Say even more")
 	d.Press("Space")
 	has(t, d, "[C]ompare")
-	d.Press("Esc", "m", "C")
-	has(t, d, "› "+git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "feature.txt", "README.md")
+	d.Press("Esc", "C")
+	has(t, d, "Compare")
+	b := selectCommit(t, d, g, "Say even more")
 	d.Press("Enter")
-	has(t, d, "DIFF")
+	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
+	d.Press("Enter")
+	has(t, d, "DIFF — README.md @ "+git.Short(a.SHA)+" ↔ README.md @ "+git.Short(b.SHA))
 	d.Press("Esc", "Esc")
+	if g.history.histP.InMode() == nil {
+		t.Error("Esc out of the files did not go back to the compare mode")
+	}
+	d.Press("Esc")
+	if g.history.histP.InMode() != nil {
+		t.Error("Esc did not leave the compare mode")
+	}
 	has(t, d, "GRAPH")
 }
 
@@ -637,8 +655,10 @@ func TestStashOperations(t *testing.T) {
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindStash+"stash@{0}")
 	d.Press("Enter")
-	has(t, d, "STASH — stash@{0}", "+Stashed.")
-	d.Press("Esc", "a")
+	has(t, d, "base of stash@{0} ↔ stash@{0}", "~ README.md")
+	d.Press("Enter")
+	has(t, d, "DIFF — README.md @ base of stash@{0} ↔ README.md @ stash@{0}", "+Stashed.")
+	d.Press("Esc", "Esc", "a")
 	done(t, g, d)
 	has(t, d, "Applied stash@{0}")
 	r.Git("checkout", "-q", "--", ".")
@@ -928,12 +948,20 @@ func TestDiffFollowsCursor(t *testing.T) {
 	has(t, d, "+read again")
 }
 
-func TestDiffOpensInViewer(t *testing.T) {
+// TestDiffComparesVersions is task 11 on tdp note.8: Enter on [2] DIFF compares
+// the file's two versions: the index against the working tree when unstaged,
+// HEAD against the index when staged.
+func TestDiffComparesVersions(t *testing.T) {
 	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
 	r.Write("README.md", "changed\n")
-	_, d := start(t, r, 100, 32)
-	d.Press("W", "Tab", "Enter")
-	has(t, d, "DIFF — README.md", "/:search")
+	_, d := start(t, r, 120, 32)
+	d.Press("W", "Tab")
+	has(t, d, "Enter:compare")
+	d.Press("Enter")
+	has(t, d, "DIFF — README.md @ index ↔ README.md", "UNIFIED", "+changed")
+	d.Press("Esc", "1", "Enter", "Tab", "Enter")
+	has(t, d, "DIFF — README.md @ HEAD ↔ README.md @ index")
 }
 
 // --- task 12: stage, unstage, discard ---

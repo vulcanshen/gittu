@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -34,10 +33,6 @@ type historyScreen struct {
 
 	histP   *terminu.Panel
 	commits *terminu.List
-	// in is the level [2] has gone into, nil on the graph (tdp panel.10).
-	in *level
-	// files lists the files of the level gone into.
-	files *terminu.List
 	// zoom is how far [2] is zoomed (tdp screen.6): 0 not, 1 with [1] at its
 	// least width, 2 the focused panel on the whole panel area.
 	zoom int
@@ -46,16 +41,6 @@ type historyScreen struct {
 // leftLeast is [1]'s width when [2] is zoomed with [1] still beside it: what
 // [1] has at 60 columns, branch names still readable (tdp L1).
 const leftLeast = 20
-
-// level is a commit, or two commits compared, that [2] has gone into: the
-// files that differ from one to the other.
-type level struct {
-	from, to string // from "" is the empty tree: a first commit
-	// commit is the row of the graph gone in from, to come back to.
-	commit  string
-	where   string // what the location row adds: "a1b2c3d Fix the graph"
-	changes []git.Change
-}
 
 func newHistoryScreen(g *gitreu) *historyScreen {
 	h := &historyScreen{g: g}
@@ -87,16 +72,9 @@ func newHistoryScreen(g *gitreu) *historyScreen {
 			{Title: "Author", Shrink: true, MinWidth: 6, Drop: 2},
 			{Title: "Date", Drop: 1},
 		},
-		Marks:      true,
 		Filterable: true,
 		EmptyFact:  "No commits yet",
 		EmptyHint:  "Press [W] to see the files to commit",
-	}
-	h.files = &terminu.List{
-		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
-		Flags:     true,
-		EmptyFact: "No files changed",
-		EmptyHint: "Press [Esc] to go back to the history",
 	}
 	h.histP = &terminu.Panel{Label: "Commits", Body: h.commits}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
@@ -174,9 +152,6 @@ func (h *historyScreen) show(s *git.Snapshot) {
 	}
 	h.commits.SetRows(h.commitRows(s))
 	h.commits.Location = h.scope()
-	if h.in != nil {
-		h.files.Location = h.scope() + " › " + h.in.where
-	}
 }
 
 // failed says the repository could not be read (tdp panel.15).
@@ -345,7 +320,7 @@ func description(refs []ref, subject string) (string, []terminu.Span) {
 // tag under [1]'s cursor points at, as SourceTree's sidebar does; the focus
 // stays (tdp K3, panel.13).
 func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
-	if h.in != nil || h.g.snap == nil {
+	if h.g.snap == nil {
 		return nil
 	}
 	if sha := h.shaOf(r.ID); sha != "" {
@@ -402,9 +377,6 @@ func (h *historyScreen) commit(sha string) (git.Commit, bool) {
 
 // current is the commit under [2]'s cursor on the graph.
 func (h *historyScreen) current() (git.Commit, bool) {
-	if h.in != nil {
-		return git.Commit{}, false
-	}
 	r, ok := h.commits.Current()
 	if !ok {
 		return git.Commit{}, false
@@ -412,95 +384,84 @@ func (h *historyScreen) current() (git.Commit, bool) {
 	return h.commit(r.ID)
 }
 
-// goIn shows the files that differ from one commit to another in [2] (tdp
-// panel.10): from "" is the empty tree.
-func (h *historyScreen) goIn(from, to, where string) tea.Cmd {
-	changes, err := h.g.repo.Changes(from, to)
+// commitItems are the files that differ from commit from to commit to,
+// fromName and toName naming the two sides (tdp panel.9): a path each, its mark
+// + - ~ (a rename ~ <old> → <new>), its two versions to compare, none for a
+// binary file. from "" is the empty tree: a first commit.
+func (h *historyScreen) commitItems(from, to, fromName, toName string) ([]terminu.DiffItem, error) {
+	repo := h.g.repo
+	changes, err := repo.Changes(from, to)
 	if err != nil {
-		return h.g.a.ErrorAbout("Files failed", git.Short(to), errLines(err)...)
+		return nil, err
 	}
-	r, _ := h.commits.Current()
-	h.in = &level{from: from, to: to, commit: r.ID, where: where, changes: changes}
-	h.files.SetRows(changeRows(changes))
-	h.files.ClearFilter()
-	h.files.Location = h.scope() + " › " + where
-	h.histP.Body = h.files
-	h.histP.OnEsc = h.goOut
-	return nil
-}
-
-// goOut goes back up to the graph, the cursor on the commit gone in from (tdp
-// K4, panel.10).
-func (h *historyScreen) goOut() tea.Cmd {
-	if h.in == nil {
-		return nil
-	}
-	h.commits.Select(h.in.commit)
-	h.in = nil
-	h.histP.Body = h.commits
-	h.histP.OnEsc = nil
-	return nil
-}
-
-// changeRows are the files of a commit: what changed in the flag column
-// (tdp panel.7), the path.
-func changeRows(cs []git.Change) []terminu.Row {
-	rows := make([]terminu.Row, len(cs))
-	for i, c := range cs {
-		path := c.Path
+	items := make([]terminu.DiffItem, len(changes))
+	for i, c := range changes {
+		old := c.Path
 		if c.Orig != "" {
-			path = c.Orig + " → " + c.Path
+			old = c.Orig
 		}
-		rows[i] = terminu.Row{ID: strconv.Itoa(i), Cells: []string{path}, Flag: changeFlag(c.Status)}
+		it := terminu.DiffItem{Name: c.Path, Anchor: old + " @ " + fromName, Other: c.Path + " @ " + toName}
+		switch {
+		case c.Status == 'A' || c.Status == 'C' && from == "":
+			it.Mark = terminu.DiffAdded
+		case c.Status == 'D':
+			it.Mark = terminu.DiffRemoved
+		default:
+			it.Mark = terminu.DiffChanged
+		}
+		if c.Status == 'C' && from != "" {
+			it.Mark = terminu.DiffAdded // a copy is a new file, made from another
+		}
+		if c.Orig != "" && c.Status == 'R' {
+			it.Name = c.Orig + " → " + c.Path
+		}
+		if !c.Binary {
+			mark, path := it.Mark, c.Path
+			it.Text = func() (string, string, error) {
+				var a, b string
+				var err error
+				if mark != terminu.DiffAdded && from != "" {
+					if a, err = repo.Show(from, old); err != nil {
+						return "", "", err
+					}
+				}
+				if mark != terminu.DiffRemoved {
+					if b, err = repo.Show(to, path); err != nil {
+						return "", "", err
+					}
+				}
+				return a, b, nil
+			}
+		}
+		items[i] = it
 	}
-	return rows
+	return items, nil
 }
 
-// changeFlag is a change's letter in its colour (tdp P5).
-func changeFlag(status byte) terminu.Span {
-	c := terminu.Peach
-	switch status {
-	case 'A', 'C':
-		c = terminu.Green
-	case 'D':
-		c = terminu.Red
-	case 'R':
-		c = terminu.Blue
-	case '?':
-		c = terminu.Overlay0
-	case 'U':
-		c = terminu.Red
-	}
-	return terminu.Span{Text: string(status), Style: terminu.Fg(c)}
-}
-
-// change is the file under the cursor of the level gone into.
-func (h *historyScreen) change() (git.Change, bool) {
-	if h.in == nil {
-		return git.Change{}, false
-	}
-	r, ok := h.files.Current()
-	if !ok {
-		return git.Change{}, false
-	}
-	i, err := strconv.Atoi(r.ID)
-	if err != nil || i >= len(h.in.changes) {
-		return git.Change{}, false
-	}
-	return h.in.changes[i], true
-}
-
-// openDiff opens the diff of the file under the cursor in a viewer (tdp
-// note.1).
-func (h *historyScreen) openDiff() tea.Cmd {
-	c, ok := h.change()
+// showCommit goes into what the commit under the cursor changed against its
+// first parent (tdp note.8, panel.9): the files that differ, each opening
+// its two versions.
+func (h *historyScreen) showCommit() tea.Cmd {
+	c, ok := h.current()
 	if !ok {
 		return nil
 	}
-	lines, err := h.g.repo.Diff(h.in.from, h.in.to, c)
-	if err != nil {
-		return h.g.a.ErrorAbout("Diff failed", c.Path, errLines(err)...)
+	from, fromName := "", "empty"
+	if len(c.Parents) > 0 {
+		from, fromName = c.Parents[0], git.Short(c.Parents[0])
 	}
-	h.g.a.Log(terminu.Info, "Opened the diff of "+c.Path+" in "+h.in.where)
-	return h.g.a.Viewer(&terminu.Viewer{Title: "Diff", Subject: c.Path, Glyph: glyphDiff, Lines: lines, Lang: "diff", NoNumbers: true})
+	h.g.a.Log(terminu.Info, "Opened the changes of "+git.Short(c.SHA)+" "+c.Subject)
+	return h.g.a.OpenDiff(h.histP, terminu.DiffItem{Anchor: fromName, Other: git.Short(c.SHA),
+		Items: func() ([]terminu.DiffItem, error) { return h.commitItems(from, c.SHA, fromName, git.Short(c.SHA)) }})
+}
+
+// compareMode is [2]'s compare mode (tdp panel.9): two commits hold many, so
+// comparing them goes into the files that differ, the anchor the base.
+func (h *historyScreen) compareMode() terminu.Action {
+	return h.g.a.CompareAction(h.histP, h.commits, terminu.Compare{Key: "C",
+		Many: func(terminu.Row) bool { return true },
+		Name: func(r terminu.Row) string { return git.Short(r.ID) },
+		Items: func(anchor, other terminu.Row) ([]terminu.DiffItem, error) {
+			return h.commitItems(anchor.ID, other.ID, git.Short(anchor.ID), git.Short(other.ID))
+		}})
 }

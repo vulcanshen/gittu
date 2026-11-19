@@ -23,7 +23,8 @@ no keys to learn first.
 - **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
   commits; main's line kept on the left (All) or the current branch's (Current), the remote branches only when you want
   them.
-- **Look before you act**: a commit's files, then a file's diff; two commits marked and compared the same way; `Esc`
+- **Look before you act**: a commit's files marked `+` `-` `~`, then a file's two versions side by side; two commits
+  compared the same way; `Esc`
   goes back one level at a time.
 - **Every operation from the `Space` menu**: check out, merge, rebase, cherry-pick, revert, reset, branch, tag, rename,
   delete, stash, fetch, pull, push — each with the question it needs before it runs.
@@ -111,16 +112,20 @@ the App Log, what gitreu did and what went wrong.
 | `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[D]`elete, Push |
 | `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[D]`elete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
-| `[1]` STASHES: a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
-| `[2]` a commit | Its files | `[m]`ark, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
-| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide `[r]`emote branches, `[z]`oom, `[C]`ompare the two marked commits, `[/]` filter |
+| `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
+| `[2]` a commit | Its files | `[C]`ompare with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
+| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide `[r]`emote branches, `[z]`oom, `[/]` filter |
 
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
 and tag; All keeps main's line (or master's) on the left, Current the branch you are on. The remote branches are hidden
 at first: `r` on `[2]` draws them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
-upstream was deleted on the remote says `upstream gone`. `Enter` on a
-file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.
+upstream was deleted on the remote says `upstream gone`.
+
+`Enter` on a commit goes in to the files it changed against the commit before it: `+` added, `-` deleted, `~` changed
+(a rename is `~ old → new`). `Enter` on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `C` on a
+commit, then `Enter` on another, compares the two the same way, the first one the base. `Esc` goes back a level at a
+time.
 
 ### Working tree
 
@@ -132,7 +137,8 @@ file of a commit opens its diff; `Esc` goes back to the files, and again to the 
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | Stage `[a]`ll, Unstage all |
 
-`[1]` is CHANGES, `[2]` DIFF: the diff of the file under the cursor; `Enter` there opens it in a viewer to search and copy from.
+`[1]` is CHANGES, `[2]` DIFF: the diff of the file under the cursor; `Enter` there opens its two versions side by side
+(HEAD and the index when staged, the index and the working tree when not).
 
 ### For the whole repository
 

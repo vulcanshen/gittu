@@ -101,13 +101,16 @@ gitreu
 | `[1]` BRANCHES：本地分支 | 到 `[2]` 它的 commit | `[c]`heck out、`[M]erge` 進目前的分支、把目前的分支 Re`[b]`ase 到它上面、`[r]`ename、`[D]`elete、Push |
 | `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[D]`elete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
-| `[1]` STASHES：stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
-| `[2]` commit | 它改了的檔案 | `[m]`ark、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
-| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、Show／Hide `[r]`emote branches、`[z]`oom、`[C]`ompare 標起來的兩個 commit、`[/]` 篩選 |
+| `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[D]`rop |
+| `[2]` commit | 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
+| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、Show／Hide `[r]`emote branches、`[z]`oom、`[/]` 篩選 |
 
 `[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag：All 把 main（或 master）那條固定
-在最左邊，Current 是你現在的分支那條；遠端分支一開始不畫，在 `[2]` 按 `r` 才畫。`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
-差異；`Esc` 回到檔案，再按一次回到分支圖。
+在最左邊，Current 是你現在的分支那條；遠端分支一開始不畫，在 `[2]` 按 `r` 才畫。`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
+
+在 commit 上按 `Enter`，進到它對上一個 commit 改了的檔案：`+` 新增、`-` 刪除、`~` 修改（改名是 `~ 舊 → 新`）。在檔案上按
+`Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。在一個 commit 上按 `C`、再到另一個按 `Enter`，用同樣的方式
+比較這兩個，第一個是基準。`Esc` 一層一層退回。
 
 ### Working tree
 
@@ -119,7 +122,8 @@ gitreu
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | Stage `[a]`ll、Unstage all |
 
-`[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔的差異；在那裡按 `Enter` 用 viewer 打開，可以找字、複製。
+`[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔的差異；在那裡按 `Enter`，左右對照打開它的兩個版本（已經 stage 的是 HEAD 與 index，
+還沒 stage 的是 index 與工作區）。
 
 ### 整個 repo 的動作
 

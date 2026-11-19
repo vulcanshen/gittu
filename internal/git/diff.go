@@ -15,22 +15,74 @@ type Change struct {
 	Path   string
 	// Orig is the path it had before, for a rename or a copy.
 	Orig string
+	// Binary reports a file git sees as binary: it has no lines to compare.
+	Binary bool
 }
 
 // Changes are the files that differ from commit from to commit to; from ""
 // is the empty tree, for a first commit.
 func (r *Repo) Changes(from, to string) ([]Change, error) {
-	var out string
-	var err error
-	if from == "" {
-		out, err = r.Run("diff-tree", "-r", "-M", "--root", "--no-commit-id", "--name-status", "-z", to)
-	} else {
-		out, err = r.Run("diff", "--no-ext-diff", "-M", "--name-status", "-z", from, to, "--")
+	run := func(format string) (string, error) {
+		if from == "" {
+			return r.Run("diff-tree", "-r", "-M", "--root", "--no-commit-id", format, "-z", to)
+		}
+		return r.Run("diff", "--no-ext-diff", "-M", format, "-z", from, to, "--")
 	}
+	out, err := run("--name-status")
 	if err != nil {
 		return nil, err
 	}
-	return parseNameStatus(out), nil
+	cs := parseNameStatus(out)
+	if out, err = run("--numstat"); err != nil {
+		return nil, err
+	}
+	binary := parseBinary(out)
+	for i := range cs {
+		cs[i].Binary = binary[cs[i].Path]
+	}
+	return cs, nil
+}
+
+// parseBinary reads git's --numstat -z: the paths whose counts are "-", the
+// binary files.
+func parseBinary(out string) map[string]bool {
+	bin := map[string]bool{}
+	f := strings.Split(out, "\x00")
+	for i := 0; i < len(f); i++ {
+		parts := strings.SplitN(f[i], "\t", 3)
+		if len(parts) < 3 {
+			continue
+		}
+		path := parts[2]
+		if path == "" && i+2 < len(f) { // a rename: the old and the new path follow
+			path = f[i+2]
+			i += 2
+		}
+		if parts[0] == "-" && parts[1] == "-" {
+			bin[path] = true
+		}
+	}
+	return bin
+}
+
+// Show is a file's text at rev: a commit, or "" for the index; "" with no
+// error when the file is not there.
+func (r *Repo) Show(rev, path string) (string, error) {
+	out, err := r.Run("show", rev+":"+path)
+	var e *Error
+	if errors.As(err, &e) && e.Code == 128 {
+		return "", nil // not in that tree
+	}
+	return out, err
+}
+
+// WorkFile is a working tree file's text; "" when it is not there.
+func (r *Repo) WorkFile(path string) (string, error) {
+	b, err := os.ReadFile(filepath.Join(r.Dir, path))
+	if errors.Is(err, os.ErrNotExist) {
+		return "", nil
+	}
+	return string(b), err
 }
 
 func parseNameStatus(out string) []Change {
@@ -57,26 +109,6 @@ func parseNameStatus(out string) []Change {
 		cs = append(cs, c)
 	}
 	return cs
-}
-
-// Diff is the patch of one file from commit from to commit to (from "" is the
-// empty tree), as git diff prints it.
-func (r *Repo) Diff(from, to string, c Change) ([]string, error) {
-	paths := []string{c.Path}
-	if c.Orig != "" {
-		paths = append(paths, c.Orig)
-	}
-	var out string
-	var err error
-	if from == "" {
-		out, err = r.Run(append([]string{"diff-tree", "-p", "-M", "--root", "--no-commit-id", "--no-color", "--no-ext-diff", to, "--"}, paths...)...)
-	} else {
-		out, err = r.Run(append([]string{"diff", "--no-color", "--no-ext-diff", "-M", from, to, "--"}, paths...)...)
-	}
-	if err != nil {
-		return nil, err
-	}
-	return Lines(out), nil
 }
 
 // WorkDiff is the patch of a working tree file: its staged change when staged,
@@ -117,10 +149,4 @@ func (r *Repo) untrackedDir(dir string) ([]string, error) {
 		lines = append(lines, "+ "+l)
 	}
 	return lines, nil
-}
-
-// StashDiff is a stash entry's patch.
-func (r *Repo) StashDiff(ref string) ([]string, error) {
-	out, err := r.Run("stash", "show", "-p", "--no-color", "--no-ext-diff", ref)
-	return Lines(out), err
 }
