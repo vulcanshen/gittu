@@ -21,7 +21,7 @@ const (
 	inUnstaged = "u:"
 )
 
-// statusScreen is Working tree (SourceTree's File Status): [1] the files with
+// statusScreen is Working tree: [1] the files with
 // a change, [2] the change of the one under the cursor (tdp panel.13).
 type statusScreen struct {
 	g      *gittu

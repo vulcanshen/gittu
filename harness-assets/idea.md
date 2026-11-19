@@ -1,22 +1,22 @@
 # gittu（原名 gitreu）
 
-> 照 SourceTree 的畫面安排做的 git TUI：左邊是分支列表，右邊是分支圖，SourceTree 的右鍵選單就用 Space 選單來呈現。terminu 家族的一員。
+> 終端機的 git TUI：左邊是分支列表，右邊是分支圖，能做的事都在 Space 選單裡。terminu 家族的一員。
 
 ## 要解決的問題
 
-- **user 的經驗**：用 lazygit 不順手。它把操作拆成一堆熱鍵組合，看起來很潮，但違反 user 對 TUI 的想法：每次都要按 `?` 或上網查自己要的功能怎麼做，最後乾脆直接打開 SourceTree。仿 Magit 的 gitu 也不順手。
-- **跑回 SourceTree 的時候，都是要做這三件事**：
+- **user 的經驗**：終端機的 git 工具常把操作拆成一堆熱鍵組合，違反 user 對 TUI 的想法：每次都要按 `?` 或上網查自己要的功能怎麼做，最後乾脆改開 GUI。
+- **改開 GUI 的時候，都是要做這三件事**：
   1. 看分支圖，可以切換「全部分支」和「目前分支」。
   2. merge 和解衝突。
   3. 比較兩個 commit：有哪些檔案變了，再進去看每個檔案前後的差異。
 - **目標使用者**：在終端機工作、不想背熱鍵的人。第一個使用者是 user 自己。
-- **成功的標準**：做出來之後，不再打開 SourceTree。
+- **成功的標準**：做出來之後，不用再另外開 GUI 的 git 工具。
 
 ## 核心功能（MVP）
 
-- [ ] 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖，跟 SourceTree 一樣。
+- [ ] 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖。
 - [ ] 分支圖可以切換「全部分支」和「目前分支」。
-- [ ] 一般的 git 操作都在 app 裡完成（stage、commit、push、pull、fetch、開分支、merge、stash、tag 等），全部從 Space 選單執行。SourceTree 右鍵選單上的動作，都對應到 Space 選單。
+- [ ] 一般的 git 操作都在 app 裡完成（stage、commit、push、pull、fetch、開分支、merge、stash、tag 等），全部從 Space 選單執行。對分支、遠端分支、tag、stash、commit 能做的事，都在 Space 選單裡。
 - [ ] merge 和解衝突。
 - [ ] 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回。
 
@@ -33,7 +33,7 @@
 
 ## 已知風險與待釐清事項
 
-- **GUI 搬到 TUI 會有水土不服的地方**：SourceTree 畢竟是 GUI，哪裡會不合，要做出來實際用過才知道。user 決定先把 app 做出來，再回頭打磨。tdp 沒寫到的，照家族的流程回 tdp 開 issue。
+- **GUI 的習慣搬到 TUI 會有水土不服的地方**：哪裡會不合，要做出來實際用過才知道。user 決定先把 app 做出來，再回頭打磨。tdp 沒寫到的，照家族的流程回 tdp 開 issue。
 - **分支圖**：要在終端機裡把分支線畫得清楚又好看，大 repo 裡也要夠快。
 - **解衝突**：三件事裡面最難的。每個衝突的區塊都要選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊。
   - 可能會用到 tdp「app 自己的模式」（K11）。到目前只有 tetru 用過 K11，gitreu 會是第二個，正好可以驗證那些條文是家族共通的規則，還是只有遊戲才需要。
@@ -52,7 +52,6 @@ user 看了第一版的回饋，照原話：
 
 其他的下一波再說。
 
-參考：GitKraken（user：「可以參考 gitkraken，這款我因為要付費所以沒用的超級酷的 git GUI」）。
 
 ## branches panel（2026-11-19）
 
@@ -67,12 +66,12 @@ user 照原話：
 
 user 照原話：
 
-1. 「graph 的線似乎太多了，分支好多，sourcetree 和 gitkraken 有處理這個問題嗎？」（先回答、再決定要做什麼）
+1. 「graph 的線似乎太多了，分支好多」，問有沒有辦法處理（先回答、再決定要做什麼）
 2. 「需要可以 zoom，但是 zoom 分兩段，第一段是還保留 panel 1 最小寬度，第二段是完全展開，panel 1 就完全被覆蓋，當窄寬時，就不會有 panel 1 最小寬度那一段」
 
-看了 SourceTree、GitKraken 的做法之後（2026-11-19），user 照原話：
+討論過分支圖的畫法之後（2026-11-19），user：
 
-1. 「我認為需要像 sourcetree 那樣有 show all/current 的展示，但是 sourcetree 裡面這兩個差異只是主線是誰，current 的時候，當前 head 一定是在最左邊，而 all 的時候應該是以 main/master 在最左邊，或者沒有主線」（追問後：All 與 Current 都畫全部的分支，只差最左邊的主線）
+1. 要有 show all/current 的切換，兩者的差異只是主線是誰：「current 的時候，當前 head 一定是在最左邊，而 all 的時候應該是以 main/master 在最左邊，或者沒有主線」（追問後：All 與 Current 都畫全部的分支，只差最左邊的主線）
 2. 「我不懂 hide/solo 的顯示方式」（解釋後：先不要）
 3. 「顯示/隱藏 remote 確實是個好方法，畢竟正常開發只會關注自己的分支」（追問後：預設隱藏）
 4. 「tag 應該要在 commit panel 中，但現在欄位似乎有點緊」（追問後：tag 用膠囊顯示；膠囊是 tdp 保留給名稱的，先用 glyph，同時回報 tdp）
@@ -112,6 +111,13 @@ review 判 tdp 不清楚的另外三題，user 先問了「repo 壞掉？是怎�
 3. 明細 panel 顯示裝著許多項目的東西（沒追蹤的資料夾、commit）時，照 panel.9 列出有差異的項目、各有標記；沒追蹤的資料夾裡的檔都是 `+`；
    Enter 進到那份清單（note.8，note-106）。terminu-go 要新的 API，v1.2.19-beta.2 才有
 
+## 不寫別的工具（2026-11-19）
+
+user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」
+
+- 紀錄、README、程式（說明文字、splash、Homebrew 的說明、註解）都只寫 gittu 自己，不拿別的 git 工具比；
+  上面原話裡拿別的工具舉例的地方，改成只寫要的行為。已經 push 的 commit 訊息不改寫。
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。
@@ -120,18 +126,10 @@ review 判 tdp 不清楚的另外三題，user 先問了「repo 壞掉？是怎�
 
 2026-11-19 的討論：
 
-- **為什麼 SourceTree 的設計比較符合 terminu**：
-  - lazygit 主要靠背每個面板各自的單鍵，動作散在各個面板的按鍵裡，左邊五、六個小面板疊在一起。
-  - SourceTree 在東西上按右鍵，能做的全部列出來。右鍵選單管「這個 commit、這個分支」，上方工具列管「整個 repo」，左邊是側欄，中間是 commit 圖，下面是檔案和差異。
-  - 對到 terminu：右鍵選單就是 Space，工具列就是作用在整個 app 的那一層動作，各個區塊就是面板。lazygit 卡住的地方，正好是 terminu 的第一條精神「不用先背好才知道能做什麼」。
-- **gitu 為什麼有 3,000 多顆星**：星星大多來自 Magit 的使用者。Magit 那一派是「先記住入口鍵，再從跳出來的選單挑」，習慣 Emacs 的人用起來順手，但跟「不用背」是兩回事。
-- **user 跑回 SourceTree 的那三件事，都是「看」的工作**：git 指令什麼都做得到，終端機缺的是能把歷史長什麼樣子、兩邊差在哪裡攤開來看的畫面。
+- **為什麼這樣安排符合 terminu**：在東西上按 Space，能做的全部列出來：item operation 管「這個 commit、這個分支」，
+  global operation 管「整個 repo」，左邊是分支，右邊是 commit 圖。不用先背熱鍵，正是 terminu 的第一條精神「不用先背好才知道能做什麼」。
+- **那三件事都是「看」的工作**：git 指令什麼都做得到，終端機缺的是能把歷史長什麼樣子、兩邊差在哪裡攤開來看的畫面。
 - **範圍**：一開始我問 stage、commit、push 要不要放進來，user 決定一般的 git 操作全部都要進到這個 app，透過 Space 選單操作。
-- **開發順序**：先照 SourceTree 的安排把 app 做出來，水土不服的地方之後再打磨。
-- **名字**：
-  - gitu 已經被用掉了：altsem/gitu，仿 Magit 的 git TUI，大約 3,000 顆星。另外還有 gitui，大約 2.2 萬顆星。
-  - 我提的 branchu、twigu、mergu、grovu，user 都覺得不好。
-  - gittu 沒有撞名，但多出來的 t 只是為了跟 gitu 區隔。
-  - gitru 撞名：ruru-m07/gitru 是一個用 Tauri 做的 git 客戶端，291 顆星，有自己的網站 gitru.app。
-  - 最後定為 **gitreu**：git 和 tree 共用一個 t，再接上家族的 u。tree 指的是 SourceTree，也是右邊那個分支圖。做法跟 Alphade 讓 alpha 和 fade 共用一個 a 一樣。
-  - 撞名檢查（2026-11-19，只查了 GitHub 和 Homebrew）：GitHub 上只有一個 2024 年開的同名 repo（DiegoDiMattina/gitreu），裡面只有 1KB，開了當天之後就沒再動過，0 顆星；Homebrew 沒有。
+- **開發順序**：先把 app 做出來，水土不服的地方之後再打磨。
+- **名字**：先定為 gitreu（git 和 tree 共用一個 t，再接上家族的 u；tree 是右邊那個分支圖），2026-11-19 改名為 **gittu**
+  （git terminu ui，見「改名」）。撞名檢查（只查 GitHub 與 Homebrew）：GitHub 沒有 vulcanshen/gittu，Homebrew 沒有 gittu。

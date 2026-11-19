@@ -2,9 +2,8 @@ package git
 
 // The history's graph, one row a commit: each line of history is a column two
 // cells wide, the commit a Node on its line, the lines going on down │, joining it
-// and leaving it with ─ ╮ ╯ ╭ ╰ ├ ┤, crossing ┼ (as lazygit and tig draw it,
-// not git log --graph, whose rows of lines only would put the cursor on rows
-// that are not commits).
+// and leaving it with ─ ╮ ╯ ╭ ╰ ├ ┤, crossing ┼ (not git log --graph, whose
+// rows of lines only would put the cursor on rows that are not commits).
 
 // Cell is one cell of a graph row: a rune and the line it belongs to, whose
 // colour it takes (-1: a blank).

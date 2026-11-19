@@ -1,10 +1,10 @@
-id: 12
+id: 13
 from: v1.2.16
 to: v1.2.17
 tasks:
   - id: 1
     spec: 11
-    request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖，跟 SourceTree 一樣
+    request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color]
     remark:
       - |
@@ -20,11 +20,11 @@ tasks:
         ┗━ Enter:show h|l:tab ━┛└─ Enter:files ────────────────────────── 1 of 300 ─┘
         Space:menu ?:help !:log Tab|1–2:panels q:quit
       - "兩個畫面（tdp terms.2）：History（[1] BRANCHES、[2] COMMITS，打開時的畫面）與 Working tree（[1] CHANGES、[2] DIFF，task 11）。工作區的檔案（stage、commit、解衝突）要一個檔案清單加差異，跟分支列表加分支圖放不進同一個畫面。切換畫面是 global operation（tdp P3），畫面 chip 的熱鍵 [H]istory、[W]orking tree（tdp screen.3）"
-      - "名字（使用者 2026-11-19：File status 怪、History 畫面裡又有一個 History panel 也怪）：File Status 是 SourceTree 自己的叫法，git 的名詞是 working tree，在終端機用 git 的人認得的是後者，所以第二個畫面叫 Working tree；畫面與 panel 不同名，[2] 放的是一個一個 commit，叫 COMMITS，第二個畫面的 [1] 放的是有改動的檔，叫 CHANGES（名字是 app 的內容：tdp terms.2、terms.3、panel.1、screen.3 只規定畫面 chip 與 [N] label 膠囊怎麼畫、怎麼大寫）"
+      - "名字（使用者 2026-11-19：File status 怪、History 畫面裡又有一個 History panel 也怪）：git 的名詞是 working tree，在終端機用 git 的人認得它，所以第二個畫面叫 Working tree；畫面與 panel 不同名，[2] 放的是一個一個 commit，叫 COMMITS，第二個畫面的 [1] 放的是有改動的檔，叫 CHANGES（名字是 app 的內容：tdp terms.2、terms.3、panel.1、screen.3 只規定畫面 chip 與 [N] label 膠囊怎麼畫、怎麼大寫）"
       - "[1] 與 [2] 照 1:2 分寬：60 欄時是 20｜40，分支名稱與分支圖都還讀得到（tdp L1 的為什麼）；最低尺寸用預設 60×32（tdp L1），60 欄以上兩個 panel 一律並排，所以沒有窄寬（tdp screen.5 的門檻 app 自行決定，不能高於 60）"
       - "statusbar 在畫面 chip 列右邊（tdp screen.4：多畫面的 app 用 chip 列的右邊），先 Branch 再 Repo（使用者 2026-11-19）：Branch: <HEAD 的分支>（detached 時寫 detached at <短 hash>）、有 upstream 時接 ↑N ↓N（只寫不是 0 的）；Repo: <repo 資料夾的名字>；兩個值都是 Lavender（tdp screen.4：你現在在哪的值）；merge、rebase、cherry-pick、revert 做到一半時接 Merging: <對方> 之類（Green：做到一半的 merge 也是進行中的工作，tdp screen.4、color 的 Green；2026-11-19 review 判 tdp 不清楚，使用者選回報，tdp session 回覆照這兩處用 Green）；正在跑的 git 指令接 Pushing… 之類（Green，進行中的工作）"
       - "statusbar 的寬度不跟著內容變（tdp L2）：tgo 把 statusbar 靠右畫，內容一變長，整串都會往左跑，所以 gittu 給的 statusbar 一律是 tgo 給的寬度（畫面的一半），左邊對齊、後面補空白；Branch 那一欄（名字加 ↑N ↓N）的寬度只看終端機寬度（放不下從尾端截、加 …），Repo 的名字整個執行期間不變；進行中的工作是最後一欄、不補空白（tdp L2：只有最後一個動態欄位可以不補）：git 指令在跑時寫在做什麼（Pushing…），沒在跑時寫做到一半的操作（Merging: <對方>），兩個不同時出現"
-      - "q、Ctrl-C：沒有 git 指令在跑時直接離開（tdp K9：離開流程 app 可以自行決定，像 lazygit 一樣）；有 git 指令在跑（push、merge……）時先問（離開會把它中斷）；有 popup 開著時照 tdp K9 先問（tgo 做）"
+      - "q、Ctrl-C：沒有 git 指令在跑時直接離開（tdp K9：離開流程 app 可以自行決定）；有 git 指令在跑（push、merge……）時先問（離開會把它中斷）；有 popup 開著時照 tdp K9 先問（tgo 做）"
       - "怎麼操作 git：呼叫使用者裝的 git 指令，不用 Go 的 git 函式庫（tdp P5：要呼叫哪些外部指令是功能邏輯）。理由：使用者的 git 設定（hooks、credential helper、ssh、gpg 簽章、pull.rebase）照樣生效；merge 與解衝突跟使用者在終端機打的 git 一模一樣；Go 的函式庫（go-git）沒有完整的 merge。git 指令都不給它終端機（自己的 session），所以不會在畫面上問密碼；要密碼時照錯誤處理（task 10）"
   - id: 2
     spec: 11
@@ -36,16 +36,16 @@ tasks:
       - "不認得的旗標（- 開頭）印用法到 stderr，結束碼 2；資料夾剛好叫 version、help 時寫 ./version（help 裡寫明）"
   - id: 3
     spec: 12
-    request: 左邊是分支列表，跟 SourceTree 的側欄一樣，看得到本地分支、遠端分支、tag、stash；upstream gone 也加個 glyph；點了分支，右邊的分支圖跳到那裡；在 panel 1 按 Enter 切換 focus 到 history panel，捲到那個分支的 commit 點；REMOTE 和 TAG 用分頁作，不要都擠在一個 panel
+    request: 左邊是分支列表，看得到本地分支、遠端分支、tag、stash；upstream gone 也加個 glyph；點了分支，右邊的分支圖跳到那裡；在 panel 1 按 Enter 切換 focus 到 history panel，捲到那個分支的 commit 點；REMOTE 和 TAG 用分頁作，不要都擠在一個 panel
     tdp: [tdp panel.1, tdp panel.4, tdp panel.5, tdp panel.7, tdp panel.13, tdp panel.14, tdp terms.4, tdp K12, tdp screen.8, tdp components.5, tdp P5, tdp K3, tdp toast.2, tdp panel.15, tdp M5, tdp note.8, tdp note.7, tdp F5, tdp panel.10, tdp panel.9]
     remark:
-      - "[1] 有四個分頁（tdp terms.4、panel.4）：BRANCHES（本地分支）、REMOTES（遠端分支，origin/main）、TAGS、STASHES，照 SourceTree 側欄的順序；h|l 切換（tdp K12：一維清單放在有 tab 的 panel 裡，h|l 給 tab），下框 hint 在 Enter 後面寫 h|l:tab（tdp panel.1）。原本是一個清單分四組，使用者 2026-11-19 要 REMOTE 和 TAG 分頁、不要都擠在一個 panel；stash 也是另一種東西，一起拆成分頁。每個分頁是一般清單（tdp panel.5），照名稱排（tag 照版本的數字排，v1.10 在 v1.9 後面；stash 照 stash@{N} 的 N），tdp panel.5 的順序固定；每個分頁有自己的 cursor 與 / 篩選"
+      - "[1] 有四個分頁（tdp terms.4、panel.4）：BRANCHES（本地分支）、REMOTES（遠端分支，origin/main）、TAGS、STASHES；h|l 切換（tdp K12：一維清單放在有 tab 的 panel 裡，h|l 給 tab），下框 hint 在 Enter 後面寫 h|l:tab（tdp panel.1）。原本是一個清單分四組，使用者 2026-11-19 要 REMOTE 和 TAG 分頁、不要都擠在一個 panel；stash 也是另一種東西，一起拆成分頁。每個分頁是一般清單（tdp panel.5），照名稱排（tag 照版本的數字排，v1.10 在 v1.9 後面；stash 照 stash@{N} 的 N），tdp panel.5 的順序固定；每個分頁有自己的 cursor 與 / 篩選"
       - "沒有東西的分頁是空狀態（tdp screen.8）：No remote branches / Press [f] to fetch every remote；No tags / Press [t] to tag HEAD；No stashes / Press [S] to stash the changes；提示點名的鍵現在按不動時（沒有 remote、還沒有 commit、沒有改動，tdp M6 停用）改點名 Space（Press [Space] to see what you can do here），沒有 remote 的事實改寫 This repository has no remote（提示裡的鍵是 global operation 的熱鍵，在 [1] 上按得到）"
       - "單欄、不畫表頭（tdp panel.5：單欄的表頭 app 可以自行決定）。目前的分支在標記欄畫 Green 的 ●（tdp panel.7：不能標記的清單，app 可以把一種旗標畫在標記欄，glyph 與顏色 app 可以自行決定；跟 locku 的啟用中 profile 一樣）"
-      - "本地分支有 upstream 時，名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）：SourceTree 側欄也這樣標（tdp P5 領域的符號與顏色）。upstream 在遠端被刪掉了（git 寫 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone，用 Peach（glyph 是使用者 2026-11-19 要的，跟分支圖的 ref 一樣有 glyph）（值得注意：多半是合併完、遠端刪掉的分支，可以刪了）；原本只寫 gone，使用者看不懂（2026-11-19）"
+      - "本地分支有 upstream 時，名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）（tdp P5 領域的符號與顏色）。upstream 在遠端被刪掉了（git 寫 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone，用 Peach（glyph 是使用者 2026-11-19 要的，跟分支圖的 ref 一樣有 glyph）（值得注意：多半是合併完、遠端刪掉的分支，可以刪了）；原本只寫 gone，使用者看不懂（2026-11-19）"
       - "stash 一列寫 stash@{N}: <訊息>，訊息太長從尾端截（tdp panel.5）"
       - "/ 篩選（tdp panel.14）：分支多的 repo 找分支"
-      - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。照 SourceTree：點側欄的分支，分支圖跳到那裡。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 進到 commit 的差異清單裡時（task 6、7）先退回分支圖（tgo Panel.LeaveDiff；比較模式留著），[2] 看得到的跟著換（tdp panel.13：cursor 一移動，明細的內容立刻換成新的那一筆）"
+      - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 進到 commit 的差異清單裡時（task 6、7）先退回分支圖（tgo Panel.LeaveDiff；比較模式留著），[2] 看得到的跟著換（tdp panel.13：cursor 一移動，明細的內容立刻換成新的那一筆）"
       - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到（[2] 進到某個 commit 裡時先退回分支圖）。這個 Enter 與 cursor 移動都是 app 自己把 [2] 的 cursor 放到一個 commit 上：先清掉 [2] 的篩選，不管它有沒有擋住那個 commit；只是 focus 離開 [2] 不清（tdp main 7e62a11 的 panel.14、panel-180，使用者 2026-11-19 在 tdp session 選 A；還沒發版，發版後改引 panel-180）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [r] on [2] to show remote branches"
       - "[2] 在 commit 的差異清單裡（task 6、7，tgo 的 App.OpenDiff）時，Enter 與移動 cursor 先用 tgo Panel.LeaveDiff 退回分支圖：2026-11-19 回報給 tdp session 的缺口（app 看不出也退不回那一層），terminu-go v1.2.18 加了 LeaveDiff"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
@@ -55,7 +55,7 @@ tasks:
     tdp: [tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.14, tdp panel.15, tdp screen.8, tdp components.5, tdp P4, tdp P5, tdp L2, tdp components.2, tdp F5]
     remark:
       - "[2] COMMITS 是一般清單（tdp panel.5），一個 commit 一列，欄：GRAPH、HASH（短 hash，7 格；panel 叫 COMMITS，欄不再叫 COMMIT）、DESCRIPTION（ref 加上標題，可以截短）、AUTHOR（可以截短）、DATE（YYYY-MM-DD）。欄放不下時先收 DATE、再收 AUTHOR（tdp panel.5 的整欄收）"
-      - "分支線自己排，一個 commit 一列，不用 git log --graph 的輸出：git 的圖會多出只有線、沒有 commit 的列，cursor 會停在不是 commit 的地方。畫法照 lazygit、tig：每一條線一欄兩格，commit 是 ◉（U+25C9）：使用者 2026-11-19 嫌 ● 單調，看了 Nerd Font 的圓圈（nf-md-source_commit、nf-md-record_circle……）在自己終端機上的預覽後選的。Nerd Font 的 icon 在會讓 icon 溢出到下一格的終端機上，下一格空白時畫得大、下一格是線（─）時縮成一格，同一個 glyph 一個大一個小；◉ 是一般的 Unicode，一律畫在一格裡。往下的線 │，合進來、分出去用 ─ ╮ ╯ ╭ ╰，線交叉 ┼；每條線一個顏色，照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo（tdp P5：內容的符號與顏色是領域的；不用模式的 Yellow 與使用者足跡的 Lavender，tdp P4）。線超過 10 條時只畫前 10 條，最後一格畫 …（L2：GRAPH 欄不會無限變寬）"
+      - "分支線自己排，一個 commit 一列，不用 git log --graph 的輸出：git 的圖會多出只有線、沒有 commit 的列，cursor 會停在不是 commit 的地方。畫法：每一條線一欄兩格，commit 是 ◉（U+25C9）：使用者 2026-11-19 嫌 ● 單調，看了 Nerd Font 的圓圈（nf-md-source_commit、nf-md-record_circle……）在自己終端機上的預覽後選的。Nerd Font 的 icon 在會讓 icon 溢出到下一格的終端機上，下一格空白時畫得大、下一格是線（─）時縮成一格，同一個 glyph 一個大一個小；◉ 是一般的 Unicode，一律畫在一格裡。往下的線 │，合進來、分出去用 ─ ╮ ╯ ╭ ╰，線交叉 ┼；每條線一個顏色，照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo（tdp P5：內容的符號與顏色是領域的；不用模式的 Yellow 與使用者足跡的 Lavender，tdp P4）。線超過 10 條時只畫前 10 條，最後一格畫 …（L2：GRAPH 欄不會無限變寬）"
       - "DESCRIPTION 前面接指著這個 commit 的 ref（tdp P5 的符號與顏色）：分支前面一個 nf-dev-git_branch（U+E725），本地分支 Green、遠端分支 Mauve；tag 前面一個 nf-md-tag（U+F04F9），Peach；glyph 與名字之間一格（tdp components.2），HEAD 所在的分支粗體；ref 之間空一格，再空一格接標題。遠端分支隱藏時（task 18）不寫遠端分支的 ref"
       - "使用者 2026-11-19 想讓 tag 像膠囊一樣顯示。膠囊是 tdp 的介面元素，意思是名稱（panel、分頁、畫面；tdp P4、panel.4），內容不能借用；用 glyph 加顏色（tdp P5：內容的符號與顏色是 app 的）。回報給 tdp session 後（2026-11-19）定案就是這樣：P5 已經放行，tdp 不改、不開 issue"
       - "順序：git log --topo-order（同一條分支的 commit 排在一起，線比較直；tdp panel.5 的順序固定：資料本身有順序）。大 repo：一次讀 1000 個 commit（README 的限制寫明），讀 log 加排線在 1000 個以內一下就好"
@@ -65,12 +65,12 @@ tasks:
       - "/ 篩選（tdp panel.14）：找 commit 的標題、hash、作者"
   - id: 5
     spec: 6
-    request: 分支圖可以切換「全部分支」和「目前分支」；像 SourceTree 一樣，兩者只差主線是誰：current 的時候 HEAD 一定在最左邊，all 的時候 main／master 在最左邊，或沒有主線
+    request: 分支圖可以切換「全部分支」和「目前分支」；兩者只差主線是誰：current 的時候 HEAD 一定在最左邊，all 的時候 main／master 在最左邊，或沒有主線
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp panel.10, tdp note.7, tdp P5, tdp E3]
     remark:
       - "使用者 2026-11-19：All 與 Current 都畫全部的分支（遠端分支照 task 18 的開關），只差最左邊固定的主線：Current 是 HEAD 那一串，All 是 main（沒有就 master；兩個都沒有就不固定）。以下原本 Current 只畫 HEAD 走得到的 commit 的寫法改掉"
       - "[2] COMMITS 的 panel operation（tdp P3：作用在整個 panel），一個鍵 a 來回切：All 時是 Current br[a]nch（HEAD's line on the left），Current 時是 [a]ll branches（main's line on the left）；label 裡有 a，照 tdp M5 包第一次出現的那個（tgo 畫）；另一個用 Hidden 藏起來（tdp M6：對象不存在）"
-      - "畫的 commit = 所有本地分支、tag 與 HEAD 走得到的（遠端分支照 task 18；不含 stash：stash 在 [1] 的 STASHES，跟 SourceTree 一樣）。預設是 All（SourceTree 的預設）；不存下來（tdp E3：刪了只是回到預設的東西才是狀態，這裡沒有必要多一個檔）"
+      - "畫的 commit = 所有本地分支、tag 與 HEAD 走得到的（遠端分支照 task 18；不含 stash：stash 在 [1] 的 STASHES）。預設是 All；不存下來（tdp E3：刪了只是回到預設的東西才是狀態，這裡沒有必要多一個檔）"
       - "位置列寫目前是哪一種：All branches／Current branch（tdp panel.10：位置列寫目前的位置，要不要有 app 可以自行決定）"
       - "切換記 App Log（Info：Showing all branches, main on the left／Showing the current branch on the left；tdp note.7：只看不改的動作也記）"
   - id: 6
@@ -94,7 +94,7 @@ tasks:
       - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
   - id: 8
     spec: 12
-    request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；SourceTree 右鍵選單上的動作（分支、遠端分支、tag、stash）都對應到 Space 選單
+    request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；分支、遠端分支、tag、stash 能做的事都在 Space 選單
     tdp: [tdp note.8, tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.9, tdp panel.10, tdp note-102, tdp input.5, tdp screen.4, tdp panel.14]
     remark:
       - "[1] 的 item operation 依那一列是什麼而不同（tdp K3：同一種項目永遠是同一個動作；不同的種類用 Hidden 分開，tdp M6）：
@@ -102,7 +102,7 @@ tasks:
         遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、Re[b]ase、[D]elete（刪遠端的分支）；
         tag（TAGS 分頁） — Enter：Show（task 3）、[c]heck out（HEAD 會 detached）、[D]elete、Push（沒有熱鍵）；
         stash（STASHES 分頁） — Enter：Show（它存的改動對它的 base，照 tdp note.8 進到差異清單，跟 task 6 一樣）、[a]pply、P[o]p、[D]rop"
-      - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支不問（SourceTree 也不問），會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）"
+      - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支不問，會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）"
       - "先 confirm 的：Merge、Rebase、Delete、Drop（tdp F6）；Apply、Pop 不問（不會丟東西，衝突照 task 14）。Delete 遠端分支與 Drop 的內容寫無法復原（Peach，tdp confirm.2）。刪本地分支用 git branch -d，沒合併過的被 git 擋下時再開一個 confirm 問要不要強制刪（git branch -D），警告那一句寫沒合併的 commit 會不見"
       - "Rename、建分支、建 tag 用 text input（tdp text）：名稱照 git check-ref-format 檢查，不合格寫在錯誤列（tdp F7）"
       - "熱鍵（tdp P5 領域熱鍵，不佔 core key 與移動的字母 tdp K12）：c check out、M merge、b rebase、r rename、D delete／drop、a apply、o pop；一樣的動詞盡量全 app 用同一個鍵（task 9、10 也是）。rename 用 r、checkout 用 c、[1] 的 rebase 用 b（Re[b]ase）都是使用者 2026-11-19 指定的。[2] 的 commit 上 b 是 [b]ranch here，所以那裡的 rebase 留在 e（R[e]base，task 9）。b 也是 global 的 [b]ranch（在 HEAD 開分支）：panel 的熱鍵優先（tdp M4），在 [1] 上 b 是 rebase，開分支從 Global operation 那一列執行"
@@ -110,27 +110,27 @@ tasks:
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9
     spec: 12
-    request: SourceTree 右鍵選單上 commit 的動作，都對應到分支圖的 Space 選單
+    request: 對 commit 能做的事，都在分支圖的 Space 選單
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14]
     remark:
-      - "[2] COMMITS 的 commit 上（item operation，tdp M2）：Enter：Files（task 6）、[C]ompare（task 7）、[c]heck out（HEAD 會 detached，先 confirm；跟 [1] 同一個鍵，task 8）、[b]ranch here（text input，建好就 checkout，跟 SourceTree 的 New branch 預設一樣）、[t]ag here（text input）、[M]erge into the current branch、R[e]base the current branch onto it、Cherry-pick、Revert、Re[s]et the current branch to here、Cop[y] hash"
+      - "[2] COMMITS 的 commit 上（item operation，tdp M2）：Enter：Files（task 6）、[C]ompare（task 7）、[c]heck out（HEAD 會 detached，先 confirm；跟 [1] 同一個鍵，task 8）、[b]ranch here（text input，建好就 checkout）、[t]ag here（text input）、[M]erge into the current branch、R[e]base the current branch onto it、Cherry-pick、Revert、Re[s]et the current branch to here、Cop[y] hash"
       - "Reset 先開 select（tdp select）選 [s]oft／[m]ixed／[H]ard，每個選項一句說明；Hard 再 confirm，警告那一句寫沒 commit 的改動會不見（tdp F6、confirm.2）。Hard 的熱鍵是 H 不是 h：h 是移動鍵（tdp K12），大寫也比較不會誤按"
       - "Cherry-pick、Revert 沒有熱鍵（tdp M5：沒有熱鍵不加括號；不常用，留在 menu 裡）"
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
   - id: 10
     spec: 12
-    request: SourceTree 上方工具列的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
+    request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
     tdp: [tdp P3, tdp M2, tdp M4, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp note.6, tdp note.7, tdp toast.2, tdp screen.4, tdp F5, tdp P5, tdp components.5, tdp panel.15, tdp K3, tdp input.6]
     remark:
-      - "照 idea.md：SourceTree 的工具列管整個 repo，對到 global operation（tdp P3、M4）：[c]ommit（task 13）、[p]ull、[P]ush、[f]etch、[b]ranch（從 HEAD 開分支）、[M]erge（select 選一個分支合進目前的分支）、[S]tash、[t]ag（在 HEAD 打 tag）、Discard all（沒有熱鍵）、[R]efresh。global 熱鍵在 panel 上也能按，跟 panel 自己的熱鍵撞到時 panel 的優先（tdp M4）：[2] 上的 b、t、M 是對 cursor 那個 commit"
+      - "照 idea.md：對整個 repo 的動作是 global operation（tdp P3、M4）：[c]ommit（task 13）、[p]ull、[P]ush、[f]etch、[b]ranch（從 HEAD 開分支）、[M]erge（select 選一個分支合進目前的分支）、[S]tash、[t]ag（在 HEAD 打 tag）、Discard all（沒有熱鍵）、[R]efresh。global 熱鍵在 panel 上也能按，跟 panel 自己的熱鍵撞到時 panel 的優先（tdp M4）：[2] 上的 b、t、M 是對 cursor 那個 commit"
       - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
       - "fetch、pull、push 在背景跑：statusbar 寫 Fetching…／Pulling…／Pushing…（Green，tdp screen.4 進行中的工作），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
-      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變（SourceTree 也會），怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
+      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
     spec: 12
-    request: 看工作區的檔案（SourceTree 的 File Status，git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
+    request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
     tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1]
     remark:
       - |
@@ -160,7 +160,7 @@ tasks:
       - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 Enter 可以一個一個 stage 下去）"
   - id: 13
     spec: 8
-    request: commit 在 app 裡完成（SourceTree 下方打 commit 訊息的地方）
+    request: commit 在 app 裡完成
     tdp: [tdp textarea, tdp P3, tdp M4, tdp M6, tdp F6, tdp note.6, tdp note.7, tdp toast.2, tdp E3, tdp components.5, tdp K3, tdp confirm, tdp screen.4]
     remark:
       - "global operation [c]ommit（task 10）：開 textarea（tdp textarea，多行的 commit 訊息），標題 COMMIT，Esc 再 Enter 送出；git commit -F 收訊息，hooks 照樣跑。沒有 stage 任何檔案時停用（tdp M6）"
@@ -179,7 +179,7 @@ tasks:
       - "Working tree 的 [1] CHANGES 在衝突的檔上按 Enter，照 tdp panel.10 一層一層進去：[1] 換成這個檔的衝突區塊，一個區塊一列（Conflict 1 · lines 12–18），位置列 All changes › <路徑>；Esc 回到檔案清單，cursor 停在那個檔（tdp K4）"
       - "[2] 是 cursor 那個區塊的明細（tdp panel.13）：label CONFLICT: <路徑>，上面 MINE · <HEAD 的分支> 一段、下面 THEIRS · <合進來的> 一段，兩段的標題用 Teal 與 Mauve（tdp P5 內容的顏色），內容是那一段原本的行；合進來的那一段有 diff3 的 base 時不畫（先求兩邊）"
       - "區塊的 item operation：Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs），下框 hint 寫 Enter:read m:mine t:theirs b:both；Enter 把 focus 送到 [2] 讀長的區塊（tdp K3：清單上的 Enter 可以送 focus 到明細）。選了就改寫那個檔、那個區塊換成選的內容，cursor 到下一個區塊；最後一個區塊解完就 git add，Success toast <路徑> resolved and staged，[1] 回到檔案清單（那一層已經沒有東西了，tdp T1 的「那一項不在了」同理）"
-      - "檔案那一層也有 Use [m]ine for the whole file、Use [t]heirs for the whole file（git checkout --ours／--theirs 再 git add），跟 SourceTree 的 Resolve using Mine／Theirs 一樣；一樣的動詞、一樣的鍵"
+      - "檔案那一層也有 Use [m]ine for the whole file、Use [t]heirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞、一樣的鍵"
       - "merge、rebase、cherry-pick、revert 做到一半時（task 1 的 statusbar 寫著）：global operation [A]bort <merge／rebase／cherry-pick／revert>（confirm，警告這次做到一半的會不見）、Continue（rebase、cherry-pick、revert；還有衝突時停用）；merge 解完用 [c]ommit 結束（task 13）"
       - "記 App Log：Used mine in conflict 2 of README.md 之類，每一次選擇一筆"
   - id: 15
@@ -194,12 +194,12 @@ tasks:
       - "改名（2026-11-19，gitreu → gittu）：設定的位置跟著換成 ~/.config/gittu、GITTU__CONFIG；gitreu 沒發過版、也不會自己建設定檔，沒有東西要照 tdp E3 的「換了位置時」搬"
       - "gittu 沒有狀態與資料要存（tdp E3）：要看的 repo 由命令列給，分支圖的範圍不存（task 5）"
   - id: 16
-    spec: 11
+    spec: 13
     request: 跟 terminu 家族其他 app 一樣的 splash
     tdp: [tdp S1, tdp S2, tdp S3, tdp S4, tdp S5, tdp E6]
     remark:
       - "docs/icon.svg：U 框照 tdp principle/icon.svg；框裡的金字是 G I T（上排）與 R E（下排），最後的 u 就是 U 框，跟 demou、tetru 一樣（tdp S5：框裡的字各 app 自己設計）"
-      - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client laid out like SourceTree"
+      - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
     spec: 11
@@ -216,7 +216,7 @@ tasks:
     request: 分支圖可以顯示／隱藏遠端分支，預設隱藏：正常開發只會關注自己的分支
     tdp: [tdp P3, tdp M2, tdp M5, tdp M6, tdp panel.10, tdp note.7, tdp P5, tdp panel.14]
     remark:
-      - "[2] COMMITS 的 panel operation，一個鍵 r 來回切（tdp P3：作用在整個 panel）：隱藏時是 Show [r]emote branches（in the graph），畫出來時是 Hide [r]emote branches；另一個 Hidden（tdp M6）。照 SourceTree 的 Show Remote Branches；r 在 [2] 沒有用到（[1] 的 r 是 rename，不同 panel）"
+      - "[2] COMMITS 的 panel operation，一個鍵 r 來回切（tdp P3：作用在整個 panel）：隱藏時是 Show [r]emote branches（in the graph），畫出來時是 Hide [r]emote branches；另一個 Hidden（tdp M6）；r 在 [2] 沒有用到（[1] 的 r 是 rename，不同 panel）"
       - "隱藏 = 只畫本地分支、tag 與 HEAD 走得到的 commit（git log 不帶 --remotes），DESCRIPTION 也不寫遠端分支的 ref；本地分支落後遠端多少照樣寫在 statusbar 與 [1] 的 ↓N（task 1、3）。預設隱藏（使用者 2026-11-19），不存下來"
       - "位置列在遠端分支畫出來時接 · with remote branches（tdp panel.10），看得出現在是哪一種"
       - "切換記 App Log（Info：Showing remote branches／Hiding remote branches；tdp note.7）"

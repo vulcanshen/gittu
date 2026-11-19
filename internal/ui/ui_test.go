@@ -485,7 +485,7 @@ func TestActionsClearTheFilter(t *testing.T) {
 // --- task 5: all branches or the current one ---
 
 // TestAllOrCurrentBranch: both draw every branch, the main line on the left
-// is main for All and HEAD for Current (SourceTree's All and Current).
+// is main for All and HEAD for Current.
 func TestAllOrCurrentBranch(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -1585,7 +1585,7 @@ func TestSplashOpens(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 100, 40)
 	d.Press("V")
 	d.Advance(3 * time.Second)
-	has(t, d, "gittu", "A git client laid out like SourceTree", "vulcan.shen.2304@gmail.com")
+	has(t, d, "gittu", "A git client for the terminal", "vulcan.shen.2304@gmail.com")
 	d.Press("q")
 	if d.Quit() {
 		t.Error("a key on the splash quit")

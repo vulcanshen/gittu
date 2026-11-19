@@ -424,8 +424,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 }
 
 // setAll switches the graph's main line between main (All) and HEAD
-// (Current), as SourceTree's All and Current branches (tdp P3: the panel's
-// operation).
+// (Current) (tdp P3: the panel's operation).
 func (h *historyScreen) setAll(all bool) tea.Cmd {
 	g := h.g
 	g.all = all
@@ -528,8 +527,7 @@ func (g *gittu) newTag(ref string) tea.Cmd {
 		}})
 }
 
-// globalActions are what SourceTree's toolbar does, for the whole repository
-// (tdp P3, M4).
+// globalActions are what works on the whole repository (tdp P3, M4).
 func (g *gittu) globalActions() []terminu.Action {
 	off := func() bool { return !g.idle() }
 	state := func(op string) func() bool {

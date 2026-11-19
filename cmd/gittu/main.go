@@ -1,5 +1,5 @@
-// gittu is a git client laid out like SourceTree, in the terminal: the
-// branches beside the history graph, every operation in the Space menu.
+// gittu is a git client for the terminal: the branches beside the history
+// graph, every operation in the Space menu.
 package main
 
 import (
@@ -13,7 +13,7 @@ import (
 	"github.com/vulcanshen/gittu/internal/version"
 )
 
-const usage = `gittu: a git client laid out like SourceTree
+const usage = `gittu: a git client for the terminal
 
 Usage:
   gittu            open the repository the current directory is in

@@ -1,6 +1,6 @@
-// Package ui is gittu's screens: History (the branches and the history graph,
-// as SourceTree lays them out) and File status (the working tree's files and
-// their changes), every git operation in their Space menus.
+// Package ui is gittu's screens: History (the branches beside the history
+// graph) and Working tree (the working tree's files and their changes),
+// every git operation in their Space menus.
 package ui
 
 import (
@@ -56,7 +56,7 @@ type gittu struct {
 	repo *git.Repo
 	snap *git.Snapshot
 	// all is the graph's main line, the first column: main (else master) when
-	// set, HEAD otherwise (SourceTree's All and Current branches).
+	// set, HEAD otherwise.
 	all bool
 	// remote reports the remote branches drawn in the graph too.
 	remote bool
@@ -101,7 +101,7 @@ func newGittu(repo *git.Repo) *gittu {
 
 // splash is the family's easter egg, V on a panel (tdp S).
 func splash() terminu.Splash {
-	s, err := terminu.NewSplash(icon, "gittu", version.Display(), "A git client laid out like SourceTree")
+	s, err := terminu.NewSplash(icon, "gittu", version.Display(), "A git client for the terminal")
 	if err != nil {
 		panic(err) // the embedded icon is broken: a mistake in the program
 	}

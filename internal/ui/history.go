@@ -22,7 +22,7 @@ const (
 var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 
 // historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
-// [2] the history graph, as SourceTree lays them out.
+// [2] the history graph beside them.
 type historyScreen struct {
 	g      *gittu
 	screen *terminu.Screen
@@ -339,7 +339,7 @@ func description(refs []ref, subject string) (string, []terminu.Span) {
 }
 
 // branchMoved puts [2]'s cursor on the commit the branch, remote branch or
-// tag under [1]'s cursor points at, as SourceTree's sidebar does; the focus
+// tag under [1]'s cursor points at; the focus
 // stays (tdp K3, panel.13). [2] gone into the files of a commit comes back
 // to the graph (LeaveDiff, tdp note.8).
 func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
