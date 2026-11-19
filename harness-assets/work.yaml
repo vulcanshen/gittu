@@ -203,7 +203,7 @@ tasks:
   - id: 16
     spec: 11
     implementation: |
-      docs/icon.svg：U 框照家族的（#205090），框裡的金字（#f2b753）照註解的順序 G、I、T（上排）、R、E（下排），最後的 u 是 U 框
+      docs/icon.svg：使用者用 kamonu 做的（~/.kamonu/data/svg/gittu.svg）：U 框照家族的（#205090），框裡的金字（#f2b753）照註解的順序 G、I、T、T，最後的 u 是 U 框
       internal/ui/icon.svg 是它的副本（go:embed），terminu.NewSplash(icon, "gittu", version.Display(), "A git client laid out like SourceTree")；V 打開由 tgo 做
     test: [TestSplashIsDocsIcon, TestSplashOpens]
   - id: 17

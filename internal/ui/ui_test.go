@@ -1473,6 +1473,7 @@ func TestSplashIsDocsIcon(t *testing.T) {
 	if !bytes.Equal(icon, want) {
 		t.Fatal("internal/ui/icon.svg is not docs/icon.svg: copy docs/icon.svg over it")
 	}
+	// gittu: G I T T inside the U.
 	for _, letter := range []string{"<!-- U -->", "<!-- G -->", "<!-- I -->", "<!-- T -->"} {
 		if !bytes.Contains(icon, []byte(letter)) {
 			t.Errorf("the mark has no %s", letter)

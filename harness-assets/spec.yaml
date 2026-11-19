@@ -200,7 +200,7 @@ tasks:
     remark:
       - "docs/icon.svg：U 框照 tdp principle/icon.svg；框裡的金字是 G I T（上排）與 R E（下排），最後的 u 就是 U 框，跟 demou、tetru 一樣（tdp S5：框裡的字各 app 自己設計）"
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client laid out like SourceTree"
-      - "改名之後 docs/icon.svg 的金色字母還是 GITREU（tdp S5 要拼 app 的名字）：使用者 2026-11-19 說 icon 由他用 kamonu 做，換上之前照舊；測試只守住 icon 與 internal/ui 的副本一樣、有 U G I T 這幾個字母"
+      - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
     spec: 11
     request: history [2] commits 需要可以 zoom，分兩段：第一段還保留 panel 1 最小寬度，第二段完全展開、panel 1 完全被覆蓋；窄寬時沒有保留 panel 1 最小寬度那一段
