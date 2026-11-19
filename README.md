@@ -112,12 +112,12 @@ the App Log, what gittu did and what went wrong.
 | `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[D]`elete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
-| `[2]` a commit | Its files | `[C]`ompare with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
-| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide `[r]`emote branches, `[z]`oom, `[/]` filter |
+| `[2]` a commit | Its files | `[C]`ompare with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
+| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide remote branches, `[z]`oom, `[/]` filter |
 
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
 and tag; All keeps main's line (or master's) on the left, Current the branch you are on. The remote branches are hidden
-at first: `r` on `[2]` draws them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
+at first: Show remote branches in `[2]`'s `Space` menu draws them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 

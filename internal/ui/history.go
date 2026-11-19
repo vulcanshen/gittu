@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"path"
 	"slices"
 	"strings"
 
@@ -354,6 +355,11 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	return nil
 }
 
+// base is a file's name without its folders, naming a side of a comparison:
+// the title keeps room for its tabs, the path being in the list it opens
+// from (tdp panel.9: DIFF — ui.go @ 1a2b3c4 ↔ ui.go @ 5d6e7f8).
+func base(p string) string { return path.Base(p) }
+
 // inGraph reports the commit sha among the graph's rows, a filter or not.
 func (h *historyScreen) inGraph(sha string) bool {
 	return sha != "" && h.g.snap != nil && slices.ContainsFunc(h.g.snap.Commits, func(c git.Commit) bool { return c.SHA == sha })
@@ -430,7 +436,7 @@ func (h *historyScreen) commitItems(from, to, fromName, toName string) ([]termin
 		if c.Orig != "" {
 			old = c.Orig
 		}
-		it := terminu.DiffItem{Name: c.Path, Anchor: old + " @ " + fromName, Other: c.Path + " @ " + toName}
+		it := terminu.DiffItem{Name: c.Path, Anchor: base(old) + " @ " + fromName, Other: base(c.Path) + " @ " + toName}
 		switch {
 		case c.Status == 'A' || c.Status == 'C' && from == "":
 			it.Mark = terminu.DiffAdded

@@ -355,11 +355,13 @@ func TestEnterOnARemoteBranchHidden(t *testing.T) {
 	g, d := start(t, r, 120, 32)
 	selectBranch(d, g, kindRemote+"origin/topic")
 	d.Press("Enter")
-	has(t, d, "origin/topic is not in the graph", "Press [r] on [2] to show remote branches")
+	has(t, d, "origin/topic is not in the graph", "Press [Space] on [2] to show remote branches")
 	if g.a.Screen().Focused() != g.history.branchP {
 		t.Error("the focus left [1]")
 	}
-	d.Press("Tab", "r", "1")
+	d.Press("Tab")
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Show remote branches") })
+	d.Press("1")
 	selectBranch(d, g, kindRemote+"origin/topic")
 	d.Press("Enter")
 	if g.a.Screen().Focused() != g.history.histP {
@@ -377,13 +379,18 @@ func TestRemoteBranchesToggle(t *testing.T) {
 	has(t, d, "All branches")
 	hasNot(t, d, "origin/main", "Try a topic", "with remote branches")
 	d.Press("Space")
-	has(t, d, "Show [r]emote branches")
+	has(t, d, "Show remote branches")
+	hasNot(t, d, "[r]emote") // no hotkey: not by a stray key
 	d.Press("Esc", "r")
+	if g.remote {
+		t.Error("r drew the remote branches")
+	}
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Show remote branches") })
 	has(t, d, "All branches · with remote branches", "origin/main", "origin/topic", "Try a topic")
 	if !g.remote {
 		t.Error("remote still off")
 	}
-	d.Press("r")
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Hide remote branches") })
 	hasNot(t, d, "origin/topic", "Try a topic")
 	d.Press("!")
 	has(t, d, "Showing remote branches", "Hiding remote branches")
@@ -854,7 +861,7 @@ func TestResetHardAsks(t *testing.T) {
 	g, d := start(t, r, 100, 32)
 	d.Press("Tab")
 	c := selectCommit(t, d, g, "Say more")
-	d.Press("s")
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Reset") })
 	has(t, d, "RESET: "+git.Short(c.SHA), "[s]oft: keep the changes, staged", "[H]ard: throw the changes away")
 	d.Press("H")
 	has(t, d, "throw the changes away?", "can't be undone")
@@ -871,7 +878,10 @@ func TestResetSoft(t *testing.T) {
 	g, d := start(t, r, 100, 32)
 	d.Press("Tab")
 	selectCommit(t, d, g, "Say more")
-	d.Press("s", "s")
+	d.Press("s", "e") // no hotkeys for Reset and Rebase
+	hasNot(t, d, "RESET", "REBASE")
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Reset") })
+	d.Press("s")
 	done(t, g, d)
 	has(t, d, "(soft)")
 }
@@ -1013,6 +1023,21 @@ func TestStashAndDiscardAll(t *testing.T) {
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Discarded every change")
+}
+
+// runPanel runs the operation of panel p with this label, its confirm first.
+func runPanel(t *testing.T, p *terminu.Panel, label string) tea.Cmd {
+	t.Helper()
+	for _, a := range p.Actions {
+		if a.Label == label && (a.Hidden == nil || !a.Hidden()) {
+			if a.Do == nil {
+				t.Fatalf("%s does nothing", label)
+			}
+			return a.Do()
+		}
+	}
+	t.Fatalf("no %s on the panel", label)
+	return nil
 }
 
 // runGlobal runs the global operation with this label, its confirm first.
@@ -1281,7 +1306,7 @@ func TestDiffNewFolder(t *testing.T) {
 	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
 	hasNot(t, d, "DIFF — newdir/blob.bin")
 	d.Press("j", "Enter")
-	has(t, d, "DIFF — newdir/one.txt @ index ↔ newdir/one.txt", "UNIFIED")
+	has(t, d, "DIFF — one.txt @ index ↔ one.txt", "UNIFIED")
 	d.Press("Esc")
 	d.Press("1", "k") // [1]'s cursor on another row: out of the list
 	d.Press("j")

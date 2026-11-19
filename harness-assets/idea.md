@@ -111,6 +111,16 @@ review 判 tdp 不清楚的另外三題，user 先問了「repo 壞掉？是怎�
 3. 明細 panel 顯示裝著許多項目的東西（沒追蹤的資料夾、commit）時，照 panel.9 列出有差異的項目、各有標記；沒追蹤的資料夾裡的檔都是 `+`；
    Enter 進到那份清單（note.8，note-106）。terminu-go 要新的 API，v1.2.19-beta.2 才有
 
+## commits panel 與比較的畫面（2026-11-19）
+
+user 照原話（附了一張比較的截圖：標題太長，UNIFIED／SPLIT 被截成 …）：
+
+1. 「commits panel：R[e]base 移除熱鍵，這種操作不要給熱鍵誤觸」
+2. 「Re[s]et 同 (1)」
+3. 「Show [r]emote branches 同上」
+4. 「diff 這種 title，根本看不到 unified/split tab，那個不應該放在 border title 上吧？」
+5. 「diff 的 popup 不夠大」
+
 ## 不寫別的工具（2026-11-19）
 
 user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」

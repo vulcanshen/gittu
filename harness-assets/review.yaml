@@ -1,4 +1,4 @@
-spec: 12
+spec: 13
 tasks:
   - id: 1
     accepted: true
@@ -17,12 +17,13 @@ tasks:
   - id: 8
     accepted: true
   - id: 9
-    accepted: true
-  - id: 10
-    accepted: true
-  - id: 11
     accepted: false
-    reason: "違反：沒追蹤的資料夾裡沒有檔時，[2] 的空狀態只寫一句事實 No files in it to show，紀錄沒寫點名按鍵的提示（tdp screen.8、screen-27）"
+    reason: "tdp 不清楚：Cherry-pick、Revert、不是 fast-forward 的 Merge 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）寫新增一項之後 cursor 移到新的那一項，例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
+  - id: 10
+    accepted: false
+    reason: "違反：global 的 [b]ranch 建好之後的 cursor、toast、失敗，[S]tash 與 Discard all 的成功與失敗、App Log，紀錄沒寫（tdp K3、note.7、F5）；[M]erge 做出 merge commit 之後 cursor 要不要移過去，同 task 9 的 tdp 不清楚"
+  - id: 11
+    accepted: true
   - id: 12
     accepted: true
   - id: 13

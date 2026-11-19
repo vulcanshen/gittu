@@ -374,7 +374,7 @@ func (s *statusScreen) folderItems(dir string) ([]terminu.DiffItem, error) {
 	}
 	items := make([]terminu.DiffItem, 0, len(files))
 	for _, p := range files {
-		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: p + " @ index", Other: p}
+		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: base(p) + " @ index", Other: base(p)}
 		if !binaryFile(filepath.Join(repo.Dir, filepath.FromSlash(p))) {
 			it.Text = func() (string, string, error) {
 				b, err := repo.WorkFile(p)
@@ -456,7 +456,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 			if f.Orig != "" {
 				old = f.Orig
 			}
-			item = terminu.DiffItem{Anchor: old + " @ HEAD", Other: path + " @ index", Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: base(old) + " @ HEAD", Other: base(path) + " @ index", Text: func() (string, string, error) {
 				a, err := repo.Show("HEAD", old)
 				if err != nil {
 					return "", "", err
@@ -465,7 +465,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 				return a, b, err
 			}}
 		case inUnstaged:
-			item = terminu.DiffItem{Anchor: path + " @ index", Other: path, Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: base(path) + " @ index", Other: base(path), Text: func() (string, string, error) {
 				a, err := repo.Show("", path)
 				if err != nil {
 					return "", "", err
@@ -474,7 +474,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 				return a, b, err
 			}}
 		default: // a conflict: what HEAD has against the file with its markers
-			item = terminu.DiffItem{Anchor: path + " @ HEAD", Other: path, Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: base(path) + " @ HEAD", Other: base(path), Text: func() (string, string, error) {
 				a, err := repo.Show("HEAD", path)
 				if err != nil {
 					return "", "", err

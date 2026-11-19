@@ -233,7 +233,7 @@ func (h *historyScreen) showRef() tea.Cmd {
 	sha := h.shaOf(r.ID)
 	if !h.inGraph(sha) {
 		if r.ID[:2] == kindRemote && !h.g.remote {
-			return h.g.a.Toast(terminu.Info, name+" is not in the graph", "Press [r] on [2] to show remote branches")
+			return h.g.a.Toast(terminu.Info, name+" is not in the graph", "Press [Space] on [2] to show remote branches")
 		}
 		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
 	}
@@ -372,7 +372,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
 			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askMerge(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.merge(c.SHA) }},
-		{Key: "e", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
+		{Label: "Rebase", Desc: "the current branch onto it", Scope: item, // no hotkey: not by a stray key
 			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.rebase(c.SHA) }},
 		{Label: "Cherry-pick", Desc: "it onto the current branch", Scope: item,
@@ -398,7 +398,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 					ok:        func() tea.Cmd { return g.a.Toast(terminu.Success, "Reverted "+git.Short(c.SHA)) },
 					conflicts: g.conflictsSaid("Revert")}, "Reverting…", func() error { return g.repo.Revert(c) })
 			}},
-		{Key: "s", Label: "Reset", Desc: "the current branch to here", Scope: item,
+		{Label: "Reset", Desc: "the current branch to here", Scope: item, // no hotkey: not by a stray key
 			Hidden: onGraph, Disabled: h.busyOr(func() bool { return g.snap == nil || g.snap.HeadSHA == "" }), Do: h.reset},
 		{Key: "y", Label: "Copy hash", Desc: "the whole hash, to the clipboard", Scope: item,
 			Hidden: onGraph, Do: func() tea.Cmd {
@@ -410,9 +410,9 @@ func (h *historyScreen) commitActions() []terminu.Action {
 			Hidden: func() bool { return !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
 		{Key: "a", Label: "All branches", Desc: "main's line on the left", Scope: panel,
 			Hidden: func() bool { return g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
-		{Key: "r", Label: "Show remote branches", Desc: "in the graph", Scope: panel,
+		{Label: "Show remote branches", Desc: "in the graph", Scope: panel, // no hotkey: not by a stray key
 			Hidden: func() bool { return g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
-		{Key: "r", Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
+		{Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
 			Hidden: func() bool { return !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
 		{Key: "z", Label: "Zoom", Desc: "wider, [1] at its least", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},

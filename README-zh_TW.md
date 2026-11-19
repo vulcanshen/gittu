@@ -102,11 +102,11 @@ gittu
 | `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[D]`elete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[D]`rop |
-| `[2]` commit | 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
-| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、Show／Hide `[r]`emote branches、`[z]`oom、`[/]` 篩選 |
+| `[2]` commit | 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
+| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
 
 `[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag：All 把 main（或 master）那條固定
-在最左邊，Current 是你現在的分支那條；遠端分支一開始不畫，在 `[2]` 按 `r` 才畫。`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
+在最左邊，Current 是你現在的分支那條；遠端分支一開始不畫，在 `[2]` 的 `Space` 選單選 Show remote branches 才畫。`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
 在 commit 上按 `Enter`，進到它對上一個 commit 改了的檔案：`+` 新增、`-` 刪除、`~` 修改（改名是 `~ 舊 → 新`）。在檔案上按
 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。在一個 commit 上按 `C`、再到另一個按 `Enter`，用同樣的方式
