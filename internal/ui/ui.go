@@ -103,10 +103,6 @@ func splash() terminu.Splash {
 // start reads the settings and starts reading the repository again now and
 // then.
 func (g *gitreu) start() tea.Cmd {
-	if g.snap != nil {
-		// The graph again, with the icon width measured now (tdp E5).
-		g.history.show(g.snap)
-	}
 	return tea.Batch(g.loadConfig(), g.tick())
 }
 

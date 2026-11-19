@@ -46,9 +46,7 @@ tasks:
       [2] COMMITS 是 tgo List，Marks（可以標記），Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
       讀 git log --topo-order -n 1001 --format=%H %P %an %at %s；全部分支時 --branches --remotes --tags HEAD，目前分支時 HEAD（task 5）；多於 1000 個只留 1000 個
-      分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit 是 nf-md-source_commit（U+F0718）、上面沒有線的（分支最上面那個）是 nf-md-source_commit_start（U+F071D）、
-      沒有 parent 的（第一個 commit）是 nf-md-source_commit_end（U+F0719）；icon 佔兩格時（terminu.IconWidth() == 2）commit 後面那一格不畫，讓給 icon；
-      gitreu 啟動時（App.Start，tgo 量好 icon 寬度之後）重畫一次分支圖。往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
+      分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit ◉（U+25C9）、往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
       橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；超過 10 條線時第 10 條的位置畫 …（Overlay0）；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
       DESCRIPTION 前面接指著這個 commit 的 ref：本地分支 Green、遠端分支 Mauve、tag Peach，HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面
       位置列（List.Location）：All branches 或 Current branch；進到 commit 裡時接上那一層（task 6）

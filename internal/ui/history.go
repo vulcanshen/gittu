@@ -178,18 +178,11 @@ func commitRows(s *git.Snapshot) []terminu.Row {
 	return rows
 }
 
-// graphSpans is a graph row in its lines' colours. On a terminal where an
-// icon takes two cells, the commit's glyph takes the cell after it too (tdp
-// E5), so every row keeps its columns where they are.
+// graphSpans is a graph row in its lines' colours.
 func graphSpans(cells []git.Cell) (string, []terminu.Span) {
 	var b strings.Builder
 	var spans []terminu.Span
-	wide := terminu.IconWidth() == 2
-	for i := 0; i < len(cells); i++ {
-		c := cells[i]
-		if wide && c.Rune >= 0xE000 {
-			i++ // the cell after the icon is the icon's second cell
-		}
+	for _, c := range cells {
 		b.WriteRune(c.Rune)
 		st := terminu.Style{}
 		if c.Line >= 0 {

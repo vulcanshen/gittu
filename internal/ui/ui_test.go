@@ -285,12 +285,11 @@ func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 160, 32)
 	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", "main origin/main Say even more",
-		string(git.Node), string(git.NodeTip), string(git.NodeRoot))
+		string(git.Node)+"─┴─╮")
 }
 
-// TestGraphWithWideIcons is tdp E5: where an icon takes two cells, the
-// commit's glyph takes the cell after it, and the lines stay in their
-// columns on every row.
+// TestGraphWithWideIcons is tdp E5: whatever cells an icon takes, the
+// lines and the columns after the graph stay where they are on every row.
 func TestGraphWithWideIcons(t *testing.T) {
 	r := gittest.Sample(t)
 	tdptest.EachIconWidth(t, func(t *testing.T) {

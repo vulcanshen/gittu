@@ -16,13 +16,11 @@ type Cell struct {
 // MaxLines is how many lines a row draws: past them it ends in "…".
 const MaxLines = 10
 
-// The commit on its line: Nerd Font glyphs of a circle on a vertical line, so
-// the lines above and below join it.
-const (
-	Node     = '\U000F0718' // nf-md-source_commit: a line above and below
-	NodeTip  = '\U000F071D' // nf-md-source_commit_start: the top of a line, a line below only
-	NodeRoot = '\U000F0719' // nf-md-source_commit_end: a first commit, a line above only
-)
+// Node is a commit on its line. Not a Nerd Font icon: a terminal that lets an
+// icon spill into a blank cell after it draws it large there and small before
+// a line (─), so one commit would look bigger than the next; ◉ is drawn in its
+// one cell everywhere.
+const Node = '◉'
 
 // Graph lays out the commits, in the order given (a child before its
 // parents), and gives each its row of cells.
@@ -49,8 +47,7 @@ func Graph(commits []Commit) [][]Cell {
 				break
 			}
 		}
-		tip := col < 0
-		if tip { // a tip: no child seen
+		if col < 0 { // a tip: no child seen
 			col = free(nil)
 			lanes[col], colour[col] = c.SHA, next
 			next++
@@ -140,12 +137,6 @@ func Graph(commits []Commit) [][]Cell {
 			switch {
 			case i == col:
 				r, line = Node, colour[col]
-				switch {
-				case tip && len(c.Parents) > 0:
-					r = NodeTip
-				case !tip && len(c.Parents) == 0:
-					r = NodeRoot
-				}
 			case isJoin[i] && isFork[i]:
 				r, line = '┼', colour[i]
 			case isJoin[i] && through:
