@@ -80,7 +80,7 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[1] BRANCHES", "[2] HISTORY", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–2:panels q:quit")
+	has(t, d, "[1] BRANCHES", "[2] COMMITS", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–2:panels q:quit")
 	// [1] a third of the width, [2] the rest (tdp L1).
 	top := d.Screen()[2]
 	at := strings.Index(top, "┌")
@@ -92,16 +92,45 @@ func TestHistoryLayout(t *testing.T) {
 func TestFileStatusScreen(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 120, 32)
-	d.Press("F")
-	has(t, d, "[1] FILES", "[2] DIFF", "Nothing to commit", "Press [H] to see the history")
+	d.Press("W")
+	has(t, d, "[1] CHANGES", "[2] DIFF", "All changes", "Nothing to commit", "Press [H] to see the history")
 	d.Press("H")
 	has(t, d, "[1] BRANCHES")
 }
 
 func TestStatusbarSaysTheMerge(t *testing.T) {
 	r := gittest.Conflicted(t)
-	_, d := start(t, r, 100, 32)
+	_, d := start(t, r, 120, 32)
 	has(t, d, "Merging: feature")
+}
+
+// TestStatusbarKeepsItsPlace is tdp L2: Branch first, then Repo, both values
+// Lavender; switching to a branch with a longer name moves nothing.
+func TestStatusbarKeepsItsPlace(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Git("branch", "a-much-longer-branch-name")
+	g, d := start(t, r, 120, 32)
+	top := d.Screen()[0]
+	branchAt, repoAt := strings.Index(top, "Branch: "), strings.Index(top, "Repo: ")
+	if branchAt < 0 || repoAt < branchAt {
+		t.Fatalf("Branch is not before Repo:\n%s", top)
+	}
+	styled := d.Styled()[0]
+	lavender := "38;2;180;190;254"
+	if strings.Count(styled, lavender) < 2 {
+		t.Errorf("the branch and the repository are not both Lavender:\n%q", styled)
+	}
+	selectBranch(d, g, kindBranch+"a-much-longer-branch-name")
+	d.Press("o")
+	done(t, g, d)
+	top2 := d.Screen()[0]
+	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
+		t.Errorf("Repo moved:\n%s\n%s", top, top2)
+	}
+	if terminu.Width(top2[:strings.Index(top2, "Branch: ")]) != terminu.Width(top[:branchAt]) {
+		t.Errorf("Branch moved:\n%s\n%s", top, top2)
+	}
 }
 
 func TestQuitAtOnce(t *testing.T) {
@@ -141,7 +170,7 @@ func TestOwnPopupsEverySize(t *testing.T) {
 		{"new branch", []string{"b"}},
 		{"reset select", []string{"Tab", "s"}},
 		{"checkout confirm", []string{"Tab", "o"}},
-		{"commit textarea", []string{"F", "Enter", "c"}},
+		{"commit textarea", []string{"W", "Enter", "c"}},
 		{"stash", []string{"S"}},
 	}
 	for _, o := range opens {
@@ -192,12 +221,93 @@ func TestBranchesEmpty(t *testing.T) {
 	has(t, d, "No branches yet", "No commits yet")
 }
 
-// --- task 4: [2] HISTORY ---
+func TestUpstreamGone(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("push", "-q", "-u", "origin", "topic")
+	r.Git("push", "-q", "origin", "--delete", "topic")
+	r.Git("fetch", "-q", "--prune")
+	_, d := start(t, r, 120, 32)
+	has(t, d, "topic upstream gone")
+	if !strings.Contains(strings.Join(d.Styled(), "\n"), "38;2;250;179;135m upstream gone") {
+		t.Error("upstream gone is not Peach")
+	}
+}
+
+func TestEnterShowsTheCommit(t *testing.T) {
+	r := gittest.Sample(t)
+	g, d := start(t, r, 120, 32)
+	for _, ref := range []struct{ id, rev string }{
+		{kindBranch + "feature", "feature"},
+		{kindRemote + "origin/main", "origin/main"},
+		{kindTag + "v0.1.0", "v0.1.0^{commit}"},
+	} {
+		d.Press("1")
+		selectBranch(d, g, ref.id)
+		d.Press("Enter")
+		if g.a.Screen().Focused() != g.history.histP {
+			t.Fatalf("%s: Enter did not go to [2]", ref.id)
+		}
+		cur, _ := g.history.commits.Current()
+		if want := strings.TrimSpace(r.Git("rev-parse", ref.rev)); cur.ID != want {
+			t.Errorf("%s: [2] is on %s, want %s", ref.id, cur.ID, want)
+		}
+		if strings.TrimSpace(r.Git("branch", "--show-current")) != "main" {
+			t.Fatalf("%s: Enter checked out", ref.id)
+		}
+	}
+	// From a commit gone into, Enter on a branch comes back to the graph.
+	d.Press("Enter")
+	has(t, d, "All branches › ")
+	d.Press("1")
+	selectBranch(d, g, kindBranch+"topic")
+	d.Press("Enter")
+	hasNot(t, d, "All branches › ")
+	has(t, d, "Enter:files")
+	d.Press("!")
+	hasNot(t, d, "Checked out")
+}
+
+func TestEnterOnABranchNotInTheGraph(t *testing.T) {
+	r := gittest.Sample(t)
+	g, d := start(t, r, 120, 32)
+	d.Press("Tab", "a", "1")
+	selectBranch(d, g, kindBranch+"topic")
+	d.Press("Enter")
+	has(t, d, "topic is not in the current branch's history", "Press [a] on [2] for all branches")
+	if g.a.Screen().Focused() != g.history.branchP {
+		t.Error("the focus left [1]")
+	}
+}
+
+// --- task 4: [2] COMMITS ---
 
 func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 160, 32)
-	has(t, d, "GRAPH", "COMMIT", "DESCRIPTION", "Merge branch 'feature'", "─╮", "main origin/main Say even more")
+	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", "main origin/main Say even more",
+		string(git.Node), string(git.NodeTip), string(git.NodeRoot))
+}
+
+// TestGraphWithWideIcons is tdp E5: where an icon takes two cells, the
+// commit's glyph takes the cell after it, and the lines stay in their
+// columns on every row.
+func TestGraphWithWideIcons(t *testing.T) {
+	r := gittest.Sample(t)
+	tdptest.EachIconWidth(t, func(t *testing.T) {
+		_, d := start(t, r, 160, 32)
+		var cols []int
+		for _, row := range d.Screen() {
+			if i := strings.Index(row, "Add the feature"); i >= 0 {
+				cols = append(cols, terminu.Width(row[:i]))
+			}
+			if i := strings.Index(row, "Start the demo"); i >= 0 {
+				cols = append(cols, terminu.Width(row[:i]))
+			}
+		}
+		if len(cols) != 2 || cols[0] != cols[1] {
+			t.Errorf("the descriptions are not in one column: %v\n%s", cols, strings.Join(d.Screen(), "\n"))
+		}
+	})
 }
 
 func TestGraphDropsColumnsWhenNarrow(t *testing.T) {
@@ -287,7 +397,7 @@ func TestCheckoutBranch(t *testing.T) {
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindBranch+"feature")
-	d.Press("Enter")
+	d.Press("o")
 	done(t, g, d)
 	has(t, d, "Checked out feature", "Branch: feature")
 	if strings.TrimSpace(r.Git("branch", "--show-current")) != "feature" {
@@ -308,7 +418,7 @@ func TestMergeBranchConflicts(t *testing.T) {
 	has(t, d, "Merge other into main?")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Merge stopped on conflicts in 1 file", "Resolve them in File status [F]", "Merging: other")
+	has(t, d, "Merge stopped on conflicts in 1 file", "Resolve them in Working tree [W]", "Merging: other")
 }
 
 func TestMergeAndRebaseBranch(t *testing.T) {
@@ -384,7 +494,7 @@ func TestCheckoutRemoteBranch(t *testing.T) {
 	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindRemote+"origin/topic")
-	d.Press("Enter")
+	d.Press("o")
 	has(t, d, "Check out origin/topic as topic?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -413,7 +523,7 @@ func TestTagOperations(t *testing.T) {
 	selectBranch(d, g, kindTag+"v0.1.0")
 	d.Press("Space")
 	has(t, d, "Push", "this tag to its remote")
-	d.Press("Esc", "Enter")
+	d.Press("Esc", "o")
 	has(t, d, "Check out v0.1.0?", "HEAD is left detached")
 	d.Press("Enter")
 	done(t, g, d)
@@ -472,7 +582,7 @@ func TestPushBranch(t *testing.T) {
 func TestCommitOperations(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
-	g, d := start(t, r, 100, 32)
+	g, d := start(t, r, 160, 32)
 	d.Press("Tab")
 	c := selectCommit(t, d, g, "Add the feature")
 	d.Press("y")
@@ -603,7 +713,7 @@ func TestNewBranchAndTagAtHead(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("F", "b")
+	d.Press("W", "b")
 	has(t, d, "A branch at HEAD, checked out")
 	d.Type("next")
 	d.Press("Enter")
@@ -620,7 +730,7 @@ func TestPickMerge(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("F", "M")
+	d.Press("W", "M")
 	has(t, d, "MERGE: main", "topic", "origin/main")
 	d.Press("/")
 	d.Type("topic")
@@ -694,8 +804,8 @@ func TestFileGroups(t *testing.T) {
 	r.Write("README.md", "staged and more\n")
 	r.Write("new.txt", "new\n")
 	_, d := start(t, r, 100, 32)
-	d.Press("F")
-	has(t, d, "Working tree", "STAGED", "UNSTAGED", "? new.txt")
+	d.Press("W")
+	has(t, d, "All changes", "STAGED", "UNSTAGED", "? new.txt")
 	screen := strings.Join(d.Screen(), "\n")
 	if strings.Count(screen, "README.md") < 2 {
 		t.Errorf("README.md is not in both groups:\n%s", screen)
@@ -707,7 +817,7 @@ func TestDiffFollowsCursor(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "brand new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("F")
+	d.Press("W")
 	has(t, d, "DIFF: README.md", "+changed")
 	d.Press("j")
 	has(t, d, "DIFF: new.txt", "+brand new")
@@ -724,7 +834,7 @@ func TestDiffOpensInViewer(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	_, d := start(t, r, 100, 32)
-	d.Press("F", "Tab", "Enter")
+	d.Press("W", "Tab", "Enter")
 	has(t, d, "DIFF — README.md", "/:search")
 }
 
@@ -734,7 +844,7 @@ func TestStageUnstage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("F")
+	d.Press("W")
 	has(t, d, "Enter:stage")
 	d.Press("Enter")
 	done(t, g, d)
@@ -757,7 +867,7 @@ func TestDiscardFile(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("F", "D")
+	d.Press("W", "D")
 	has(t, d, "Discard the change to README.md?", "can't be undone")
 	d.Press("Enter")
 	done(t, g, d)
@@ -833,10 +943,10 @@ func TestAmendKeepsMessage(t *testing.T) {
 func TestResolveHunks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("F")
+	d.Press("W")
 	has(t, d, "CONFLICTS", "U notes.txt", "Enter:resolve")
 	d.Press("Enter")
-	has(t, d, "Working tree › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
+	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
 		"Enter:read m:mine")
 	d.Press("Enter")
 	if g.a.Screen().Focused() != g.status.diffP {
@@ -864,7 +974,7 @@ func TestResolveHunks(t *testing.T) {
 func TestUseSideWholeFile(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("F", "m")
+	d.Press("W", "m")
 	done(t, g, d)
 	has(t, d, "notes.txt resolved with mine and staged")
 	if !strings.Contains(r.Read("notes.txt"), "B from main") {
@@ -895,7 +1005,7 @@ func TestContinueRebase(t *testing.T) {
 	}
 	g, d := start(t, r, 160, 32)
 	has(t, d, "Rebasing onto: other")
-	d.Press("F", "m")
+	d.Press("W", "m")
 	done(t, g, d)
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Continue rebase") })
 	done(t, g, d)

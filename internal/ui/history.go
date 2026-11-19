@@ -60,7 +60,7 @@ func newHistoryScreen(g *gitreu) *historyScreen {
 	h.commits = &terminu.List{
 		Columns: []terminu.Column{
 			{Title: "Graph"},
-			{Title: "Commit"},
+			{Title: "Hash"},
 			{Title: "Description", Shrink: true, MinWidth: 12},
 			{Title: "Author", Shrink: true, MinWidth: 6, Drop: 2},
 			{Title: "Date", Drop: 1},
@@ -68,7 +68,7 @@ func newHistoryScreen(g *gitreu) *historyScreen {
 		Marks:      true,
 		Filterable: true,
 		EmptyFact:  "No commits yet",
-		EmptyHint:  "Press [F] to see the files to commit",
+		EmptyHint:  "Press [W] to see the files to commit",
 	}
 	h.files = &terminu.List{
 		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
@@ -76,7 +76,7 @@ func newHistoryScreen(g *gitreu) *historyScreen {
 		EmptyFact: "No files changed",
 		EmptyHint: "Press [Esc] to go back to the history",
 	}
-	h.histP = &terminu.Panel{Label: "History", Body: h.commits}
+	h.histP = &terminu.Panel{Label: "Commits", Body: h.commits}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
 	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
 		Panels: []*terminu.Panel{h.branchP, h.histP}, Layout: oneToTwo}
@@ -136,8 +136,12 @@ func branchRows(s *git.Snapshot) []terminu.Row {
 	for _, b := range s.Branches {
 		r := terminu.Row{ID: kindBranch + b.Name, Group: "Branches", Cells: []string{b.Name}}
 		if t := track(b.Ahead, b.Behind, b.Gone); t != "" {
+			st := quiet
+			if b.Gone {
+				st = terminu.Fg(terminu.Peach) // worth a look: most often merged, and deleted on the remote
+			}
 			r.Cells[0] = b.Name + " " + t
-			r.Styled = [][]terminu.Span{{{Text: b.Name}, {Text: " " + t, Style: quiet}}}
+			r.Styled = [][]terminu.Span{{{Text: b.Name}, {Text: " " + t, Style: st}}}
 		}
 		if b.Current {
 			r.Flag = terminu.Span{Text: "●", Style: terminu.Fg(terminu.Green)}
@@ -174,11 +178,18 @@ func commitRows(s *git.Snapshot) []terminu.Row {
 	return rows
 }
 
-// graphSpans is a graph row in its lines' colours.
+// graphSpans is a graph row in its lines' colours. On a terminal where an
+// icon takes two cells, the commit's glyph takes the cell after it too (tdp
+// E5), so every row keeps its columns where they are.
 func graphSpans(cells []git.Cell) (string, []terminu.Span) {
 	var b strings.Builder
 	var spans []terminu.Span
-	for _, c := range cells {
+	wide := terminu.IconWidth() == 2
+	for i := 0; i < len(cells); i++ {
+		c := cells[i]
+		if wide && c.Rune >= 0xE000 {
+			i++ // the cell after the icon is the icon's second cell
+		}
 		b.WriteRune(c.Rune)
 		st := terminu.Style{}
 		if c.Line >= 0 {

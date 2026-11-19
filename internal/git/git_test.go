@@ -117,7 +117,8 @@ func TestGraphOfAMerge(t *testing.T) {
 		}
 		return b.String()
 	}
-	want := []string{"●─╮", "● │", "│ ●", "●─╯"}
+	n, tip, root := string(git.Node), string(git.NodeTip), string(git.NodeRoot)
+	want := []string{tip + "─╮", n + " │", "│ " + n, root + "─╯"}
 	for i, r := range rows {
 		if text(r) != want[i] {
 			t.Errorf("row %d %q, want %q", i, text(r), want[i])

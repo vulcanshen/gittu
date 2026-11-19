@@ -8,8 +8,8 @@
 **A git client for the terminal, laid out like SourceTree: the branches beside the history graph, everything you can do
 in the `Space` menu.**
 
-`gitreu` in a repository opens two panels: the branches, remote branches, tags and stashes on the left, the history
-graph on the right. Whatever SourceTree puts on its right-click menu is in gitreu's `Space` menu, for the branch or the
+`gitreu` in a repository opens two panels: the branches, remote branches, tags and stashes on the left, the commits
+and their graph on the right. Whatever SourceTree puts on its right-click menu is in gitreu's `Space` menu, for the branch or the
 commit under the cursor; what its toolbar does is in the global operations. Look into a commit's files and their diffs,
 compare two commits, stage and commit, merge, and resolve conflicts one block at a time with both sides in sight — with
 no keys to learn first.
@@ -18,15 +18,15 @@ no keys to learn first.
 
 ## Features
 
-- **The SourceTree layout**: the branches, remote branches, tags and stashes on the left, the history graph on the right;
-  the cursor on a branch takes the graph to its commit.
+- **The SourceTree layout**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
+  the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
 - **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
   commits; every branch or only the current one.
 - **Look before you act**: a commit's files, then a file's diff; two commits marked and compared the same way; `Esc`
   goes back one level at a time.
 - **Every operation from the `Space` menu**: check out, merge, rebase, cherry-pick, revert, reset, branch, tag, rename,
   delete, stash, fetch, pull, push — each with the question it needs before it runs.
-- **File status**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
+- **Working tree**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
   stage, unstage, discard and commit.
 - **Conflicts one block at a time**: mine above theirs, both in sight; use mine, theirs or both, and the file is staged
   when the last block is done. Abort or continue a merge, rebase, cherry-pick or revert.
@@ -95,7 +95,7 @@ gitreu
 ```
 
 Move with `j`/`k`, press `Space` to see what you can do with the branch or commit under the cursor, `Enter` on a commit
-to see its files. `Tab` goes to the other panel, `F` to File status, `H` back to the history. `?` lists every key, `q`
+to see its files. `Tab` goes to the other panel, `W` to the working tree, `H` back to the history. `?` lists every key, `q`
 quits.
 
 ## Usage
@@ -107,16 +107,17 @@ the App Log, what gitreu did and what went wrong.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| `[1]` a branch | Check out | `[M]erge` into the current branch, `[r]ebase` the current branch onto it, Re`[n]`ame, `[D]`elete, Push |
-| `[1]` a remote branch | Check out as a local branch tracking it | `[M]erge`, `[r]ebase`, `[D]`elete it on the remote |
-| `[1]` a tag | Check out (HEAD detached) | `[D]`elete, Push |
+| `[1]` a branch | Its commit in `[2]` | Check `[o]`ut, `[M]erge` into the current branch, `[r]ebase` the current branch onto it, Re`[n]`ame, `[D]`elete, Push |
+| `[1]` a remote branch | Its commit in `[2]` | Check `[o]`ut as a local branch tracking it, `[M]erge`, `[r]ebase`, `[D]`elete it on the remote |
+| `[1]` a tag | Its commit in `[2]` | Check `[o]`ut (HEAD detached), `[D]`elete, Push |
 | `[1]` a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
 | `[2]` a commit | Its files | `[m]`ark, Check `[o]`ut, `[b]`ranch here, `[t]`ag, `[M]`erge, `[r]`ebase, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
 | `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[C]`ompare the two marked commits, `[/]` filter |
 
-`Enter` on a file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.
+`[1]` is BRANCHES, `[2]` COMMITS. A branch whose upstream was deleted on the remote says `upstream gone`. `Enter` on a
+file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.
 
-### File status
+### Working tree
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
@@ -126,7 +127,7 @@ the App Log, what gitreu did and what went wrong.
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | Stage `[a]`ll, Unstage all |
 
-`[2]` shows the diff of the file under the cursor; `Enter` there opens it in a viewer to search and copy from.
+`[1]` is CHANGES, `[2]` DIFF: the diff of the file under the cursor; `Enter` there opens it in a viewer to search and copy from.
 
 ### For the whole repository
 

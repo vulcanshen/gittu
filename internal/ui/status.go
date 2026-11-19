@@ -18,8 +18,8 @@ const (
 	inUnstaged = "u:"
 )
 
-// statusScreen is File status (SourceTree's): [1] the working tree's files
-// with a change, [2] the change of the one under the cursor (tdp panel.13).
+// statusScreen is Working tree (SourceTree's File Status): [1] the files with
+// a change, [2] the change of the one under the cursor (tdp panel.13).
 type statusScreen struct {
 	g      *gitreu
 	screen *terminu.Screen
@@ -44,7 +44,7 @@ func newStatusScreen(g *gitreu) *statusScreen {
 	s.files = &terminu.List{
 		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
 		Flags:     true,
-		Location:  "Working tree",
+		Location:  "All changes",
 		EmptyFact: "Nothing to commit",
 		EmptyHint: "Press [H] to see the history",
 		OnMove:    func(terminu.Row) tea.Cmd { s.showDiff(false); return nil },
@@ -55,13 +55,13 @@ func newStatusScreen(g *gitreu) *statusScreen {
 	}
 	s.diff = &terminu.Pager{Follow: true, EmptyFact: "No file to show", EmptyHint: "Press [1] to go to the files"}
 	s.diffP = &terminu.Panel{Label: "Diff", Body: s.diff}
-	s.filesP = &terminu.Panel{Label: "Files", Body: s.files, Details: s.diffP}
+	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = s.fileActions()
 	s.diffP.Actions = []terminu.Action{
 		{Key: "Enter", Label: "Open", Desc: "this in a viewer, to search and copy", Scope: panel, Hint: "open",
 			Hidden: func() bool { return s.diff.Empty() }, Do: s.openDiff},
 	}
-	s.screen = &terminu.Screen{Name: "File status", Key: "F", Desc: "the files to commit and their changes",
+	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
 		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: oneToTwo}
 	return s
 }
@@ -276,7 +276,7 @@ func (s *statusScreen) goIn(path string) tea.Cmd {
 		return s.g.a.ErrorAbout("Resolve failed", path, err.Error())
 	}
 	s.hunkList.Select("0")
-	s.hunkList.Location = "Working tree › " + path
+	s.hunkList.Location = "All changes › " + path
 	s.filesP.Body = s.hunkList
 	s.filesP.OnEsc = func() tea.Cmd { s.goOut(); s.showDiff(false); return nil }
 	s.showDiff(false)

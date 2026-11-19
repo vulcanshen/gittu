@@ -103,6 +103,10 @@ func splash() terminu.Splash {
 // start reads the settings and starts reading the repository again now and
 // then.
 func (g *gitreu) start() tea.Cmd {
+	if g.snap != nil {
+		// The graph again, with the icon width measured now (tdp E5).
+		g.history.show(g.snap)
+	}
 	return tea.Batch(g.loadConfig(), g.tick())
 }
 
@@ -222,29 +226,61 @@ func (g *gitreu) show(snap *git.Snapshot, err error) {
 func (g *gitreu) conflictsSaid(what string) func(int) tea.Cmd {
 	return func(n int) tea.Cmd {
 		return g.a.Toast(terminu.Warning, what+" stopped on conflicts in "+plural(n, "file", "files"),
-			"Resolve them in File status [F]")
+			"Resolve them in Working tree [W]")
 	}
 }
 
-// statusbar is the right of the screen chips (tdp screen.4): the repository,
-// where HEAD is, an operation stopped half way, what git is doing.
+// statusbar is the right of the screen chips (tdp screen.4): where HEAD is,
+// the repository (both Lavender: where you are), an operation stopped half
+// way, what git is doing.
+//
+// The lib draws it on the right, so a longer text moves all of it: it is
+// always the w cells given, its fields from the left and blanks after them,
+// the branch's field as wide as the terminal allows, not as the name is (tdp
+// L2). The repository's name does not change while gitreu runs; the operation
+// and what git does are the last fields.
 func (g *gitreu) statusbar(w int) []terminu.Span {
 	quiet := terminu.Fg(terminu.Overlay0)
-	spans := []terminu.Span{{Text: "Repo: ", Style: quiet}, {Text: g.repo.Name(), Style: quiet}}
-	if g.snap != nil {
-		spans = append(spans, terminu.Span{Text: "  Branch: ", Style: quiet},
-			terminu.Span{Text: g.where(), Style: terminu.Fg(terminu.Lavender)})
-		if t := track(g.snap.Ahead, g.snap.Behind, false); t != "" {
-			spans = append(spans, terminu.Span{Text: " " + t, Style: quiet})
+	here := terminu.Fg(terminu.Lavender)
+	repo := g.repo.Name()
+	var spans []terminu.Span
+	used := 0
+	add := func(text string, st terminu.Style) {
+		if text != "" {
+			spans = append(spans, terminu.Span{Text: text, Style: st})
+			used += terminu.Width(text)
 		}
+	}
+	field := min(max((w-len("Branch: ")-len("  Repo: ")-terminu.Width(repo))/2, 8), 28)
+	name, t := "", ""
+	if g.snap != nil {
+		name, t = g.where(), track(g.snap.Ahead, g.snap.Behind, false)
+	}
+	nameW := field
+	if t != "" {
+		nameW = field - 1 - terminu.Width(t)
+		if nameW < 4 { // no room for both: the name alone
+			t, nameW = "", field
+		}
+	}
+	name = terminu.Truncate(name, nameW)
+	add("Branch: ", quiet)
+	add(name, here)
+	if t != "" {
+		add(" "+t, quiet)
+	}
+	add(strings.Repeat(" ", max(len("Branch: ")+field-used, 0)), terminu.Style{})
+	add("  Repo: ", quiet)
+	add(repo, here)
+	if g.snap != nil {
 		if st := g.snap.State; st.Op != "" {
-			spans = append(spans, terminu.Span{Text: "  " + stateWord(st.Op) + ": ", Style: terminu.Fg(terminu.Peach)},
-				terminu.Span{Text: st.Other, Style: terminu.Fg(terminu.Peach)})
+			add("  "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Peach))
 		}
 	}
 	if g.busy != "" {
-		spans = append(spans, terminu.Span{Text: "  " + g.busy, Style: terminu.Fg(terminu.Green)})
+		add("  "+g.busy, terminu.Fg(terminu.Green))
 	}
+	add(strings.Repeat(" ", max(w-used, 0)), terminu.Style{})
 	return spans
 }
 
@@ -275,10 +311,10 @@ func stateWord(op string) string {
 }
 
 // track is a branch's commits ahead of and behind its upstream: ↑1 ↓2, only
-// what is not 0; gone when the upstream is no longer there.
+// what is not 0; "upstream gone" when it is no longer there (git's [gone]).
 func track(ahead, behind int, gone bool) string {
 	if gone {
-		return "gone"
+		return "upstream gone"
 	}
 	var parts []string
 	if ahead > 0 {

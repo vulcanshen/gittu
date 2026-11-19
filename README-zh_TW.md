@@ -7,7 +7,7 @@
 
 **照 SourceTree 的畫面安排做的終端機 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gitreu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是分支圖。SourceTree 右鍵選單上的動作，
+在 repo 裡打 `gitreu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。SourceTree 右鍵選單上的動作，
 都在 gitreu 的 `Space` 選單裡，對著 cursor 那個分支或 commit；工具列上的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，衝突一塊一塊解、兩邊都看得到 —— 不用先背任何熱鍵。
 
@@ -15,12 +15,13 @@
 
 ## 特色
 
-- **SourceTree 的畫面安排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是分支圖；cursor 移到分支上，分支圖就跳到它的 commit。
+- **SourceTree 的畫面安排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖；cursor 移到分支上，分支圖就跳到它的
+  commit，按 `Enter` 就過去。
 - **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，分支與 tag 標在它們的 commit 上；可以看全部分支，或只看目前的分支。
 - **先看再動手**：一個 commit 的檔案，再進去看每個檔的差異；標兩個 commit 一樣這樣比；`Esc` 一層一層退回。
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
-- **File status**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
+- **Working tree**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
 - **衝突一塊一塊解**：我的在上、對方的在下，兩邊都看得到；選用我的、用對方的或兩個都要，最後一塊解完自動 stage。merge、
   rebase、cherry-pick、revert 做到一半時可以放棄或繼續。
 - **用你自己的 git**：gitreu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
@@ -85,7 +86,7 @@ gitreu
 ```
 
 用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼，在 commit 上按 `Enter` 看它改了哪些檔。`Tab` 換到另一個
-面板，`F` 到 File status，`H` 回到分支圖。`?` 列出所有按鍵，`q` 離開。
+面板，`W` 到 working tree，`H` 回到分支圖。`?` 列出所有按鍵，`q` 離開。
 
 ## 使用方式與按鍵
 
@@ -96,16 +97,17 @@ gitreu
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| `[1]` 本地分支 | Check out | `[M]erge` 進目前的分支、把目前的分支 `[r]ebase` 到它上面、Re`[n]`ame、`[D]`elete、Push |
-| `[1]` 遠端分支 | Check out 成追蹤它的本地分支 | `[M]erge`、`[r]ebase`、`[D]`elete 遠端的分支 |
-| `[1]` tag | Check out（HEAD 會 detached） | `[D]`elete、Push |
+| `[1]` 本地分支 | 到 `[2]` 它的 commit | Check `[o]`ut、`[M]erge` 進目前的分支、把目前的分支 `[r]ebase` 到它上面、Re`[n]`ame、`[D]`elete、Push |
+| `[1]` 遠端分支 | 到 `[2]` 它的 commit | Check `[o]`ut 成追蹤它的本地分支、`[M]erge`、`[r]ebase`、`[D]`elete 遠端的分支 |
+| `[1]` tag | 到 `[2]` 它的 commit | Check `[o]`ut（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
 | `[2]` commit | 它改了的檔案 | `[m]`ark、Check `[o]`ut、`[b]`ranch here、`[t]`ag、`[M]`erge、`[r]`ebase、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
 | `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、`[C]`ompare 標起來的兩個 commit、`[/]` 篩選 |
 
-在 commit 的檔案上按 `Enter` 打開它的差異；`Esc` 回到檔案，再按一次回到分支圖。
+`[1]` 是 BRANCHES，`[2]` 是 COMMITS。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
+差異；`Esc` 回到檔案，再按一次回到分支圖。
 
-### File status
+### Working tree
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
@@ -115,7 +117,7 @@ gitreu
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | Stage `[a]`ll、Unstage all |
 
-`[2]` 顯示 cursor 那個檔的差異；在那裡按 `Enter` 用 viewer 打開，可以找字、複製。
+`[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔的差異；在那裡按 `Enter` 用 viewer 打開，可以找字、複製。
 
 ### 整個 repo 的動作
 

@@ -1,19 +1,21 @@
 tasks:
   - id: 1
-    spec: 1
+    spec: 2
     implementation: |
-      兩個畫面（tgo Screen）：History（Key H，打開時的畫面）與 File status（Key F）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
+      兩個畫面（tgo Screen）：History（Key H，打開時的畫面；[1] BRANCHES、[2] COMMITS）與 Working tree（Key W；[1] CHANGES、[2] DIFF）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
       每個畫面兩個 panel，Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40）；最低尺寸用 tgo 的預設 60×32，沒有設 NarrowBelow
-      statusbar（tgo App.Status）：Repo: <repo 資料夾名>（Overlay0）、Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet）、
-      有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；merge、rebase、cherry-pick、revert 做到一半時接 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Peach）；
-      背景有 git 指令在跑時接 Pushing…、Merging… 之類（Green）
+      statusbar（tgo App.Status）：先 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），
+      有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；再 Repo: <repo 資料夾名>（Lavender）；merge、rebase、cherry-pick、revert 做到一半時接
+      Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Peach）；背景有 git 指令在跑時接 Pushing…、Merging… 之類（Green）；標籤 Overlay0
+      寬度固定：給 tgo 的 span 一律是 tgo 給的寬度 w（畫面的一半），左邊對齊、最後補空白；Branch 那一欄（名字加 ↑N ↓N）寬 clamp((w − 16 − repo 名的寬) / 2, 8, 28)，
+      放不下時名字從尾端截、加 …（太窄時只留名字），後面補空白；所以換到名字比較長的分支時，Branch 與 Repo 都不動
       q 與 Ctrl-C：tgo App.QuitFlow；沒有 git 指令在跑時直接離開（tea.Quit）；有在跑時開 confirm QUIT「Quit gitreu?」，內容 git is still at work: <在做什麼>（Peach）；有 popup 開著時 tgo 先問
       git 指令都是 internal/git 呼叫使用者 PATH 上的 git：工作目錄是 repo 的頂層，環境加 GIT_TERMINAL_PROMPT=0、GIT_MERGE_AUTOEDIT=no、GIT_OPTIONAL_LOCKS=0，
       Setsid（沒有控制終端機，ssh、gpg 開不了 /dev/tty）；改 repo 的操作在背景跑（tea.Cmd），跑完重新讀整個 repo、換上畫面
       L4 的畫面測試：tdptest 每一格畫面都量；tdptest.Check 在各種尺寸與 icon 寬度走第一次啟動；gitreu 自己會開的 popup（diff viewer、new branch 的 text input、
       reset 的 select、checkout 的 confirm、commit 的 textarea、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
-    test: [TestHistoryLayout, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
+    test: [TestHistoryLayout, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 1
     implementation: |
@@ -24,32 +26,38 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gitreu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gitreu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 1
+    spec: 2
     implementation: |
       [1] BRANCHES 是 tgo List：單欄、沒有表頭，Flags（標記欄放旗標），Filterable（/ 篩選）
       四組（Row.Group）：Branches（git for-each-ref refs/heads，照名稱排）、Remotes（refs/remotes，不列 <remote>/HEAD，照名稱排）、
       Tags（refs/tags，annotated tag 指它的 commit；照版本的數字排，v1.9 在 v1.10 前面）、Stashes（git stash list，stash@{N}: <訊息>）；沒有東西的組 tgo 不畫標題
-      目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的；upstream 不在了寫 gone）
+      目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 upstream gone（Peach）
       打開時 cursor 停在目前的分支上
       cursor 移到分支、遠端分支、tag、stash 上（tgo List.OnMove）：[2] 在分支圖這一層時，[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），focus 留在 [1]
+      分支、遠端分支、tag 上的 Enter（[Enter] Show — its commit in [2] COMMITS；hint Enter:show；stash 那一列沒有，它的 Enter 是 task 8 的 Show）：
+      [2] 進到某個 commit 裡時先退回分支圖；[2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
+      tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：只看目前的分支時
+      「<名字> is not in the current branch's history」「Press [a] on [2] for all branches」，看全部分支時「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；讀 repo 失敗時兩個 panel 都是 Can't read <repo>: <原因>（Red）/ Press [R] to read it again（tgo Panel.Fail）
-    test: [TestBranchGroups, TestBranchMovesTheGraph, TestBranchesEmpty, TestReadTheSample, TestVersionCompare]
+    test: [TestBranchGroups, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnABranchNotInTheGraph, TestReadTheSample, TestVersionCompare]
   - id: 4
-    spec: 1
+    spec: 2
     implementation: |
-      [2] HISTORY 是 tgo List，Marks（可以標記），Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、COMMIT（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
+      [2] COMMITS 是 tgo List，Marks（可以標記），Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
       讀 git log --topo-order -n 1001 --format=%H %P %an %at %s；全部分支時 --branches --remotes --tags HEAD，目前分支時 HEAD（task 5）；多於 1000 個只留 1000 個
-      分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit ●、往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
+      分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit 是 nf-md-source_commit（U+F0718）、上面沒有線的（分支最上面那個）是 nf-md-source_commit_start（U+F071D）、
+      沒有 parent 的（第一個 commit）是 nf-md-source_commit_end（U+F0719）；icon 佔兩格時（terminu.IconWidth() == 2）commit 後面那一格不畫，讓給 icon；
+      gitreu 啟動時（App.Start，tgo 量好 icon 寬度之後）重畫一次分支圖。往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
       橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；超過 10 條線時第 10 條的位置畫 …（Overlay0）；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
       DESCRIPTION 前面接指著這個 commit 的 ref：本地分支 Green、遠端分支 Mauve、tag Peach，HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面
       位置列（List.Location）：All branches 或 Current branch；進到 commit 裡時接上那一層（task 6）
-      空的 repo：空狀態 No commits yet / Press [F] to see the files to commit；讀失敗同 task 3
-    test: [TestGraphRows, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
+      空的 repo：空狀態 No commits yet / Press [W] to see the files to commit；讀失敗同 task 3
+    test: [TestGraphRows, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
   - id: 5
     spec: 1
     implementation: |
-      [2] 的 panel operation（Space menu 的 PANEL OPERATION 與 a 鍵）：全部分支時列 Current br[a]nch（only what HEAD reaches），目前分支時列 [a]ll branches（every branch, remote branch and tag），另一個 Hidden；
+      [2] COMMITS 的 panel operation（Space menu 的 PANEL OPERATION 與 a 鍵）：全部分支時列 Current br[a]nch（only what HEAD reaches），目前分支時列 [a]ll branches（every branch, remote branch and tag），另一個 Hidden；
       進到 commit 裡時兩個都 Hidden
       切換時馬上重新讀 repo（同步），位置列換成 All branches／Current branch；App Log 記 Info：Showing all branches／Showing the current branch
       預設全部分支，不存檔
@@ -73,21 +81,21 @@ tasks:
       git diff --name-status -M <舊> <新>，跟 task 6 一樣進到檔案清單，位置列 All branches › <舊的短 hash> ↔ <新的短 hash>；Enter 開 diff 的 viewer，Esc 一層一層退回；標記留著
     test: [TestCompareMarked]
   - id: 8
-    spec: 1
+    spec: 2
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
-      本地分支：[Enter] Check out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
+      本地分支：Check [o]ut（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
       [r]ebase（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、Re[n]ame（text input RENAME: <分支>，舊名是灰字提議，
       檢查 git check-ref-format --branch 與同名分支，錯誤列 Not a valid branch name／There is a branch <名> already；git branch -m）、[D]elete（confirm「Delete <分支>?」；git branch -d，
       沒合併時再開 confirm「Delete <分支> anyway?」，內容 <分支> is not merged: … are lost.（Peach），Enter 用 git branch -D）、Push（沒有熱鍵；git push <upstream 的 remote 或 origin> refs/heads/<分支>）；
       merge、rebase、delete 在目前的分支上停用
-      遠端分支：[Enter] Check out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
+      遠端分支：Check [o]ut（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
       [M]erge、[r]ebase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
-      tag：[Enter] Check out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
+      tag：Check [o]ut（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
       stash：[Enter] Show（git stash show -p，開 Viewer STASH — stash@{N}，Lang diff；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
-      merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in File status [F]」；
+      merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
       其他失敗開 error popup <動作> FAILED，內容是 git 印的每一列（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列
     test: [TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
   - id: 9
@@ -117,9 +125,9 @@ tasks:
       每 3 秒（tgo App.Tick）在背景重新讀一次 repo（沒有 git 指令在跑、上一次還沒讀完時不讀），換上畫面：cursor 留在同一列（SetRows），focus 不動，不記 App Log
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain]
   - id: 11
-    spec: 1
+    spec: 2
     implementation: |
-      File status 畫面：[1] FILES 是 tgo List（Flags，一欄 PATH，Path 從前面截），位置列 Working tree；git status --porcelain=v1 -z 讀出來，三組：
+      Working tree 畫面：[1] CHANGES 是 tgo List（Flags，一欄 PATH，Path 從前面截），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
       同一個檔 index 與 working tree 都有改時兩組各一列；旗標顏色 M Peach、A Green、D Red、R Blue；改名寫 舊 → 新
       [2] DIFF 是 tgo Pager（Follow），[1] 的 Details（panel.13）：[1] 的 cursor 一移動（List.OnMove）就換成那一列的 diff（SetLines），label DIFF: <路徑>（Panel.Name）：
@@ -131,7 +139,7 @@ tasks:
   - id: 12
     spec: 1
     implementation: |
-      [1] FILES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
+      [1] CHANGES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
       Conflicts → Resolve（task 14；hint Enter:resolve）；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀，cursor 留在原本的位置
       [D]iscard（衝突的列沒有）：confirm DISCARD: <路徑>，「Discard the change to <路徑>?」（沒追蹤的是「Delete <路徑>?」），內容寫無法復原（Peach）；
       Unstaged 的 git restore -- <路徑>、沒追蹤的刪掉檔案、Staged 的 git restore --staged --worktree --source=HEAD（新加的檔 git rm -f）；Success Discarded the change to <路徑>
@@ -150,10 +158,10 @@ tasks:
       TODO(tgo #7)：textarea 打開時是空的，什麼都沒打就按 Enter，tgo 直接關掉、沒有錯誤列（spec 的 remark）
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage]
   - id: 14
-    spec: 1
+    spec: 2
     implementation: |
-      [1] FILES 衝突的檔上 Enter（Resolve）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
-      [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 Working tree › <路徑>，Panel.OnEsc 設好；
+      [1] CHANGES 衝突的檔上 Enter（Resolve）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
+      [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 All changes › <路徑>，Panel.OnEsc 設好；
       Esc 回到檔案清單，cursor 回到那個檔
       [2] 是 cursor 那個區塊（OnMove 換）：label CONFLICT: <路徑>，MINE · <標記上寫的>（是 HEAD 時接 (<目前的分支>)，Teal 粗體）、那一段的行、空一列、THEIRS · <標記上寫的>（Mauve 粗體）、那一段的行；有 diff3 的 base 時不畫
       區塊的 item operation：[Enter] Read（ToDetails：focus 到 [2]）、Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs）；hint Enter:read m:mine t:theirs b:both：

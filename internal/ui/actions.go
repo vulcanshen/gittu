@@ -3,6 +3,7 @@ package ui
 import (
 	"errors"
 	"slices"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -84,8 +85,11 @@ func (h *historyScreen) branchActions() []terminu.Action {
 	name := func() string { _, n := h.rowKind(); return n }
 	off := h.busyOr(nil)
 	return []terminu.Action{
+		// A branch, a remote branch, a tag: Enter shows its commit in [2].
+		{Key: "Enter", Label: "Show", Desc: "its commit in [2] COMMITS", Scope: item, Hint: "show",
+			Hidden: func() bool { k, _ := h.rowKind(); return k == "" || k == kindStash }, Do: h.showRef},
 		// A branch.
-		{Key: "Enter", Label: "Check out", Desc: "this branch", Scope: item, Hint: "checkout",
+		{Key: "o", Label: "Check out", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent, Do: func() tea.Cmd {
 				n := name()
 				return g.run("Checking out…", "Checkout", func() error { return g.repo.Checkout(n, false) },
@@ -116,7 +120,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed "+b.Name+" to "+remote) })
 			}},
 		// A remote branch.
-		{Key: "Enter", Label: "Check out", Desc: "as a local branch tracking it", Scope: item, Hint: "checkout",
+		{Key: "o", Label: "Check out", Desc: "as a local branch tracking it", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				rb, _ := h.remote()
@@ -152,7 +156,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Deleted "+rb.Branch+" on "+rb.Remote) })
 			}},
 		// A tag.
-		{Key: "Enter", Label: "Check out", Desc: "this tag, HEAD detached", Scope: item, Hint: "checkout",
+		{Key: "o", Label: "Check out", Desc: "this tag, HEAD detached", Scope: item,
 			Hidden: h.is(kindTag), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Check out", Subject: name(), Question: "Check out " + name() + "?", Verb: "check out",
@@ -211,6 +215,31 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Dropped "+st.Ref) })
 			}},
 	}
+}
+
+// showRef puts the focus on [2] with its cursor on the commit the row under
+// [1]'s cursor points at, scrolled into sight (tdp K3: the user pressing
+// Enter on a branch expects the graph). [2] gone into a commit comes back to
+// the graph first.
+func (h *historyScreen) showRef() tea.Cmd {
+	r, ok := h.branches.Current()
+	if !ok {
+		return nil
+	}
+	name := r.ID[2:]
+	h.goOut()
+	sha := h.shaOf(r.ID)
+	if sha != "" && !h.commits.Select(sha) && h.commits.Filtering() {
+		h.commits.ClearFilter() // the filter hides it: show it all the same
+		h.histP.Body = h.commits
+	}
+	if sha == "" || !h.commits.Select(sha) {
+		if !h.g.all {
+			return h.g.a.Toast(terminu.Info, name+" is not in the current branch's history", "Press [a] on [2] for all branches")
+		}
+		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
+	}
+	return h.g.a.Focus(h.histP)
 }
 
 func (h *historyScreen) hasLocal(name string) bool {

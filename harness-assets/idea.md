@@ -40,6 +40,20 @@
 - **比較兩個 commit**：tdp 已經規定，裝著東西的項目一次只走一層（panel.10），就像 filu 走資料夾那樣。commit → 檔案 → 差異，應該照這條走。
 - **怎麼操作 git**：呼叫 git 指令還是用 Go 的 git 函式庫，還沒決定。
 
+## 第一版看過之後（2026-11-19）
+
+user 看了第一版的回饋，照原話：
+
+1. 「[F]ile status 命名是不是有點怪？還是這是慣例，這部份不是 working tree 嗎？[H]istory tab 裡面有個 History panel 這樣命名怪怪的吧」
+2. 「branches panel 裡面有個 gone 是啥意思？」（看不懂就是沒寫清楚）
+3. 「graph 的 commit 點有沒有其他 glyph 可以用，圓點有點單調」
+4. 「panel 1 的 enter 不要 checkout，換成切換 focus 到 history panel 然後 scroll 到該 head 的 commit 點位置」
+5. 「header status 中的 Repo 和 Branch 交換位置，然後 Repo value 也要上色」
+
+其他的下一波再說。
+
+參考：GitKraken（user：「可以參考 gitkraken，這款我因為要付費所以沒用的超級酷的 git GUI」）。
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。
