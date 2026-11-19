@@ -80,6 +80,8 @@ tasks:
       - "檔案上按 Enter 開 viewer（tdp note.1）：標題 DIFF — <路徑>，內容是 git diff 的輸出（語法顏色用 diff，tdp note.2），有搜尋與選取模式（tgo 的 viewer）；Esc 關掉回到檔案清單。照 tdp T1：打開東西來看，source 保留"
       - "從 Space menu 執行進去（drill-down）時 menu 收起（tdp T1 的表）"
       - "進出不記 App Log（換 focus 與看的範圍，tdp note.7 的「進明細」同理）；開 diff 的 viewer 記 Info：Opened the diff of <路徑> in <短 hash>（只看不改的動作也記）"
+      - note: "2026-11-19 tdp 定案（使用者在 tdp session 與這裡都選 A；tdp main 85f15d9，note.8 的「同一項的兩個版本」）：看同一項兩個版本的動作一律打開 note.8 的比較（UNIFIED 與 SPLIT），不開顯示 patch 的 viewer，舊的當 anchor，標題 DIFF — <舊的> ↔ <新的>。一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列差異：+ Green、- Red、~ Peach，git 的 M／A／D／R 字母拿掉，改名是一列 ~ <舊> → <新>；檔案上 Enter 打開 parent ↔ commit 的比較。tgo 要新的 API（app 的動作打開 note.8 與差異清單），等 terminu-go 出 beta 再改；在那之前照舊"
+        issue: tdp #20
   - id: 7
     spec: 1
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
@@ -144,6 +146,8 @@ tasks:
       - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；內容是 git diff（STAGED 的是 git diff --cached，沒追蹤的檔整個當新增），diff 的語法顏色；沒有 cursor 的 panel（tgo Pager），j|k 捲動。[2] 上的 Enter 用 viewer 打開同一份 diff（tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事），有搜尋與選取模式"
       - "沒有改動時是空狀態（tdp screen.8）：Nothing to commit / Press [H] to see the history"
       - "每 3 秒重新讀（task 10）時，[2] 的內容換了就重新放進去（tdp note.9 的重新讀進來；不算串流，失焦時變暗）"
+      - note: "2026-11-19 tdp 定案（同 task 6；tdp main 85f15d9，note.8）：[2] DIFF 上的 Enter 打開 note.8 的比較，STAGED 的是 HEAD ↔ index，UNSTAGED 的是 index ↔ 工作區（沒追蹤的檔，舊的那一邊是空的），不再開 viewer；明細 panel 本身顯示的不變。等 terminu-go 出 beta 再改；在那之前照舊"
+        issue: tdp #20
   - id: 12
     spec: 1
     request: stage、unstage、捨棄改動都在 app 裡做
