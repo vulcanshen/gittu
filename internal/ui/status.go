@@ -363,7 +363,7 @@ func (g *gitreu) commit() tea.Cmd {
 		return g.a.Confirm(terminu.Ask{Title: "Commit", Question: "Commit the merge?", Verb: "commit", Details: []string{firstLine(msg)}},
 			func() tea.Cmd { return g.doCommit(msg, false) })
 	}
-	// TODO(tgo): an empty textarea taken with Enter untouched closes with no
+	// TODO(tgo #7): an empty textarea taken with Enter untouched closes with no
 	// error row, where tdp K3 has a value that may not be empty say so; the
 	// Check here only stops a message emptied after typing.
 	return g.a.Textarea(terminu.Textarea{Title: "Commit", Glyph: glyphCommit, Name: "Message", Old: g.draft,

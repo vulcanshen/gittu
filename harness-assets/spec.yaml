@@ -86,7 +86,7 @@ tasks:
     tdp: [tdp panel.7, tdp P3, tdp panel.10, tdp T1, tdp note.1, tdp note.2, tdp M6]
     remark:
       - note: "tdp 的比較（panel.9 的比較模式、note.8 的比較 popup）只比兩段文字。比兩個 commit 的結果是一份有變動的檔案清單，再對每個檔案看前後的差異，tdp 沒寫這種比較。暫時：在 [2] 用標記（tdp panel.7，[m]ark）標兩個 commit，panel operation [C]ompare（tdp P3：對整批標記的項目做事；不是剛好兩個時停用，tdp M6）照 task 6 一樣進到檔案清單（位置列接 › <舊的短 hash> ↔ <新的短 hash>），Enter 開 diff 的 viewer，Esc 一層一層退回"
-        issue: 待回報
+        issue: tdp #20
   - id: 8
     spec: 1
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；SourceTree 右鍵選單上的動作（分支、遠端分支、tag、stash）都對應到 Space 選單
@@ -161,7 +161,7 @@ tasks:
       - "Amend（沒有熱鍵）：confirm（內容是上一個 commit 訊息的第一行），留著原本的訊息，把 staged 的改動併進上一個 commit（git commit --amend）；已經推上 upstream 時，內容多一句警告要 force push（Peach）。理由同上：不用 textarea 帶著舊訊息"
       - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 印的每一列（tdp note.6）。git 在背景跑，textarea 已經關了：寫好的訊息留著，下次按 [c]ommit 打開時就在裡面，commit 成功才清掉"
       - note: "textarea 打開時是空的，什麼都沒打就按 Enter，tgo 直接關掉、不寫錯誤；tdp K3 說打開時是空的、又不能空的欄位要照不合格處理（寫出錯誤、popup 不關）。暫時照 tgo 做：沒有 commit，什麼都沒發生；Check 擋的是改過之後又清空的訊息"
-        issue: 待回報
+        issue: tgo #7
       - "textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
     spec: 1

@@ -147,7 +147,7 @@ tasks:
       merge 做到一半時：confirm COMMIT「Commit the merge?」，內容是 .git/MERGE_MSG 去掉註解後的第一行，Enter 用那份訊息 commit
       Amend（沒有熱鍵；還沒有 commit 時停用）：confirm AMEND「Amend the last commit, keeping its message?」，內容是上一個訊息的第一行；HEAD 已經在 upstream 上（git merge-base --is-ancestor HEAD @{upstream}）
       時多一句 It is on <upstream> already: pushing it again takes a force push.（Peach）；Enter 用原本的訊息 git commit --amend
-      TODO(tgo)：textarea 打開時是空的，什麼都沒打就按 Enter，tgo 直接關掉、沒有錯誤列（spec 的 remark）
+      TODO(tgo #7)：textarea 打開時是空的，什麼都沒打就按 Enter，tgo 直接關掉、沒有錯誤列（spec 的 remark）
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage]
   - id: 14
     spec: 1

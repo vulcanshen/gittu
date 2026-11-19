@@ -414,7 +414,7 @@ func (h *historyScreen) setAll(all bool) tea.Cmd {
 // compare goes into the files that differ between the two marked commits,
 // the older one first (tdp panel.7, panel.10).
 //
-// TODO(tdp): tdp compares two texts only (panel.9, note.8); comparing two
+// TODO(tdp #20): tdp compares two texts only (panel.9, note.8); comparing two
 // commits, a list of files and then each file, is not in it yet. Meanwhile the
 // two commits are marked and compared as a batch (tdp P3).
 func (h *historyScreen) compare() tea.Cmd {
