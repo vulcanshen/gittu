@@ -1,4 +1,4 @@
-// Package ui is gitreu's screens: History (the branches and the history graph,
+// Package ui is gittu's screens: History (the branches and the history graph,
 // as SourceTree lays them out) and File status (the working tree's files and
 // their changes), every git operation in their Space menus.
 package ui
@@ -14,18 +14,18 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/gitreu/internal/git"
-	"github.com/vulcanshen/gitreu/internal/version"
+	"github.com/vulcanshen/gittu/internal/git"
+	"github.com/vulcanshen/gittu/internal/version"
 )
 
-// icon is gitreu's family mark (tdp S5), drawn by the splash: a copy of
+// icon is gittu's family mark (tdp S5), drawn by the splash: a copy of
 // docs/icon.svg, which go:embed can't reach from here (a test holds the two
 // the same, tdp E6).
 //
 //go:embed icon.svg
 var icon []byte
 
-// Glyphs of gitreu's own popups (tdp note.2: a viewer's glyph is the app's),
+// Glyphs of gittu's own popups (tdp note.2: a viewer's glyph is the app's),
 // and of the refs in the graph (tdp P5: content's symbols are the app's).
 const (
 	glyphRefTag = "\U000F04F9" // nf-md-tag
@@ -36,7 +36,7 @@ const (
 	glyphStash  = "\U000F01BC" // nf-md-database
 )
 
-// The colours gitreu gives content of its own (tdp P5), catppuccin-mocha.
+// The colours gittu gives content of its own (tdp P5), catppuccin-mocha.
 var (
 	mauve    = terminu.Hex("#cba6f7")
 	teal     = terminu.Hex("#94e2d5")
@@ -47,11 +47,11 @@ var (
 )
 
 // refreshEvery is how often the repository is read again by itself, so that
-// what is changed outside gitreu shows (task 19; tdp K3: it moves nothing).
+// what is changed outside gittu shows (task 19; tdp K3: it moves nothing).
 const refreshEvery = 3 * time.Second
 
-// gitreu is the app and the repository it shows.
-type gitreu struct {
+// gittu is the app and the repository it shows.
+type gittu struct {
 	a    *terminu.App
 	repo *git.Repo
 	snap *git.Snapshot
@@ -75,11 +75,11 @@ type gitreu struct {
 	status  *statusScreen
 }
 
-// New makes gitreu on repo.
-func New(repo *git.Repo) *terminu.App { return newGitreu(repo).a }
+// New makes gittu on repo.
+func New(repo *git.Repo) *terminu.App { return newGittu(repo).a }
 
-func newGitreu(repo *git.Repo) *gitreu {
-	g := &gitreu{a: terminu.New("gitreu"), repo: repo, all: true}
+func newGittu(repo *git.Repo) *gittu {
+	g := &gittu{a: terminu.New("gittu"), repo: repo, all: true}
 	g.a.Splash = splash()
 	g.a.QuitFlow = g.quit
 	g.a.Status = g.statusbar
@@ -101,7 +101,7 @@ func newGitreu(repo *git.Repo) *gitreu {
 
 // splash is the family's easter egg, V on a panel (tdp S).
 func splash() terminu.Splash {
-	s, err := terminu.NewSplash(icon, "gitreu", version.Display(), "A git client laid out like SourceTree")
+	s, err := terminu.NewSplash(icon, "gittu", version.Display(), "A git client laid out like SourceTree")
 	if err != nil {
 		panic(err) // the embedded icon is broken: a mistake in the program
 	}
@@ -110,13 +110,13 @@ func splash() terminu.Splash {
 
 // start reads the settings and starts reading the repository again now and
 // then.
-func (g *gitreu) start() tea.Cmd {
+func (g *gittu) start() tea.Cmd {
 	return tea.Batch(g.loadConfig(), g.tick())
 }
 
 type tickMsg struct{}
 
-func (g *gitreu) tick() tea.Cmd {
+func (g *gittu) tick() tea.Cmd {
 	return g.a.Tick(refreshEvery, func(time.Time) tea.Msg { return tickMsg{} })
 }
 
@@ -141,7 +141,7 @@ type doneMsg struct {
 	failed func(error) tea.Cmd
 }
 
-func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
+func (g *gittu) onMsg(msg tea.Msg) tea.Cmd {
 	switch m := msg.(type) {
 	case tickMsg:
 		if g.busy == "" && !g.reading {
@@ -158,10 +158,10 @@ func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
 		g.show(m.snap, m.err)
 		reread := g.status.takeReread()
 		if !m.asked && m.err == nil {
-			// What changed outside gitreu since the last read: its own
+			// What changed outside gittu since the last read: its own
 			// operations read the repository as they end (task 19).
 			if what := changes(old, m.snap, reread); len(what) > 0 {
-				g.a.Log(terminu.Info, "Changed outside gitreu: "+said(what))
+				g.a.Log(terminu.Info, "Changed outside gittu: "+said(what))
 			}
 		}
 		if m.asked && m.err == nil {
@@ -175,7 +175,7 @@ func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
 		g.busy = ""
 		was := g.readErr
 		g.show(m.snap, m.rerr)
-		g.status.takeReread() // gitreu's own change
+		g.status.takeReread() // gittu's own change
 		var c *git.Conflicts
 		switch {
 		case m.err == nil && m.rerr != nil && g.readErr != was:
@@ -197,7 +197,7 @@ func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
 }
 
 // read reads the repository in the background.
-func (g *gitreu) read(asked bool) tea.Cmd {
+func (g *gittu) read(asked bool) tea.Cmd {
 	repo, remote := g.repo, g.remote
 	return func() tea.Msg {
 		snap, err := repo.Read(remote)
@@ -208,12 +208,12 @@ func (g *gitreu) read(asked bool) tea.Cmd {
 // run runs an operation in the background while the statusbar says doing,
 // then reads the repository and shows it. ok says how it went; title names
 // it in its error popup.
-func (g *gitreu) run(doing, title string, op func() error, ok func() tea.Cmd) tea.Cmd {
+func (g *gittu) run(doing, title string, op func() error, ok func() tea.Cmd) tea.Cmd {
 	return g.runWith(doneMsg{title: title, ok: ok}, doing, op)
 }
 
 // runWith is run with what doneMsg says about conflicts and failures.
-func (g *gitreu) runWith(m doneMsg, doing string, op func() error) tea.Cmd {
+func (g *gittu) runWith(m doneMsg, doing string, op func() error) tea.Cmd {
 	g.busy = doing
 	repo, remote := g.repo, g.remote
 	return func() tea.Msg {
@@ -225,12 +225,12 @@ func (g *gitreu) runWith(m doneMsg, doing string, op func() error) tea.Cmd {
 
 // idle reports that nothing runs: an operation that changes the repository is
 // off while one does (tdp M6).
-func (g *gitreu) idle() bool { return g.busy == "" }
+func (g *gittu) idle() bool { return g.busy == "" }
 
 // show puts a read of the repository on every panel. A read that failed
 // leaves what was read before (tdp panel.15); with nothing read yet the
 // panels say why.
-func (g *gitreu) show(snap *git.Snapshot, err error) {
+func (g *gittu) show(snap *git.Snapshot, err error) {
 	if err != nil {
 		g.readErr = reason(gitLines(err))
 		if g.snap == nil {
@@ -245,7 +245,7 @@ func (g *gitreu) show(snap *git.Snapshot, err error) {
 }
 
 // conflictsSaid is the toast of an operation that stopped on conflicts.
-func (g *gitreu) conflictsSaid(what string) func(int) tea.Cmd {
+func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	return func(n int) tea.Cmd {
 		return g.a.Toast(terminu.Warning, what+" stopped on conflicts in "+plural(n, "file", "files"),
 			"Resolve them in Working tree [W]")
@@ -259,9 +259,9 @@ func (g *gitreu) conflictsSaid(what string) func(int) tea.Cmd {
 // The lib draws it on the right, so a longer text moves all of it: it is
 // always the w cells given, its fields from the left and blanks after them,
 // the branch's field as wide as the terminal allows, not as the name is (tdp
-// L2). The repository's name does not change while gitreu runs; the operation
+// L2). The repository's name does not change while gittu runs; the operation
 // and what git does are the last fields.
-func (g *gitreu) statusbar(w int) []terminu.Span {
+func (g *gittu) statusbar(w int) []terminu.Span {
 	quiet := terminu.Fg(terminu.Overlay0)
 	here := terminu.Fg(terminu.Lavender)
 	repo := g.repo.Name()
@@ -308,7 +308,7 @@ func (g *gitreu) statusbar(w int) []terminu.Span {
 }
 
 // where is the branch HEAD is on, or where it is detached.
-func (g *gitreu) where() string {
+func (g *gittu) where() string {
 	switch {
 	case g.snap.Head != "":
 		return g.snap.Head
@@ -351,21 +351,21 @@ func track(ahead, behind int, gone bool) string {
 
 // quit is the quit flow (tdp K9): at once, but asking first while git runs,
 // as leaving would cut it short.
-func (g *gitreu) quit() tea.Cmd {
+func (g *gittu) quit() tea.Cmd {
 	if g.busy == "" {
 		return tea.Quit
 	}
-	return g.a.Confirm(terminu.Ask{Title: "Quit", Question: "Quit gitreu?", Verb: "quit",
+	return g.a.Confirm(terminu.Ask{Title: "Quit", Question: "Quit gittu?", Verb: "quit",
 		Details: []string{"git is still at work: " + g.busy}, Warn: []int{0}}, func() tea.Cmd { return tea.Quit })
 }
 
 // fail opens the error popup of a git operation that failed: the line that
 // says why, git's whole text in the App Log (tdp components.5, F5).
-func (g *gitreu) fail(title, subject string, err error) tea.Cmd {
+func (g *gittu) fail(title, subject string, err error) tea.Cmd {
 	lines := gitLines(err)
 	say := []string{reason(lines)}
 	if needsCredentials(lines) {
-		say = append(say, "gitreu can't ask for a password: use an ssh agent or a credential helper")
+		say = append(say, "gittu can't ask for a password: use an ssh agent or a credential helper")
 	}
 	cmd := g.a.ErrorAbout(title+" failed", subject, say...)
 	g.logAll(lines)
@@ -376,7 +376,7 @@ func (g *gitreu) fail(title, subject string, err error) tea.Cmd {
 // an Error toast with the line that says why; with nothing read yet the
 // panels say it. git's whole text goes in the App Log (tdp panel.15,
 // components.5, F5).
-func (g *gitreu) readFailed(err error) tea.Cmd {
+func (g *gittu) readFailed(err error) tea.Cmd {
 	lines := gitLines(err)
 	if g.snap == nil { // nothing read yet: the panels say why (tdp panel.15)
 		g.a.Log(terminu.Error, "Can't read "+g.repo.Name()+": "+reason(lines))
@@ -389,7 +389,7 @@ func (g *gitreu) readFailed(err error) tea.Cmd {
 }
 
 // logAll writes git's text, more than the one line shown, in the App Log.
-func (g *gitreu) logAll(lines []string) {
+func (g *gittu) logAll(lines []string) {
 	if len(lines) < 2 {
 		return
 	}

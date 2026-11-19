@@ -1,13 +1,13 @@
 #!/bin/sh
-# gitreu installer for macOS / Linux.
-# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/install.sh | sh
+# gittu installer for macOS / Linux.
+# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | sh
 #
-# terminu family template (harness project/install.sh). Replace gitreu; set
+# terminu family template (harness project/install.sh). Replace gittu; set
 # WINDOWS; the blocks marked "app's own" are the app's, the rest stays as it is.
 
 set -e
 
-APP="gitreu"
+APP="gittu"
 REPO="vulcanshen/$APP"
 # yes when the app ships a Windows build and an install.ps1.
 WINDOWS="no"

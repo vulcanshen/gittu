@@ -1,17 +1,17 @@
-# gitreu
+# gittu
 
-[![Release](https://img.shields.io/github/v/release/vulcanshen/gitreu)](https://github.com/vulcanshen/gitreu/releases)
-[![License](https://img.shields.io/github/license/vulcanshen/gitreu)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/vulcanshen/gittu)](https://github.com/vulcanshen/gittu/releases)
+[![License](https://img.shields.io/github/license/vulcanshen/gittu)](LICENSE)
 
 **Language**: [English](README.md) · 繁體中文
 
 **照 SourceTree 的畫面安排做的終端機 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gitreu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。SourceTree 右鍵選單上的動作，
-都在 gitreu 的 `Space` 選單裡，對著 cursor 那個分支或 commit；工具列上的動作在 global operation 裡。看一個 commit 改了哪些檔、
+在 repo 裡打 `gittu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。SourceTree 右鍵選單上的動作，
+都在 gittu 的 `Space` 選單裡，對著 cursor 那個分支或 commit；工具列上的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，衝突一塊一塊解、兩邊都看得到 —— 不用先背任何熱鍵。
 
-![gitreu：分支圖、一個 commit 的檔案與差異、要 commit 的檔案、一次 merge 與解衝突](docs/demo.gif)
+![gittu：分支圖、一個 commit 的檔案與差異、要 commit 的檔案、一次 merge 與解衝突](docs/demo.gif)
 
 ## 特色
 
@@ -25,7 +25,7 @@
 - **Working tree**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
 - **衝突一塊一塊解**：我的在上、對方的在下，兩邊都看得到；選用我的、用對方的或兩個都要，最後一塊解完自動 stage。merge、
   rebase、cherry-pick、revert 做到一半時可以放棄或繼續。
-- **用你自己的 git**：gitreu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
+- **用你自己的 git**：gittu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
 
 ## 安裝
 
@@ -35,55 +35,55 @@
 - `PATH` 上有 git。
 - 終端機用 [Nerd Font](https://www.nerdfonts.com)：圖示與框線都是 Nerd Font 的字。
 - 支援 truecolor（24-bit）的終端機：256 色下分不出淡化的顏色與層色。
-- 終端機至少 60 欄寬、32 列高；比這小時 gitreu 只顯示名稱、需要的大小與怎麼離開，視窗拉大後回到原本的樣子。
+- 終端機至少 60 欄寬、32 列高；比這小時 gittu 只顯示名稱、需要的大小與怎麼離開，視窗拉大後回到原本的樣子。
 
-gitreu 啟動時會量 icon 與 powerline 符號各佔幾格。量錯時可以自己指定：
+gittu 啟動時會量 icon 與 powerline 符號各佔幾格。量錯時可以自己指定：
 
 | 變數 | 指定什麼 |
 |---|---|
-| `GITREU__ICON_WIDTH` | icon 佔幾格，只給 gitreu |
-| `GITREU__POWERLINE_WIDTH` | powerline 符號佔幾格，只給 gitreu |
+| `GITTU__ICON_WIDTH` | icon 佔幾格，只給 gittu |
+| `GITTU__POWERLINE_WIDTH` | powerline 符號佔幾格，只給 gittu |
 | `TERMINU__ICON_WIDTH` | icon 佔幾格，terminu 家族每個 app 共用：設一次，每個 app 都讀得到 |
 | `TERMINU__POWERLINE_WIDTH` | powerline 符號佔幾格，terminu 家族每個 app 共用 |
 
-在家族 app 的終端機裡跑時，外層的 app 會替 gitreu 設好 `TERMINU__` 這兩個。
+在家族 app 的終端機裡跑時，外層的 app 會替 gittu 設好 `TERMINU__` 這兩個。
 
 ### Homebrew
 
 ```sh
-brew install vulcanshen/tap/gitreu
+brew install vulcanshen/tap/gittu
 ```
 
 ### 安裝腳本
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | sh
 ```
 
 不用 sudo：裝到 `~/.local/bin`。
 
 ### 第一次啟動
 
-`gitreu` 打開目前目錄所在的 repo；`gitreu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。gitreu 自己不寫任何東西：
+`gittu` 打開目前目錄所在的 repo；`gittu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。gittu 自己不寫任何東西：
 只有你執行操作時，才會改動你的 repo。
 
 ### 移除
 
 ```sh
-brew uninstall gitreu
+brew uninstall gittu
 ```
 
 用安裝腳本裝的：
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/uninstall.sh | sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.sh | sh
 ```
 
 ## 快速開始
 
 ```sh
 cd your-repository
-gitreu
+gittu
 ```
 
 用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼，在 commit 上按 `Enter` 看它改了哪些檔。`Tab` 換到另一個
@@ -91,7 +91,7 @@ gitreu
 
 ## 使用方式與按鍵
 
-最下面一列一直寫著 `Space:menu ?:help !:log`：`Space` 列出在這裡能做的事，`?` 列出按鍵，`!` 打開 App Log，看 gitreu 做了什麼、
+最下面一列一直寫著 `Space:menu ?:help !:log`：`Space` 列出在這裡能做的事，`?` 列出按鍵，`!` 打開 App Log，看 gittu 做了什麼、
 哪裡出錯。
 
 ### History
@@ -131,29 +131,29 @@ gitreu
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
 revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[1]` 上 `b` 是 rebase，Branch 從 global operation 執行。
 
-gitreu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
+gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
 
 ## 疑難排解
 
-- **push、pull 要密碼**：gitreu 沒辦法問密碼，git 會失敗並說明原因。請用 ssh agent，https 的話用 credential helper。
+- **push、pull 要密碼**：gittu 沒辦法問密碼，git 會失敗並說明原因。請用 ssh agent，https 的話用 credential helper。
 - **commit 被 hook 擋下**：hook 印的內容在錯誤訊息裡；再按一次 `[c]`，剛剛寫的訊息還在。
 
 ## 設定與資料
 
-gitreu 沒有資料、狀態與快取。設定是 `$XDG_CONFIG_HOME/gitreu`（或 `~/.config/gitreu`；`GITREU__CONFIG` 指定別的目錄）裡的
-`config.yaml`。gitreu 不會自己建它；沒有這個檔時用預設值。
+gittu 沒有資料、狀態與快取。設定是 `$XDG_CONFIG_HOME/gittu`（或 `~/.config/gittu`；`GITTU__CONFIG` 指定別的目錄）裡的
+`config.yaml`。gittu 不會自己建它；沒有這個檔時用預設值。
 
 ```yaml
 input_tab_width: 4   # commit 訊息裡按 Tab 插入幾個空白，差異裡的 Tab 也畫成這麼寬
 ```
 
-這是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，gitreu 會問要不要移到 `config.yaml.bak`，不要就離開；值不是
-大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。gitreu 不讀的 key（例：打錯字）留在檔案裡，每次啟動 App Log（`!`）會寫出來。
+這是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，gittu 會問要不要移到 `config.yaml.bak`，不要就離開；值不是
+大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。gittu 不讀的 key（例：打錯字）留在檔案裡，每次啟動 App Log（`!`）會寫出來。
 
 ## 限制
 
 - 分支圖只讀最新的 1000 個 commit。
-- gitreu 沒辦法問密碼或 passphrase：請用 ssh agent 或 credential helper。
+- gittu 沒辦法問密碼或 passphrase：請用 ssh agent 或 credential helper。
 - 衝突只顯示我的與對方的，不顯示共同的祖先。
 - 沒有互動式 rebase、submodule、worktree、git-flow。
 - 只有 macOS 與 Linux（WSL 也可以），沒有 Windows 版。
@@ -164,10 +164,10 @@ input_tab_width: 4   # commit 訊息裡按 Tab 插入幾個空白，差異裡的
 
 ## terminu family
 
-gitreu 遵循 terminu design：
+gittu 遵循 terminu design：
 
 - [terminu design](https://github.com/vulcanshen/terminu)：家族的設計規範
-- [terminu-go](https://github.com/vulcanshen/terminu-go)：gitreu 用的 Go 函式庫
+- [terminu-go](https://github.com/vulcanshen/terminu-go)：gittu 用的 Go 函式庫
 - [terminu-harness](https://github.com/vulcanshen/terminu-harness)：照 terminu design 做 app 的 Claude Code plugin
 
 ## License

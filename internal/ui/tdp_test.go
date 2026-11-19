@@ -6,11 +6,11 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
 
-	"github.com/vulcanshen/gitreu/internal/git"
-	"github.com/vulcanshen/gitreu/internal/gittest"
+	"github.com/vulcanshen/gittu/internal/git"
+	"github.com/vulcanshen/gittu/internal/gittest"
 )
 
-// TestFirstLaunch launches gitreu as for the first time on many terminal
+// TestFirstLaunch launches gittu as for the first time on many terminal
 // sizes and icon widths, on a repository with branches, a tag, a stash and a
 // remote, and walks every screen and panel: the Space menu, the global
 // operation popup, the App Log and the key reference; then a terminal under
@@ -23,5 +23,5 @@ func TestFirstLaunch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tdptest.Check(t, tdptest.App{Name: "gitreu", New: func() *terminu.App { return New(repo) }})
+	tdptest.Check(t, tdptest.App{Name: "gittu", New: func() *terminu.App { return New(repo) }})
 }

@@ -1,4 +1,4 @@
-module github.com/vulcanshen/gitreu
+module github.com/vulcanshen/gittu
 
 go 1.26.0
 

@@ -18,7 +18,7 @@ func TestVersionAndHelp(t *testing.T) {
 	for _, arg := range []string{"help", "-h", "--help"} {
 		var out, errOut bytes.Buffer
 		code := run([]string{arg}, &out, &errOut)
-		if code != 0 || !strings.Contains(out.String(), "gitreu <path>") || !strings.Contains(out.String(), "./version") {
+		if code != 0 || !strings.Contains(out.String(), "gittu <path>") || !strings.Contains(out.String(), "./version") {
 			t.Errorf("%s: exit %d, %q", arg, code, out.String())
 		}
 	}
@@ -27,11 +27,11 @@ func TestVersionAndHelp(t *testing.T) {
 func TestNotARepository(t *testing.T) {
 	var out, errOut bytes.Buffer
 	dir := t.TempDir()
-	if code := run([]string{dir}, &out, &errOut); code != 1 || !strings.Contains(errOut.String(), "gitreu: "+dir+" is not in a git repository") {
+	if code := run([]string{dir}, &out, &errOut); code != 1 || !strings.Contains(errOut.String(), "gittu: "+dir+" is not in a git repository") {
 		t.Errorf("exit %d, %q", code, errOut.String())
 	}
 	errOut.Reset()
-	if code := run([]string{filepath.Join(dir, "gone")}, &out, &errOut); code != 1 || !strings.HasPrefix(errOut.String(), "gitreu: ") {
+	if code := run([]string{filepath.Join(dir, "gone")}, &out, &errOut); code != 1 || !strings.HasPrefix(errOut.String(), "gittu: ") {
 		t.Errorf("exit %d, %q", code, errOut.String())
 	}
 }

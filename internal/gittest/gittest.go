@@ -1,4 +1,4 @@
-// Package gittest makes git repositories for gitreu's tests, with git set up
+// Package gittest makes git repositories for gittu's tests, with git set up
 // apart from the user's own (no ~/.gitconfig, a fixed author and dates).
 package gittest
 

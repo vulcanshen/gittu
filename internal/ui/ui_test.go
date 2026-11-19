@@ -14,24 +14,24 @@ import (
 	terminu "github.com/vulcanshen/terminu-go"
 	"github.com/vulcanshen/terminu-go/tdptest"
 
-	"github.com/vulcanshen/gitreu/internal/git"
-	"github.com/vulcanshen/gitreu/internal/gittest"
+	"github.com/vulcanshen/gittu/internal/git"
+	"github.com/vulcanshen/gittu/internal/gittest"
 )
 
-// start opens gitreu on the test's repository in a w × h terminal.
-func start(t *testing.T, r *gittest.Repo, w, h int) (*gitreu, *tdptest.Driver) {
+// start opens gittu on the test's repository in a w × h terminal.
+func start(t *testing.T, r *gittest.Repo, w, h int) (*gittu, *tdptest.Driver) {
 	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	repo, err := git.Open(r.Dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	g := newGitreu(repo)
+	g := newGittu(repo)
 	return g, tdptest.Start(t, g.a, w, h)
 }
 
-// done waits for the git gitreu runs to end.
-func done(t *testing.T, g *gitreu, d *tdptest.Driver) {
+// done waits for the git gittu runs to end.
+func done(t *testing.T, g *gittu, d *tdptest.Driver) {
 	t.Helper()
 	d.WaitFor(func() bool { return g.idle() }, 20*time.Second)
 	if !g.idle() {
@@ -60,7 +60,7 @@ func hasNot(t *testing.T, d *tdptest.Driver, text ...string) {
 
 // selectBranch puts [1] on the tab of a row and its cursor on the row, by its
 // ID.
-func selectBranch(d *tdptest.Driver, g *gitreu, id string) {
+func selectBranch(d *tdptest.Driver, g *gittu, id string) {
 	d.Do(func() tea.Cmd {
 		i := slices.Index(kinds, id[:2])
 		g.history.branchP.Tab, g.history.branchP.Body = i, g.history.tabs[i]
@@ -70,7 +70,7 @@ func selectBranch(d *tdptest.Driver, g *gitreu, id string) {
 }
 
 // selectCommit puts [2]'s cursor on the commit with this subject.
-func selectCommit(t *testing.T, d *tdptest.Driver, g *gitreu, subject string) git.Commit {
+func selectCommit(t *testing.T, d *tdptest.Driver, g *gittu, subject string) git.Commit {
 	t.Helper()
 	for _, c := range g.snap.Commits {
 		if c.Subject == subject {
@@ -167,14 +167,14 @@ func TestQuitAsksWhileGitRuns(t *testing.T) {
 	if d.Quit() {
 		t.Fatal("q quit while git runs")
 	}
-	has(t, d, "Quit gitreu?", "git is still at work: Pushing…")
+	has(t, d, "Quit gittu?", "git is still at work: Pushing…")
 	d.Press("Enter")
 	if !d.Quit() {
 		t.Fatal("Enter on the confirm did not quit")
 	}
 }
 
-// TestOwnPopupsEverySize opens gitreu's own popups and resizes the terminal
+// TestOwnPopupsEverySize opens gittu's own popups and resizes the terminal
 // under each, for every icon width: each row as wide as the terminal (tdp L4,
 // E5), never a crash.
 func TestOwnPopupsEverySize(t *testing.T) {
@@ -771,7 +771,7 @@ func TestCommitOperations(t *testing.T) {
 }
 
 // runLabel runs the action of panel p with this label, as its menu row does.
-func runLabel(t *testing.T, g *gitreu, p *terminu.Panel, label string) tea.Cmd {
+func runLabel(t *testing.T, g *gittu, p *terminu.Panel, label string) tea.Cmd {
 	for _, a := range p.Actions {
 		if a.Label == label && (a.Hidden == nil || !a.Hidden()) {
 			if a.AskFor != nil {
@@ -950,7 +950,7 @@ func TestStashAndDiscardAll(t *testing.T) {
 }
 
 // runGlobal runs the global operation with this label, its confirm first.
-func runGlobal(t *testing.T, g *gitreu, label string) tea.Cmd {
+func runGlobal(t *testing.T, g *gittu, label string) tea.Cmd {
 	for _, a := range g.a.Global {
 		if a.Label == label && (a.Hidden == nil || !a.Hidden()) {
 			if a.Ask != nil {
@@ -969,7 +969,7 @@ func runGlobal(t *testing.T, g *gitreu, label string) tea.Cmd {
 }
 
 // TestRefreshAndReadingAgain is task 19: every 3 seconds the repository is
-// read again, and what changed outside gitreu is logged; R reads it at once.
+// read again, and what changed outside gittu is logged; R reads it at once.
 func TestRefreshAndReadingAgain(t *testing.T) {
 	r := gittest.Sample(t)
 	g, d := start(t, r, 100, 32)
@@ -977,7 +977,7 @@ func TestRefreshAndReadingAgain(t *testing.T) {
 	d.Advance(refreshEvery + time.Second)
 	d.WaitFor(func() bool { return !g.reading && d.Has("later") }, 5*time.Second)
 	d.Press("!")
-	has(t, d, "INFO Changed outside gitreu: branch later (new)")
+	has(t, d, "INFO Changed outside gittu: branch later (new)")
 	d.Press("Esc")
 	r.Git("branch", "later2")
 	d.Press("R")
@@ -986,7 +986,7 @@ func TestRefreshAndReadingAgain(t *testing.T) {
 }
 
 // TestRefreshLogsOnlyChanges: a read again that finds nothing new, what git
-// ignores, and gitreu's own operations are not logged (task 19).
+// ignores, and gittu's own operations are not logged (task 19).
 func TestRefreshLogsOnlyChanges(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -1002,13 +1002,13 @@ func TestRefreshLogsOnlyChanges(t *testing.T) {
 	refresh() // only what git ignores
 	r.Write("README.md", "outside\n")
 	refresh()
-	d.Press("W", "Enter") // stage README.md: gitreu's own change
+	d.Press("W", "Enter") // stage README.md: gittu's own change
 	done(t, g, d)
 	refresh()
 	d.Press("!")
-	has(t, d, "Changed outside gitreu: README.md", "Staged README.md")
+	has(t, d, "Changed outside gittu: README.md", "Staged README.md")
 	screen := strings.Join(d.Screen(), "\n")
-	if n := strings.Count(screen, "Changed outside gitreu"); n != 1 {
+	if n := strings.Count(screen, "Changed outside gittu"); n != 1 {
 		t.Errorf("%d entries of changes, want 1:\n%s", n, screen)
 	}
 	hasNot(t, d, "build/")
@@ -1050,7 +1050,7 @@ func TestFirstReadFails(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(r.Dir, ".git", "HEAD"), []byte("broken\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	g := newGitreu(repo)
+	g := newGittu(repo)
 	d := tdptest.Start(t, g.a, 120, 32)
 	d.WaitFor(func() bool { return d.Has("Can't read") }, 5*time.Second)
 	has(t, d, "Can't read", "Press [R] to read it again")
@@ -1138,7 +1138,7 @@ func TestDiffFollowsCursor(t *testing.T) {
 	d.Advance(refreshEvery + time.Second)
 	d.WaitFor(func() bool { return d.Has("+read again") }, 5*time.Second)
 	d.Press("!")
-	has(t, d, "Changed outside gitreu: new.txt") // its status the same, its text not
+	has(t, d, "Changed outside gittu: new.txt") // its status the same, its text not
 	has(t, d, "+read again")
 }
 
@@ -1383,12 +1383,12 @@ func TestContinueRebase(t *testing.T) {
 
 func TestTabWidthSetting(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GITREU__CONFIG", dir)
+	t.Setenv("GITTU__CONFIG", dir)
 	if err := os.WriteFile(filepath.Join(dir, "config.yaml"), []byte("input_tab_width: 2\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	repo, _ := git.Open(gittest.Sample(t).Dir)
-	g := newGitreu(repo)
+	g := newGittu(repo)
 	tdptest.Start(t, g.a, 80, 32)
 	if g.a.InputTabWidth != 2 {
 		t.Errorf("tab width %d", g.a.InputTabWidth)
@@ -1397,13 +1397,13 @@ func TestTabWidthSetting(t *testing.T) {
 
 func TestConfigMisfit(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GITREU__CONFIG", dir)
+	t.Setenv("GITTU__CONFIG", dir)
 	path := filepath.Join(dir, "config.yaml")
 	if err := os.WriteFile(path, []byte("input_tab_width: -3\nother: kept\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	repo, _ := git.Open(gittest.Sample(t).Dir)
-	g := newGitreu(repo)
+	g := newGittu(repo)
 	d := tdptest.Start(t, g.a, 100, 32)
 	has(t, d, "did not fit", "config.yaml.bak")
 	b, _ := os.ReadFile(path)
@@ -1418,11 +1418,11 @@ func TestConfigMisfit(t *testing.T) {
 	}
 }
 
-// TestConfigUnreadKey: a key gitreu never read stays in the file, no toast,
+// TestConfigUnreadKey: a key gittu never read stays in the file, no toast,
 // an INFO at every start (tdp E3).
 func TestConfigUnreadKey(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GITREU__CONFIG", dir)
+	t.Setenv("GITTU__CONFIG", dir)
 	path := filepath.Join(dir, "config.yaml")
 	want := []byte("refesh: 5\ninput_tab_width: 2\n")
 	if err := os.WriteFile(path, want, 0o644); err != nil {
@@ -1430,7 +1430,7 @@ func TestConfigUnreadKey(t *testing.T) {
 	}
 	for range 2 {
 		repo, _ := git.Open(gittest.Sample(t).Dir)
-		g := newGitreu(repo)
+		g := newGittu(repo)
 		d := tdptest.Start(t, g.a, 160, 32)
 		hasNot(t, d, "did not fit")
 		d.Press("!")
@@ -1446,13 +1446,13 @@ func TestConfigUnreadKey(t *testing.T) {
 
 func TestConfigCannotBeRead(t *testing.T) {
 	dir := t.TempDir()
-	t.Setenv("GITREU__CONFIG", dir)
+	t.Setenv("GITTU__CONFIG", dir)
 	path := filepath.Join(dir, "config.yaml")
 	if err := os.WriteFile(path, []byte("input_tab_width: [\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	repo, _ := git.Open(gittest.Sample(t).Dir)
-	g := newGitreu(repo)
+	g := newGittu(repo)
 	d := tdptest.Start(t, g.a, 100, 32)
 	has(t, d, "MOVE ASIDE", "can't be read")
 	d.Press("Enter")
@@ -1463,7 +1463,7 @@ func TestConfigCannotBeRead(t *testing.T) {
 
 // --- task 16: the splash ---
 
-// TestSplashIsDocsIcon is tdp E6: the splash draws docs/icon.svg, gitreu's
+// TestSplashIsDocsIcon is tdp E6: the splash draws docs/icon.svg, gittu's
 // family mark; the copy go:embed reads is the same file.
 func TestSplashIsDocsIcon(t *testing.T) {
 	want, err := os.ReadFile("../../docs/icon.svg")
@@ -1473,7 +1473,7 @@ func TestSplashIsDocsIcon(t *testing.T) {
 	if !bytes.Equal(icon, want) {
 		t.Fatal("internal/ui/icon.svg is not docs/icon.svg: copy docs/icon.svg over it")
 	}
-	for _, letter := range []string{"<!-- U -->", "<!-- G -->", "<!-- I -->", "<!-- T -->", "<!-- R -->", "<!-- E -->"} {
+	for _, letter := range []string{"<!-- U -->", "<!-- G -->", "<!-- I -->", "<!-- T -->"} {
 		if !bytes.Contains(icon, []byte(letter)) {
 			t.Errorf("the mark has no %s", letter)
 		}
@@ -1484,7 +1484,7 @@ func TestSplashOpens(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 100, 40)
 	d.Press("V")
 	d.Advance(3 * time.Second)
-	has(t, d, "gitreu", "A git client laid out like SourceTree", "vulcan.shen.2304@gmail.com")
+	has(t, d, "gittu", "A git client laid out like SourceTree", "vulcan.shen.2304@gmail.com")
 	d.Press("q")
 	if d.Quit() {
 		t.Error("a key on the splash quit")

@@ -1,4 +1,4 @@
-# gitreu
+# gittu（原名 gitreu）
 
 > 照 SourceTree 的畫面安排做的 git TUI：左邊是分支列表，右邊是分支圖，SourceTree 的右鍵選單就用 Space 選單來呈現。terminu 家族的一員。
 
@@ -87,6 +87,14 @@ user 照原話：
 3. 每 3 秒的背景重讀要不要記進 App Log（review 判 tdp 不清楚）：「那就用 watch 啊，這樣就可以記」；重讀的方式選了「完整的 watch」
 4. 做了 watch 之後聊它的做法與困難點（平台的監看上限、分不出是誰改的、編輯器暫存檔的雜訊）：「那如果換成定時刷新呢？」（回答：沒有平台限制、自己的操作不會被誤記，每次刷新跟上一次比、有變才記；代價是最慢 3 秒才跟上）
 5. 「ok 改定時刷新，3 秒」
+
+## 改名（2026-11-19）
+
+user 照原話：
+
+1. 刪掉 GitHub 上的 repo：「我想要先撤掉 remote repo，想要改名」
+2. 「我們可以現在改名，再 push」
+3. 新名字：「gittu: git terminu ui，icon 你不用管，我會用 kamonu 作」；新的 repo 公開
 
 ## 後續可擴充
 

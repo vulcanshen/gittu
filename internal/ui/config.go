@@ -16,17 +16,17 @@ import (
 // defaultTabWidth is input_tab_width's default (tdp E3).
 const defaultTabWidth = 4
 
-// configDir is the settings directory (tdp E2, E3): GITREU__CONFIG, else
-// $XDG_CONFIG_HOME/gitreu, else ~/.config/gitreu.
+// configDir is the settings directory (tdp E2, E3): GITTU__CONFIG, else
+// $XDG_CONFIG_HOME/gittu, else ~/.config/gittu.
 func configDir() string {
-	if d := os.Getenv("GITREU__CONFIG"); d != "" {
+	if d := os.Getenv("GITTU__CONFIG"); d != "" {
 		return d
 	}
 	if x := os.Getenv("XDG_CONFIG_HOME"); x != "" {
-		return filepath.Join(x, "gitreu")
+		return filepath.Join(x, "gittu")
 	}
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, ".config", "gitreu")
+	return filepath.Join(home, ".config", "gittu")
 }
 
 // ConfigPath is the settings file, config.yaml in the settings directory.
@@ -34,7 +34,7 @@ func ConfigPath() string { return filepath.Join(configDir(), "config.yaml") }
 
 // readTabWidth reads input_tab_width from the settings file: the default with
 // no file or no key. A value that is not a whole number above 0 does not fit
-// (tdp E3): bad is what it was. unread are the other keys, which gitreu never
+// (tdp E3): bad is what it was. unread are the other keys, which gittu never
 // read. err is a file that can't be read.
 func readTabWidth(path string) (width int, bad string, unread []string, err error) {
 	b, err := os.ReadFile(path)
@@ -112,9 +112,9 @@ func writeTabWidth(path string) error {
 
 // loadConfig reads the settings at the start (tdp E3): a file that can't be
 // read asks to be moved aside; a value that does not fit is kept in a copy
-// and written again as its default; a key gitreu never read is left in the
+// and written again as its default; a key gittu never read is left in the
 // file, an INFO at every start.
-func (g *gitreu) loadConfig() tea.Cmd {
+func (g *gittu) loadConfig() tea.Cmd {
 	path := ConfigPath()
 	width, bad, unread, err := readTabWidth(path)
 	if err != nil {

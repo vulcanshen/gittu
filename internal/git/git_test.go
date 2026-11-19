@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vulcanshen/gitreu/internal/git"
-	"github.com/vulcanshen/gitreu/internal/gittest"
+	"github.com/vulcanshen/gittu/internal/git"
+	"github.com/vulcanshen/gittu/internal/gittest"
 )
 
 func TestOpenFindsTheTop(t *testing.T) {

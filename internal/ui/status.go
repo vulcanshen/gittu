@@ -8,7 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/gitreu/internal/git"
+	"github.com/vulcanshen/gittu/internal/git"
 )
 
 // The groups of [1] FILES, the start of each row's ID (tdp panel.11).
@@ -21,7 +21,7 @@ const (
 // statusScreen is Working tree (SourceTree's File Status): [1] the files with
 // a change, [2] the change of the one under the cursor (tdp panel.13).
 type statusScreen struct {
-	g      *gitreu
+	g      *gittu
 	screen *terminu.Screen
 
 	filesP *terminu.Panel
@@ -50,7 +50,7 @@ type statusScreen struct {
 	failed, failedWas string
 }
 
-func newStatusScreen(g *gitreu) *statusScreen {
+func newStatusScreen(g *gittu) *statusScreen {
 	s := &statusScreen{g: g}
 	s.files = &terminu.List{
 		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
@@ -514,7 +514,7 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 
 // commit commits the staged changes with a message the user writes
 // (tdp textarea); during a merge, with the message git prepared.
-func (g *gitreu) commit() tea.Cmd {
+func (g *gittu) commit() tea.Cmd {
 	if g.snap.State.Op == "merge" {
 		msg := g.repo.MergeMessage()
 		return g.a.Confirm(terminu.Ask{Title: "Commit", Question: "Commit the merge?", Verb: "commit", Details: []string{firstLine(msg)}},
@@ -535,7 +535,7 @@ func (g *gitreu) commit() tea.Cmd {
 
 // doCommit runs git commit; the message is kept until it goes through, to
 // write again after a hook stopped it.
-func (g *gitreu) doCommit(msg string, amend bool) tea.Cmd {
+func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
 	verb := "Commit"
 	if amend {
 		verb = "Amend"

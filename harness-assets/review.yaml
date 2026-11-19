@@ -24,7 +24,7 @@ tasks:
     reason: "違反：repo 沒有 remote 時 [f]etch 沒有可以抓的對象卻沒停用（tdp M6）；REMOTES 分頁空狀態的提示 Press [f] to fetch every remote 在沒有 remote 時也按了沒作用"
   - id: 11
     accepted: false
-    reason: "tdp 不清楚：沒追蹤的資料夾那一列在 [2] DIFF 該畫什麼 tdp 沒寫；note.8「在 panel 裡」只講文字檔，裝著許多項目的照 panel.9 是按 Enter 進去的一層，不是跟著 cursor 的明細；gitreu 現在把資料夾裡的檔名一列一列放進 [2]、Enter 隱藏"
+    reason: "tdp 不清楚：沒追蹤的資料夾那一列在 [2] DIFF 該畫什麼 tdp 沒寫；note.8「在 panel 裡」只講文字檔，裝著許多項目的照 panel.9 是按 Enter 進去的一層，不是跟著 cursor 的明細；gittu 現在把資料夾裡的檔名一列一列放進 [2]、Enter 隱藏"
   - id: 12
     accepted: true
   - id: 13

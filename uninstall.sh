@@ -1,13 +1,13 @@
 #!/bin/sh
-# gitreu uninstaller for macOS / Linux.
-# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/uninstall.sh | sh
+# gittu uninstaller for macOS / Linux.
+# Usage: curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.sh | sh
 #
-# terminu family template (harness project/uninstall.sh). Replace gitreu; the
+# terminu family template (harness project/uninstall.sh). Replace gittu; the
 # blocks marked "app's own" are the app's, the rest stays as it is.
 
 set -e
 
-APP="gitreu"
+APP="gittu"
 # The prefix of the app's environment variables (tdp E2): <APP>__CONFIG, …
 APP_UPPER=$(echo "$APP" | tr '[:lower:]' '[:upper:]')
 

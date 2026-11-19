@@ -6,7 +6,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/gitreu/internal/git"
+	"github.com/vulcanshen/gittu/internal/git"
 )
 
 // The kinds of row in [1] BRANCHES, the start of each row's ID.
@@ -20,10 +20,10 @@ const (
 // kinds are [1]'s tabs, in order: each a kind of row (tdp terms.4).
 var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 
-// historyScreen is the screen gitreu opens on (tdp terms.2): [1] the branches,
+// historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
 // [2] the history graph, as SourceTree lays them out.
 type historyScreen struct {
-	g      *gitreu
+	g      *gittu
 	screen *terminu.Screen
 
 	branchP *terminu.Panel
@@ -42,7 +42,7 @@ type historyScreen struct {
 // [1] has at 60 columns, branch names still readable (tdp L1).
 const leftLeast = 20
 
-func newHistoryScreen(g *gitreu) *historyScreen {
+func newHistoryScreen(g *gittu) *historyScreen {
 	h := &historyScreen{g: g}
 	empty := [4][2]string{
 		{"No branches yet", "Press [Space] to see what you can do here"},

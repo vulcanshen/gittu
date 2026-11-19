@@ -1,4 +1,4 @@
-// Package git runs the git the user has installed, for gitreu: it reads a
+// Package git runs the git the user has installed, for gittu: it reads a
 // repository (its refs, its history, its working tree) and runs the
 // operations the screens offer. Every git runs in a session of its own, with no
 // terminal to ask a password on (tdp P5: what outside programs to call is the

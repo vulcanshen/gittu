@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vulcanshen/gitreu/internal/git"
+	"github.com/vulcanshen/gittu/internal/git"
 )
 
 // changes are what differs between two reads of the repository, as the App

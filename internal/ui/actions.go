@@ -9,7 +9,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
 
-	"github.com/vulcanshen/gitreu/internal/git"
+	"github.com/vulcanshen/gittu/internal/git"
 )
 
 const (
@@ -293,7 +293,7 @@ func (h *historyScreen) deleteBranch(name string) tea.Cmd {
 }
 
 // checkBranch is a new branch name's rule: git check-ref-format's.
-func (g *gitreu) checkBranch(name string) error {
+func (g *gittu) checkBranch(name string) error {
 	if !g.repo.ValidBranch(name) {
 		return errors.New("Not a valid branch name")
 	}
@@ -303,7 +303,7 @@ func (g *gitreu) checkBranch(name string) error {
 	return nil
 }
 
-func (g *gitreu) checkTag(name string) error {
+func (g *gittu) checkTag(name string) error {
 	if !g.repo.ValidTag(name) {
 		return errors.New("Not a valid tag name")
 	}
@@ -313,30 +313,30 @@ func (g *gitreu) checkTag(name string) error {
 	return nil
 }
 
-func (g *gitreu) currentName() string {
+func (g *gittu) currentName() string {
 	if g.snap != nil && g.snap.Head != "" {
 		return g.snap.Head
 	}
 	return "HEAD"
 }
 
-func (g *gitreu) askMerge(what string) *terminu.Ask {
+func (g *gittu) askMerge(what string) *terminu.Ask {
 	return &terminu.Ask{Title: "Merge", Subject: what, Question: "Merge " + what + " into " + g.currentName() + "?", Verb: "merge"}
 }
 
-func (g *gitreu) askRebase(onto string) *terminu.Ask {
+func (g *gittu) askRebase(onto string) *terminu.Ask {
 	return &terminu.Ask{Title: "Rebase", Subject: onto, Question: "Rebase " + g.currentName() + " onto " + onto + "?", Verb: "rebase",
 		Details: []string{"Its commits are made again on top of " + onto + "."}}
 }
 
-func (g *gitreu) merge(what string) tea.Cmd {
+func (g *gittu) merge(what string) tea.Cmd {
 	into := g.currentName()
 	return g.runWith(doneMsg{title: "Merge",
 		ok:        func() tea.Cmd { return g.a.Toast(terminu.Success, "Merged "+what+" into "+into) },
 		conflicts: g.conflictsSaid("Merge")}, "Merging…", func() error { return g.repo.Merge(what) })
 }
 
-func (g *gitreu) rebase(onto string) tea.Cmd {
+func (g *gittu) rebase(onto string) tea.Cmd {
 	cur := g.currentName()
 	return g.runWith(doneMsg{title: "Rebase",
 		ok:        func() tea.Cmd { return g.a.Toast(terminu.Success, "Rebased "+cur+" onto "+onto) },
@@ -492,7 +492,7 @@ func (h *historyScreen) reset() tea.Cmd {
 
 // newBranch asks for the name of a branch to make at ref ("" for HEAD) and
 // checks it out.
-func (g *gitreu) newBranch(ref string) tea.Cmd {
+func (g *gittu) newBranch(ref string) tea.Cmd {
 	at := "HEAD"
 	if ref != "" {
 		at = git.Short(ref)
@@ -509,7 +509,7 @@ func (g *gitreu) newBranch(ref string) tea.Cmd {
 }
 
 // newTag asks for the name of a tag to make at ref ("" for HEAD).
-func (g *gitreu) newTag(ref string) tea.Cmd {
+func (g *gittu) newTag(ref string) tea.Cmd {
 	at := "HEAD"
 	if ref != "" {
 		at = git.Short(ref)
@@ -527,7 +527,7 @@ func (g *gitreu) newTag(ref string) tea.Cmd {
 
 // globalActions are what SourceTree's toolbar does, for the whole repository
 // (tdp P3, M4).
-func (g *gitreu) globalActions() []terminu.Action {
+func (g *gittu) globalActions() []terminu.Action {
 	off := func() bool { return !g.idle() }
 	state := func(op string) func() bool {
 		return func() bool { return g.snap == nil || g.snap.State.Op != op }
@@ -596,20 +596,20 @@ func (g *gitreu) globalActions() []terminu.Action {
 	return acts
 }
 
-func (g *gitreu) hasStaged() bool {
+func (g *gittu) hasStaged() bool {
 	return g.snap != nil && slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return f.Staged() }) ||
 		g.snap != nil && g.snap.State.Op == "merge" && !g.hasConflicts()
 }
 
-func (g *gitreu) hasChanges() bool {
+func (g *gittu) hasChanges() bool {
 	return g.snap != nil && slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return !f.Untracked() })
 }
 
-func (g *gitreu) hasConflicts() bool {
+func (g *gittu) hasConflicts() bool {
 	return g.snap != nil && slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return f.Conflicted() })
 }
 
-func (g *gitreu) pull() tea.Cmd {
+func (g *gittu) pull() tea.Cmd {
 	return g.runWith(doneMsg{title: "Pull",
 		ok:        func() tea.Cmd { return g.a.Toast(terminu.Success, "Pulled "+g.currentName()) },
 		conflicts: g.conflictsSaid("Pull")}, "Pulling…", g.repo.Pull)
@@ -618,7 +618,7 @@ func (g *gitreu) pull() tea.Cmd {
 // push pushes the current branch; one with no upstream asks first to push it
 // to the remote and track it there.
 // upstreamGone reports the current branch's upstream deleted on the remote.
-func (g *gitreu) upstreamGone() bool {
+func (g *gittu) upstreamGone() bool {
 	for _, b := range g.snap.Branches {
 		if b.Current {
 			return b.Gone
@@ -627,7 +627,7 @@ func (g *gitreu) upstreamGone() bool {
 	return false
 }
 
-func (g *gitreu) push() tea.Cmd {
+func (g *gittu) push() tea.Cmd {
 	branch := g.snap.Head
 	if g.snap.Upstream != "" {
 		return g.run("Pushing…", "Push", func() error { return g.repo.Push("", branch, false) },
@@ -643,7 +643,7 @@ func (g *gitreu) push() tea.Cmd {
 }
 
 // pickMerge asks which branch to merge into the current one (tdp select).
-func (g *gitreu) pickMerge() tea.Cmd {
+func (g *gittu) pickMerge() tea.Cmd {
 	names := g.mergeable()
 	return g.a.Select(terminu.Select{Title: "Merge", Subject: g.currentName(), Glyph: glyphBranch, Options: names, Selected: -1,
 		Done: func(i int) tea.Cmd {
@@ -653,7 +653,7 @@ func (g *gitreu) pickMerge() tea.Cmd {
 
 // mergeable are the branches the current one can take in: the other local
 // ones, then the remote ones.
-func (g *gitreu) mergeable() []string {
+func (g *gittu) mergeable() []string {
 	if g.snap == nil {
 		return nil
 	}
@@ -670,7 +670,7 @@ func (g *gitreu) mergeable() []string {
 }
 
 // stash asks for a message and puts the uncommitted changes away.
-func (g *gitreu) stash() tea.Cmd {
+func (g *gittu) stash() tea.Cmd {
 	own := g.stashMessage()
 	do := func(msg string) tea.Cmd {
 		msg = strings.TrimSpace(msg)
@@ -686,7 +686,7 @@ func (g *gitreu) stash() tea.Cmd {
 
 // stashMessage is the message git gives a stash with none, offered as the
 // suggested value (tdp input.6): WIP on <branch>: <short hash> <subject>.
-func (g *gitreu) stashMessage() string {
+func (g *gittu) stashMessage() string {
 	s := g.snap
 	if s == nil || s.HeadSHA == "" {
 		return ""
