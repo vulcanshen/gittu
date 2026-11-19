@@ -23,14 +23,20 @@ const MaxLines = 10
 const Node = '◉'
 
 // Graph lays out the commits, in the order given (a child before its
-// parents), and gives each its row of cells.
-func Graph(commits []Commit) [][]Cell {
+// parents), and gives each its row of cells. main, when not "", is the commit
+// whose line is the main line: it and its first parents, down to the end, are
+// always the first column, which no other line takes (blank above it).
+func Graph(commits []Commit, main string) [][]Cell {
+	chain := mainLine(commits, main)
 	var lanes []string // the commit each column waits for, "" when free
 	var colour []int   // each column's line, for its colour
 	next := 0
+	if len(chain) > 0 {
+		lanes, colour, next = []string{""}, []int{0}, 1
+	}
 	free := func(skip map[int]bool) int {
 		for i, l := range lanes {
-			if l == "" && !skip[i] {
+			if l == "" && !skip[i] && !(i == 0 && len(chain) > 0) {
 				return i
 			}
 		}
@@ -41,8 +47,12 @@ func Graph(commits []Commit) [][]Cell {
 	rows := make([][]Cell, len(commits))
 	for n, c := range commits {
 		col := -1
+		if chain[c.SHA] {
+			col = 0 // the main line's: other columns waiting for it join it
+			lanes[0] = c.SHA
+		}
 		for i, l := range lanes {
-			if l == c.SHA {
+			if col < 0 && l == c.SHA {
 				col = i
 				break
 			}
@@ -183,7 +193,7 @@ func Graph(commits []Commit) [][]Cell {
 			row = append(row[:2*MaxLines-1], Cell{'…', -1})
 		}
 		rows[n] = trimRow(row)
-		for len(lanes) > 0 && lanes[len(lanes)-1] == "" {
+		for len(lanes) > 1 && lanes[len(lanes)-1] == "" || len(lanes) == 1 && lanes[0] == "" && len(chain) == 0 {
 			lanes = lanes[:len(lanes)-1]
 			colour = colour[:len(colour)-1]
 		}
@@ -197,4 +207,29 @@ func trimRow(row []Cell) []Cell {
 		row = row[:len(row)-1]
 	}
 	return row
+}
+
+// mainLine is the commits of the main line: main and its first parents, as
+// far as the commits go; empty for no main.
+func mainLine(commits []Commit, main string) map[string]bool {
+	chain := map[string]bool{}
+	if main == "" {
+		return chain
+	}
+	byID := make(map[string]Commit, len(commits))
+	for _, c := range commits {
+		byID[c.SHA] = c
+	}
+	for sha := main; sha != "" && !chain[sha]; {
+		c, ok := byID[sha]
+		if !ok {
+			break
+		}
+		chain[sha] = true
+		if len(c.Parents) == 0 {
+			break
+		}
+		sha = c.Parents[0]
+	}
+	return chain
 }

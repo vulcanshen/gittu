@@ -26,42 +26,46 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gitreu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gitreu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 3
+    spec: 6
     implementation: |
       [1] 有四個分頁（tgo Panel.Tabs：label Branches、Tabs Remotes、Tags、Stashes；OnTab 把 Body 換成那一頁的 List），h|l 切換（tgo 做，下框 hint 寫 h|l:tab）；
       每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
       BRANCHES（git for-each-ref refs/heads，照名稱排）、REMOTES（refs/remotes，不列 <remote>/HEAD，照名稱排）、
       TAGS（refs/tags，annotated tag 指它的 commit；照版本的數字排，v1.9 在 v1.10 前面）、STASHES（git stash list，stash@{N}: <訊息>）
       沒有東西的頁：No remote branches / Press [f] to fetch every remote、No tags / Press [t] to tag HEAD、No stashes / Press [S] to stash the changes
-      目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 upstream gone（Peach）
+      目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone（glyph 與字都是 Peach）
       打開時 cursor 停在目前的分支上
       cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：[2] 在分支圖這一層時，[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），focus 留在 [1]
       分支、遠端分支、tag 上的 Enter（[Enter] Show — its commit in [2] COMMITS；hint Enter:show；stash 那一列沒有，它的 Enter 是 task 8 的 Show）：
       [2] 進到某個 commit 裡時先退回分支圖；[2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
-      tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：只看目前的分支時
-      「<名字> is not in the current branch's history」「Press [a] on [2] for all branches」，看全部分支時「<名字> is not in the graph's 1000 newest commits」
+      tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：遠端分支隱藏著、而它是遠端分支時
+      「<名字> is not in the graph」「Press [r] on [2] to show remote branches」，其他時候「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；讀 repo 失敗時兩個 panel 都是 Can't read <repo>: <原因>（Red）/ Press [R] to read it again（tgo Panel.Fail）
-    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnABranchNotInTheGraph, TestReadTheSample, TestVersionCompare]
+    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnARemoteBranchHidden, TestReadTheSample, TestVersionCompare]
   - id: 4
-    spec: 2
+    spec: 6
     implementation: |
       [2] COMMITS 是 tgo List，Marks（可以標記），Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
-      讀 git log --topo-order -n 1001 --format=%H %P %an %at %s；全部分支時 --branches --remotes --tags HEAD，目前分支時 HEAD（task 5）；多於 1000 個只留 1000 個
+      讀 git log --topo-order -n 1001 --format=%H %P %an %at %s --branches --tags HEAD，遠端分支畫出來時（task 18）再加 --remotes；多於 1000 個只留 1000 個
       分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit ◉（U+25C9）、往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
       橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；超過 10 條線時第 10 條的位置畫 …（Overlay0）；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
-      DESCRIPTION 前面接指著這個 commit 的 ref：本地分支 Green、遠端分支 Mauve、tag Peach，HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面
-      位置列（List.Location）：All branches 或 Current branch；進到 commit 裡時接上那一層（task 6）
+      DESCRIPTION 前面接指著這個 commit 的 ref：分支是 nf-dev-git_branch（U+E725）加名字，本地分支 Green、遠端分支 Mauve；tag 是 nf-md-tag（U+F04F9）加名字，Peach；
+      HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面；遠端分支隱藏時不寫遠端分支的 ref
+      主線（git.Graph 的 main：All 是 main 或 master 的 commit，Current 是 HEAD，task 5）：它與它的第一個 parent 一路往下一律在第一欄，其他線不佔第一欄（主線出現之前那一欄空白）；
+      主線 commit 出現時，其他等著它的欄合進第一欄
+      位置列（List.Location）：All branches 或 Current branch，遠端分支畫出來時接 · with remote branches；進到 commit 裡時接上那一層（task 6）
       空的 repo：空狀態 No commits yet / Press [W] to see the files to commit；讀失敗同 task 3
-    test: [TestGraphRows, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
+    test: [TestGraphRows, TestGraphMainLine, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
   - id: 5
-    spec: 1
+    spec: 6
     implementation: |
-      [2] COMMITS 的 panel operation（Space menu 的 PANEL OPERATION 與 a 鍵）：全部分支時列 Current br[a]nch（only what HEAD reaches），目前分支時列 [a]ll branches（every branch, remote branch and tag），另一個 Hidden；
+      [2] COMMITS 的 panel operation（Space menu 的 PANEL OPERATION 與 a 鍵）：All 時列 Current br[a]nch（HEAD's line on the left），Current 時列 [a]ll branches（main's line on the left），另一個 Hidden；
       進到 commit 裡時兩個都 Hidden
-      切換時馬上重新讀 repo（同步），位置列換成 All branches／Current branch；App Log 記 Info：Showing all branches／Showing the current branch
-      預設全部分支，不存檔
-    test: [TestAllOrCurrentBranch]
+      All 與 Current 畫的 commit 一樣（全部的本地分支、tag、HEAD；遠端分支照 task 18），只差 git.Graph 的主線：All 是 main（沒有就 master，兩個都沒有就沒有主線），Current 是 HEAD；
+      切換時不重新讀 repo，用讀好的重排分支圖；位置列換成 All branches／Current branch；App Log 記 Info：Showing all branches, main on the left／Showing the current branch on the left
+      預設 All，不存檔
+    test: [TestAllOrCurrentBranch, TestGraphMainLine]
   - id: 6
     spec: 1
     implementation: |
@@ -200,3 +204,12 @@ tasks:
       第二段時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [1] 時 [1] 佔滿；[1] 上 Enter（task 3）把 focus 送回 [2]，[2] 佔滿
       App Log 記 Info：Zoomed [2] COMMITS、Zoomed [2] COMMITS to the whole screen、Back to both panels
     test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep]
+  - id: 18
+    spec: 6
+    implementation: |
+      [2] COMMITS 的 panel operation，同一個鍵 r 用 Hidden 分開：遠端分支隱藏時列 Show [r]emote branches（in the graph），畫出來時列 Hide [r]emote branches（from the graph）；
+      進到 commit 裡時兩個都 Hidden
+      隱藏（預設）時 git.Read 不帶 --remotes：只畫本地分支、tag、HEAD 走得到的 commit，DESCRIPTION 不寫遠端分支的 ref；切換時馬上重新讀 repo（同步）
+      位置列在畫出來時接 · with remote branches；App Log 記 Info：Showing remote branches／Hiding remote branches；不存檔
+      [1] 的 REMOTES 分頁與 statusbar、[1] 的 ↑N ↓N 不受影響
+    test: [TestRemoteBranchesToggle, TestEnterOnARemoteBranchHidden, TestReadTheSample]

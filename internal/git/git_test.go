@@ -60,12 +60,15 @@ func TestReadTheSample(t *testing.T) {
 	if len(s.Commits) != 7 {
 		t.Errorf("%d commits, want 7 (topic's too)", len(s.Commits))
 	}
-	cur, err := repo.Read(false)
+	local, err := repo.Read(false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(cur.Commits) != 6 {
-		t.Errorf("%d commits on main, want 6", len(cur.Commits))
+	if len(local.Commits) != 7 {
+		t.Errorf("%d commits without the remote branches, want 7", len(local.Commits))
+	}
+	if s.MainSHA() != s.HeadSHA {
+		t.Errorf("main %s, HEAD %s", s.MainSHA(), s.HeadSHA)
 	}
 	if len(s.Files) != 0 {
 		t.Errorf("files %+v", s.Files)
@@ -109,7 +112,7 @@ func TestGraphOfAMerge(t *testing.T) {
 		{SHA: "B", Parents: []string{"A"}},
 		{SHA: "A"},
 	}
-	rows := git.Graph(cs)
+	rows := git.Graph(cs, "")
 	text := func(r []git.Cell) string {
 		var b strings.Builder
 		for _, c := range r {
@@ -135,7 +138,7 @@ func TestGraphCapsTheLines(t *testing.T) {
 		cs = append(cs, git.Commit{SHA: string(rune('a' + i)), Parents: []string{"root"}})
 	}
 	cs = append(cs, git.Commit{SHA: "root"})
-	rows := git.Graph(cs)
+	rows := git.Graph(cs, "")
 	for i, r := range rows {
 		if len(r) > 2*git.MaxLines {
 			t.Errorf("row %d is %d cells", i, len(r))
@@ -229,5 +232,36 @@ func TestDeleteUnmergedBranch(t *testing.T) {
 	}
 	if err := repo.DeleteBranch("topic", true); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// TestGraphMainLine keeps the main line in the first column: feature's tip F
+// is drawn first, yet main (A ← B) takes column 0, blank above it.
+func TestGraphMainLine(t *testing.T) {
+	cs := []git.Commit{
+		{SHA: "F", Parents: []string{"A"}},
+		{SHA: "B", Parents: []string{"A"}},
+		{SHA: "A"},
+	}
+	text := func(r []git.Cell) string { return string(cellRunes(r)) }
+	n := string(git.Node)
+	unpinned := git.Graph(cs, "")
+	if got := text(unpinned[0]); got != n {
+		t.Errorf("no main line: feature's row %q, want %q", got, n)
+	}
+	rows := git.Graph(cs, "B")
+	want := []string{"  " + n, n + " │", n + "─╯"}
+	for i, r := range rows {
+		if text(r) != want[i] {
+			t.Errorf("row %d %q, want %q", i, text(r), want[i])
+		}
+	}
+	// With main at F, F's line is the first column.
+	rows = git.Graph(cs, "F")
+	want = []string{n, "│ " + n, n + "─╯"}
+	for i, r := range rows {
+		if text(r) != want[i] {
+			t.Errorf("main at F: row %d %q, want %q", i, text(r), want[i])
+		}
 	}
 }

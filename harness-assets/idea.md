@@ -70,6 +70,14 @@ user 照原話：
 1. 「graph 的線似乎太多了，分支好多，sourcetree 和 gitkraken 有處理這個問題嗎？」（先回答、再決定要做什麼）
 2. 「需要可以 zoom，但是 zoom 分兩段，第一段是還保留 panel 1 最小寬度，第二段是完全展開，panel 1 就完全被覆蓋，當窄寬時，就不會有 panel 1 最小寬度那一段」
 
+看了 SourceTree、GitKraken 的做法之後（2026-11-19），user 照原話：
+
+1. 「我認為需要像 sourcetree 那樣有 show all/current 的展示，但是 sourcetree 裡面這兩個差異只是主線是誰，current 的時候，當前 head 一定是在最左邊，而 all 的時候應該是以 main/master 在最左邊，或者沒有主線」（追問後：All 與 Current 都畫全部的分支，只差最左邊的主線）
+2. 「我不懂 hide/solo 的顯示方式」（解釋後：先不要）
+3. 「顯示/隱藏 remote 確實是個好方法，畢竟正常開發只會關注自己的分支」（追問後：預設隱藏）
+4. 「tag 應該要在 commit panel 中，但現在欄位似乎有點緊」（追問後：tag 用膠囊顯示；膠囊是 tdp 保留給名稱的，先用 glyph，同時回報 tdp）
+5. 「那 upstream gone 也加個 glyph」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

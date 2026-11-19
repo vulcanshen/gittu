@@ -172,7 +172,7 @@ func (h *historyScreen) show(s *git.Snapshot) {
 		// Open on the branch checked out, the graph on HEAD.
 		h.tabs[0].Select(kindBranch + s.Head)
 	}
-	h.commits.SetRows(commitRows(s))
+	h.commits.SetRows(h.commitRows(s))
 	h.commits.Location = h.scope()
 	if h.in != nil {
 		h.files.Location = h.scope() + " › " + h.in.where
@@ -189,13 +189,26 @@ func (h *historyScreen) failed() {
 	h.commits.SetRows(nil)
 }
 
-// scope is the location row of the graph: which history it shows (tdp
-// panel.10).
+// scope is the location row of the graph: its main line, and the remote
+// branches when they are drawn (tdp panel.10).
 func (h *historyScreen) scope() string {
+	s := "Current branch"
 	if h.g.all {
-		return "All branches"
+		s = "All branches"
 	}
-	return "Current branch"
+	if h.g.remote {
+		s += " · with remote branches"
+	}
+	return s
+}
+
+// mainLine is the commit the graph keeps in its first column: main (else
+// master) for All, HEAD for Current.
+func (h *historyScreen) mainLine(s *git.Snapshot) string {
+	if h.g.all {
+		return s.MainSHA()
+	}
+	return s.HeadSHA
 }
 
 func firstLine(s string) string {
@@ -214,6 +227,7 @@ func branchRows(s *git.Snapshot) []terminu.Row {
 			st := quiet
 			if b.Gone {
 				st = terminu.Fg(terminu.Peach) // worth a look: most often merged, and deleted on the remote
+				t = glyphGone + " " + t
 			}
 			r.Cells[0] = b.Name + " " + t
 			r.Styled = [][]terminu.Span{{{Text: b.Name}, {Text: " " + t, Style: st}}}
@@ -235,9 +249,9 @@ func branchRows(s *git.Snapshot) []terminu.Row {
 	return rows
 }
 
-// commitRows are the graph's rows, one a commit.
-func commitRows(s *git.Snapshot) []terminu.Row {
-	graph := git.Graph(s.Commits)
+// commitRows are the graph's rows, one a commit, the main line first.
+func (h *historyScreen) commitRows(s *git.Snapshot) []terminu.Row {
+	graph := git.Graph(s.Commits, h.mainLine(s))
 	refs := refsByCommit(s)
 	rows := make([]terminu.Row, len(s.Commits))
 	for i, c := range s.Commits {
@@ -289,8 +303,10 @@ func refsByCommit(s *git.Snapshot) map[string][]ref {
 	if s.Head == "" && s.HeadSHA != "" {
 		m[s.HeadSHA] = append([]ref{{"HEAD", kindBranch, true}}, m[s.HeadSHA]...)
 	}
-	for _, rb := range s.Remotes {
-		m[rb.SHA] = append(m[rb.SHA], ref{rb.Name, kindRemote, false})
+	if s.Remote {
+		for _, rb := range s.Remotes {
+			m[rb.SHA] = append(m[rb.SHA], ref{rb.Name, kindRemote, false})
+		}
 	}
 	for _, t := range s.Tags {
 		m[t.SHA] = append(m[t.SHA], ref{t.Name, kindTag, false})
@@ -298,24 +314,27 @@ func refsByCommit(s *git.Snapshot) map[string][]ref {
 	return m
 }
 
-// description is a commit's refs, then its subject: local branches Green,
-// remote ones Mauve, tags Peach, the branch HEAD is on bold (tdp P5).
+// description is a commit's refs, then its subject: a branch glyph before a
+// local branch (Green) and a remote one (Mauve), a tag glyph before a tag
+// (Peach), the branch HEAD is on bold (tdp P5). Not a capsule: that is tdp's
+// for a name (tdp P4; a badge of its own is asked of tdp).
 func description(refs []ref, subject string) (string, []terminu.Span) {
 	var b strings.Builder
 	var spans []terminu.Span
 	for _, r := range refs {
-		st := terminu.Fg(terminu.Green)
+		st, glyph := terminu.Fg(terminu.Green), glyphBranch
 		switch r.kind {
 		case kindRemote:
 			st = terminu.Fg(mauve)
 		case kindTag:
-			st = terminu.Fg(terminu.Peach)
+			st, glyph = terminu.Fg(terminu.Peach), glyphRefTag
 		}
 		if r.head {
 			st = st.Bolded()
 		}
-		b.WriteString(r.name + " ")
-		spans = append(spans, terminu.Span{Text: r.name, Style: st}, terminu.Span{Text: " "})
+		text := glyph + " " + r.name
+		b.WriteString(text + " ")
+		spans = append(spans, terminu.Span{Text: text, Style: st}, terminu.Span{Text: " "})
 	}
 	b.WriteString(subject)
 	spans = append(spans, terminu.Span{Text: subject})

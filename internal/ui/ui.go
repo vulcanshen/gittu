@@ -25,8 +25,11 @@ import (
 //go:embed icon.svg
 var icon []byte
 
-// Glyphs of gitreu's own popups (tdp note.2: a viewer's glyph is the app's).
+// Glyphs of gitreu's own popups (tdp note.2: a viewer's glyph is the app's),
+// and of the refs in the graph (tdp P5: content's symbols are the app's).
 const (
+	glyphRefTag = "\U000F04F9" // nf-md-tag
+	glyphGone   = "\U000F0165" // nf-md-cloud_off_outline: a branch whose upstream is gone
 	glyphDiff   = "\U000F018A" // nf-md-compare
 	glyphBranch = ""          // nf-dev-git_branch
 	glyphTag    = ""          // nf-fa-tag
@@ -53,8 +56,11 @@ type gitreu struct {
 	a    *terminu.App
 	repo *git.Repo
 	snap *git.Snapshot
-	// all is the history's range: every branch, or what HEAD reaches.
+	// all is the graph's main line, the first column: main (else master) when
+	// set, HEAD otherwise (SourceTree's All and Current branches).
 	all bool
+	// remote reports the remote branches drawn in the graph too.
+	remote bool
 	// busy is what git is doing now, for the statusbar ("Pushing…"); "" when
 	// nothing runs. Operations that change the repository wait meanwhile.
 	busy string
@@ -86,7 +92,7 @@ func newGitreu(repo *git.Repo) *gitreu {
 	g.a.OnMsg = g.onMsg
 	g.a.Start = g.start
 	g.a.InputTabWidth = 4
-	snap, err := repo.Read(g.all)
+	snap, err := repo.Read(g.remote)
 	g.show(snap, err)
 	return g
 }
@@ -176,9 +182,9 @@ func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
 
 // read reads the repository in the background.
 func (g *gitreu) read(asked bool) tea.Cmd {
-	repo, all := g.repo, g.all
+	repo, remote := g.repo, g.remote
 	return func() tea.Msg {
-		snap, err := repo.Read(all)
+		snap, err := repo.Read(remote)
 		return readMsg{snap: snap, err: err, asked: asked}
 	}
 }
@@ -193,10 +199,10 @@ func (g *gitreu) run(doing, title string, op func() error, ok func() tea.Cmd) te
 // runWith is run with what doneMsg says about conflicts and failures.
 func (g *gitreu) runWith(m doneMsg, doing string, op func() error) tea.Cmd {
 	g.busy = doing
-	repo, all := g.repo, g.all
+	repo, remote := g.repo, g.remote
 	return func() tea.Msg {
 		m.err = op()
-		m.snap, m.rerr = repo.Read(all)
+		m.snap, m.rerr = repo.Read(remote)
 		return m
 	}
 }

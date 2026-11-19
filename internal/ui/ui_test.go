@@ -271,9 +271,9 @@ func TestUpstreamGone(t *testing.T) {
 	r.Git("push", "-q", "origin", "--delete", "topic")
 	r.Git("fetch", "-q", "--prune")
 	_, d := start(t, r, 120, 32)
-	has(t, d, "topic upstream gone")
-	if !strings.Contains(strings.Join(d.Styled(), "\n"), "38;2;250;179;135m upstream gone") {
-		t.Error("upstream gone is not Peach")
+	has(t, d, "topic "+glyphGone+" upstream gone")
+	if !strings.Contains(strings.Join(d.Styled(), "\n"), "38;2;250;179;135m "+glyphGone+" upstream gone") {
+		t.Error("upstream gone and its glyph are not Peach")
 	}
 }
 
@@ -311,16 +311,46 @@ func TestEnterShowsTheCommit(t *testing.T) {
 	hasNot(t, d, "Checked out")
 }
 
-func TestEnterOnABranchNotInTheGraph(t *testing.T) {
+func TestEnterOnARemoteBranchHidden(t *testing.T) {
 	r := gittest.Sample(t)
+	r.Git("push", "-q", "origin", "topic")
+	r.Git("branch", "-q", "-D", "topic")
+	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 120, 32)
-	d.Press("Tab", "a", "1")
-	selectBranch(d, g, kindBranch+"topic")
+	selectBranch(d, g, kindRemote+"origin/topic")
 	d.Press("Enter")
-	has(t, d, "topic is not in the current branch's history", "Press [a] on [2] for all branches")
+	has(t, d, "origin/topic is not in the graph", "Press [r] on [2] to show remote branches")
 	if g.a.Screen().Focused() != g.history.branchP {
 		t.Error("the focus left [1]")
 	}
+	d.Press("Tab", "r", "1")
+	selectBranch(d, g, kindRemote+"origin/topic")
+	d.Press("Enter")
+	if g.a.Screen().Focused() != g.history.histP {
+		t.Error("with the remote branches drawn, Enter did not go to [2]")
+	}
+}
+
+func TestRemoteBranchesToggle(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("push", "-q", "origin", "topic")
+	r.Git("branch", "-q", "-D", "topic")
+	r.Git("fetch", "-q", "origin")
+	g, d := start(t, r, 160, 32)
+	d.Press("Tab")
+	has(t, d, "All branches")
+	hasNot(t, d, "origin/main", "Try a topic", "with remote branches")
+	d.Press("Space")
+	has(t, d, "Show [r]emote branches")
+	d.Press("Esc", "r")
+	has(t, d, "All branches · with remote branches", "origin/main", "origin/topic", "Try a topic")
+	if !g.remote {
+		t.Error("remote still off")
+	}
+	d.Press("r")
+	hasNot(t, d, "origin/topic", "Try a topic")
+	d.Press("!")
+	has(t, d, "Showing remote branches", "Hiding remote branches")
 }
 
 // --- task 4: [2] COMMITS ---
@@ -328,8 +358,9 @@ func TestEnterOnABranchNotInTheGraph(t *testing.T) {
 func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 160, 32)
-	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", "main origin/main Say even more",
-		string(git.Node)+"─┴─╮")
+	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", glyphBranch+" main Say even more",
+		glyphRefTag+" v0.1.0 Merge branch 'feature'", string(git.Node)+"─┴─╮")
+	hasNot(t, d, "origin/main") // the remote branches are hidden at first
 }
 
 // TestGraphWithWideIcons is tdp E5: whatever cells an icon takes, the
@@ -370,20 +401,42 @@ func TestHistoryFilter(t *testing.T) {
 
 // --- task 5: all branches or the current one ---
 
+// TestAllOrCurrentBranch: both draw every branch, the main line on the left
+// is main for All and HEAD for Current (SourceTree's All and Current).
 func TestAllOrCurrentBranch(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 100, 32)
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Git("checkout", "-q", "topic")
+	g, d := start(t, r, 120, 32)
+	nodeAt := func(subject string) int {
+		for _, row := range d.Screen() {
+			if strings.Contains(row, subject) {
+				// The node in [2]: the last one before the subject, in cells.
+				i := strings.LastIndex(row[:strings.Index(row, subject)], string(git.Node))
+				return terminu.Width(row[:i])
+			}
+		}
+		return -1
+	}
 	d.Press("Tab")
-	has(t, d, "All branches", "Try a topic")
+	has(t, d, "All branches", "Try a topic", "Say even more")
+	allMain, allTopic := nodeAt("Say even more"), nodeAt("Try a topic")
+	if allMain >= allTopic {
+		t.Errorf("All: main's commit at %d is not left of topic's at %d", allMain, allTopic)
+	}
 	d.Press("a")
-	has(t, d, "Current branch")
-	hasNot(t, d, "Try a topic")
+	has(t, d, "Current branch", "Try a topic", "Say even more")
 	if g.all {
 		t.Error("still all")
 	}
+	curMain, curTopic := nodeAt("Say even more"), nodeAt("Try a topic")
+	if curTopic >= curMain {
+		t.Errorf("Current: HEAD's commit at %d is not left of main's at %d", curTopic, curMain)
+	}
 	d.Press("a")
-	has(t, d, "All branches", "Try a topic")
+	has(t, d, "All branches")
 	d.Press("!")
-	has(t, d, "Showing the current branch", "Showing all branches")
+	has(t, d, "Showing the current branch on the left", "Showing all branches, main on the left")
 }
 
 // --- task 6: a commit's files and their diffs ---

@@ -21,7 +21,8 @@ no keys to learn first.
 - **The SourceTree layout**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
   the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
 - **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
-  commits; every branch or only the current one.
+  commits; main's line kept on the left (All) or the current branch's (Current), the remote branches only when you want
+  them.
 - **Look before you act**: a commit's files, then a file's diff; two commits marked and compared the same way; `Esc`
   goes back one level at a time.
 - **Every operation from the `Space` menu**: check out, merge, rebase, cherry-pick, revert, reset, branch, tag, rename,
@@ -112,9 +113,11 @@ the App Log, what gitreu did and what went wrong.
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
 | `[2]` a commit | Its files | `[m]`ark, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
-| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[z]`oom, `[C]`ompare the two marked commits, `[/]` filter |
+| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide `[r]`emote branches, `[z]`oom, `[C]`ompare the two marked commits, `[/]` filter |
 
-`[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
+`[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
+and tag; All keeps main's line (or master's) on the left, Current the branch you are on. The remote branches are hidden
+at first: `r` on `[2]` draws them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`. `Enter` on a
 file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.

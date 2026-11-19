@@ -237,8 +237,8 @@ func (h *historyScreen) showRef() tea.Cmd {
 		h.histP.Body = h.commits
 	}
 	if sha == "" || !h.commits.Select(sha) {
-		if !h.g.all {
-			return h.g.a.Toast(terminu.Info, name+" is not in the current branch's history", "Press [a] on [2] for all branches")
+		if r.ID[:2] == kindRemote && !h.g.remote {
+			return h.g.a.Toast(terminu.Info, name+" is not in the graph", "Press [r] on [2] to show remote branches")
 		}
 		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
 	}
@@ -418,10 +418,14 @@ func (h *historyScreen) commitActions() []terminu.Action {
 				terminu.Clipboard(c.SHA)
 				return g.a.Toast(terminu.Success, "Copied "+git.Short(c.SHA))
 			}},
-		{Key: "a", Label: "Current branch", Desc: "only what HEAD reaches", Scope: panel,
+		{Key: "a", Label: "Current branch", Desc: "HEAD's line on the left", Scope: panel,
 			Hidden: func() bool { return h.in != nil || !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
-		{Key: "a", Label: "All branches", Desc: "every branch, remote branch and tag", Scope: panel,
+		{Key: "a", Label: "All branches", Desc: "main's line on the left", Scope: panel,
 			Hidden: func() bool { return h.in != nil || g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
+		{Key: "r", Label: "Show remote branches", Desc: "in the graph", Scope: panel,
+			Hidden: func() bool { return h.in != nil || g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
+		{Key: "r", Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
+			Hidden: func() bool { return h.in != nil || !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
 		{Key: "z", Label: "Zoom", Desc: "wider, [1] at its least", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},
 		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
@@ -434,17 +438,33 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	}
 }
 
-// setAll switches the graph between every branch and the current one (tdp
-// P3: the panel's operation).
+// setAll switches the graph's main line between main (All) and HEAD
+// (Current), as SourceTree's All and Current branches (tdp P3: the panel's
+// operation).
 func (h *historyScreen) setAll(all bool) tea.Cmd {
 	g := h.g
 	g.all = all
-	snap, err := g.repo.Read(all)
-	g.show(snap, err)
+	if g.snap != nil {
+		h.show(g.snap)
+	}
 	if all {
-		g.a.Log(terminu.Info, "Showing all branches")
+		g.a.Log(terminu.Info, "Showing all branches, main on the left")
 	} else {
-		g.a.Log(terminu.Info, "Showing the current branch")
+		g.a.Log(terminu.Info, "Showing the current branch on the left")
+	}
+	return nil
+}
+
+// setRemote draws the remote branches in the graph, or not (tdp P3).
+func (h *historyScreen) setRemote(remote bool) tea.Cmd {
+	g := h.g
+	g.remote = remote
+	snap, err := g.repo.Read(remote)
+	g.show(snap, err)
+	if remote {
+		g.a.Log(terminu.Info, "Showing remote branches")
+	} else {
+		g.a.Log(terminu.Info, "Hiding remote branches")
 	}
 	return nil
 }

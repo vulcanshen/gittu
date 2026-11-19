@@ -27,9 +27,9 @@ type Snapshot struct {
 	Tags     []Tag
 	Stashes  []Stash
 
-	// All reports whether Commits is every branch's history or only what HEAD
-	// reaches.
-	All     bool
+	// Remote reports whether Commits takes in what the remote branches reach,
+	// besides the local branches, the tags and HEAD.
+	Remote  bool
 	Commits []Commit
 	// More reports that the history goes on past Commits (Limit).
 	More bool
@@ -109,10 +109,10 @@ type State struct {
 // Limit is how many commits the history reads at most.
 const Limit = 1000
 
-// Read reads the repository: all, every branch's history; otherwise what HEAD
-// reaches.
-func (r *Repo) Read(all bool) (*Snapshot, error) {
-	s := &Snapshot{All: all}
+// Read reads the repository: the history of the local branches, the tags and
+// HEAD, and with remote that of the remote branches too.
+func (r *Repo) Read(remote bool) (*Snapshot, error) {
+	s := &Snapshot{Remote: remote}
 	if out, err := r.Run("symbolic-ref", "-q", "--short", "HEAD"); err == nil {
 		s.Head = strings.TrimSpace(out)
 	}
@@ -240,16 +240,14 @@ func (r *Repo) readStashes(s *Snapshot) error {
 }
 
 func (r *Repo) readLog(s *Snapshot) error {
-	revs := []string{"HEAD"}
-	if s.All {
-		revs = []string{"--branches", "--remotes", "--tags"}
-		if s.HeadSHA != "" {
-			revs = append(revs, "HEAD")
-		}
-	} else if s.HeadSHA == "" {
-		return nil
+	revs := []string{"--branches", "--tags"}
+	if s.Remote {
+		revs = append(revs, "--remotes")
 	}
-	if s.All && s.HeadSHA == "" && len(s.Branches) == 0 && len(s.Remotes) == 0 && len(s.Tags) == 0 {
+	if s.HeadSHA != "" {
+		revs = append(revs, "HEAD")
+	}
+	if s.HeadSHA == "" && len(s.Branches) == 0 && len(s.Tags) == 0 && (!s.Remote || len(s.Remotes) == 0) {
 		return nil // nothing has been committed yet
 	}
 	args := append([]string{"log", "--topo-order", "-z", "-n", strconv.Itoa(Limit + 1),
@@ -358,4 +356,17 @@ func (r *Repo) nameOf(sha string) string {
 		return strings.TrimSpace(out)
 	}
 	return Short(sha)
+}
+
+// MainSHA is the commit of the repository's main branch: main, else master;
+// "" when there is neither.
+func (s *Snapshot) MainSHA() string {
+	for _, name := range []string{"main", "master"} {
+		for _, b := range s.Branches {
+			if b.Name == name {
+				return b.SHA
+			}
+		}
+	}
+	return ""
 }
