@@ -87,6 +87,7 @@ tasks:
     remark:
       - note: "tdp 的比較（panel.9 的比較模式、note.8 的比較 popup）原本只比兩段文字。比兩個 commit 的結果是一份有變動的檔案清單，再對每個檔案看前後的差異。暫時：在 [2] 用標記（tdp panel.7，[m]ark）標兩個 commit，panel operation [C]ompare（tdp P3：對整批標記的項目做事；不是剛好兩個時停用，tdp M6）照 task 6 一樣進到檔案清單（位置列接 › <舊的短 hash> ↔ <新的短 hash>），Enter 開 diff 的 viewer，Esc 一層一層退回。2026-11-19 tdp 定案（使用者選 A，在 tdp main，還沒發版；tdp session 告知）：比兩個 commit 走比較模式，不用標記：在一個 commit 上按比較鍵成為 anchor，移到另一個按 Enter 或比較鍵；裝著許多項目的列照 panel.10 進到一層差異清單（位置列最後 <anchor> ↔ <另一個>），每一項前面 + Green（只有另一個有）、- Red（只有 anchor 有）、~ Peach（兩邊都有但不一樣），一樣的不列；在一項上 Enter 打開 note.8 的比較（UNIFIED、SPLIT；只有一邊有的另一邊是空的），不開 git diff 的 viewer；Esc 一層一層退回，最後回到模式、anchor 留著；沒有差異時 Info toast。tgo 要新的 API，等 terminu-go 出 beta 再照這個改；在那之前暫時的做法留著，比較的功能才不會不見"
         issue: tdp #20
+      - "tdp #20 的追問（tdp session 2026-11-19 回覆，tdp main 8c7ebcb，panel.9）：差異清單是一份平的路徑清單（internal/ui/ui.go），項目照 app 的叫法命名；檔案本身不裝東西，沒有再進一層。git 回報的改名算兩邊都有：一列 ~，寫 <舊> → <新>，Enter 比舊的對新的；所以比較清單裡不再有 git 的 R 與 Blue。看一個 commit 的檔案（task 6）與 Working tree 的 DIFF（task 11）要不要也改成 note.8 與 + - ~，還在等使用者決定，先照舊"
   - id: 8
     spec: 4
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；SourceTree 右鍵選單上的動作（分支、遠端分支、tag、stash）都對應到 Space 選單
