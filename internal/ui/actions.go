@@ -535,18 +535,17 @@ func (g *gittu) globalActions() []terminu.Action {
 	}
 	acts := []terminu.Action{
 		{Key: "c", Label: "Commit", Desc: "the staged changes", Disabled: func() bool { return off() || !g.hasStaged() }, Do: g.commit},
-		{Label: "Amend", Desc: "the last commit with the staged changes, its message kept",
+		{Label: "Amend", Desc: "the last commit with the staged changes, its message to keep or change",
 			Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },
 			AskFor: func() *terminu.Ask {
-				a := &terminu.Ask{Title: "Amend", Question: "Amend the last commit, keeping its message?", Verb: "amend",
-					Details: []string{firstLine(g.repo.LastMessage())}}
-				if g.repo.Pushed() {
-					a.Details = append(a.Details, "It is on "+g.snap.Upstream+" already: pushing it again takes a force push.")
-					a.Warn = []int{1}
+				if !g.repo.Pushed() {
+					return nil // nothing to warn of: straight to its message
 				}
-				return a
+				return &terminu.Ask{Title: "Amend", Question: "Amend the last commit?", Verb: "amend",
+					Details: []string{firstLine(g.repo.LastMessage()), "It is on " + g.snap.Upstream + " already: pushing it again takes a force push."},
+					Warn:    []int{1}}
 			},
-			Do: func() tea.Cmd { return g.doCommit(g.repo.LastMessage(), true) }},
+			Do: g.amend},
 		{Key: "p", Label: "Pull", Desc: "the current branch from its upstream", Disabled: func() bool {
 			return off() || g.snap == nil || g.snap.Head == "" || g.snap.Upstream == "" || g.upstreamGone() // nothing to pull from (tdp M6)
 		}, Do: g.pull},

@@ -374,7 +374,7 @@ func (s *statusScreen) folderItems(dir string) ([]terminu.DiffItem, error) {
 	}
 	items := make([]terminu.DiffItem, 0, len(files))
 	for _, p := range files {
-		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: base(p) + " @ index", Other: base(p)}
+		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: p + " @ index", Other: p}
 		if !binaryFile(filepath.Join(repo.Dir, filepath.FromSlash(p))) {
 			it.Text = func() (string, string, error) {
 				b, err := repo.WorkFile(p)
@@ -456,7 +456,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 			if f.Orig != "" {
 				old = f.Orig
 			}
-			item = terminu.DiffItem{Anchor: base(old) + " @ HEAD", Other: base(path) + " @ index", Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: old + " @ HEAD", Other: path + " @ index", Text: func() (string, string, error) {
 				a, err := repo.Show("HEAD", old)
 				if err != nil {
 					return "", "", err
@@ -465,7 +465,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 				return a, b, err
 			}}
 		case inUnstaged:
-			item = terminu.DiffItem{Anchor: base(path) + " @ index", Other: base(path), Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: path + " @ index", Other: path, Text: func() (string, string, error) {
 				a, err := repo.Show("", path)
 				if err != nil {
 					return "", "", err
@@ -474,7 +474,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 				return a, b, err
 			}}
 		default: // a conflict: what HEAD has against the file with its markers
-			item = terminu.DiffItem{Anchor: base(path) + " @ HEAD", Other: base(path), Text: func() (string, string, error) {
+			item = terminu.DiffItem{Anchor: path + " @ HEAD", Other: path, Text: func() (string, string, error) {
 				a, err := repo.Show("HEAD", path)
 				if err != nil {
 					return "", "", err
@@ -577,24 +577,32 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 }
 
 // commit commits the staged changes with a message the user writes
-// (tdp textarea); during a merge, with the message git prepared.
+// (tdp textarea): during a merge it opens with the message git prepared,
+// after a hook stopped one with that message; Enter on it unchanged commits
+// it (Textarea.Unchanged, tdp K3). Empty is an error, the popup kept open.
 func (g *gittu) commit() tea.Cmd {
-	if g.snap.State.Op == "merge" {
-		msg := g.repo.MergeMessage()
-		return g.a.Confirm(terminu.Ask{Title: "Commit", Question: "Commit the merge?", Verb: "commit", Details: []string{firstLine(msg)}},
-			func() tea.Cmd { return g.doCommit(msg, false) })
+	ready := g.draft
+	if g.snap.State.Op == "merge" && ready == "" {
+		ready = g.repo.MergeMessage()
 	}
-	// TODO(tgo #7): an empty textarea taken with Enter untouched closes with no
-	// error row, where tdp K3 has a value that may not be empty say so; the
-	// Check here only stops a message emptied after typing.
-	return g.a.Textarea(terminu.Textarea{Title: "Commit", Glyph: glyphCommit, Name: "Message", Old: g.draft,
+	return g.messageFor("Commit", ready, false)
+}
+
+// amend opens the last commit's message to amend it with the staged
+// changes: Enter on it unchanged keeps it (tdp K3).
+func (g *gittu) amend() tea.Cmd { return g.messageFor("Amend", g.repo.LastMessage(), true) }
+
+// messageFor opens the commit message's textarea with ready in it.
+func (g *gittu) messageFor(title, ready string, amend bool) tea.Cmd {
+	return g.a.Textarea(terminu.Textarea{Title: title, Glyph: glyphCommit, Name: "Message", Old: ready,
 		Check: func(msg string) error {
 			if strings.TrimSpace(msg) == "" {
 				return terminu.ErrEmpty
 			}
 			return nil
 		},
-		Done: func(msg string) tea.Cmd { g.draft = msg; return g.doCommit(msg, false) }})
+		Unchanged: func() tea.Cmd { return g.doCommit(ready, amend) },
+		Done:      func(msg string) tea.Cmd { g.draft = msg; return g.doCommit(msg, amend) }})
 }
 
 // doCommit runs git commit; the message is kept until it goes through, to

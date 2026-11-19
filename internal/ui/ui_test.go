@@ -549,9 +549,9 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	d.Press("Tab", "Enter")
 	has(t, d, git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:compare")
 	d.Press("Enter")
-	has(t, d, "DIFF — README.md @ "+git.Short(parent)+" ↔ README.md @ "+git.Short(c.SHA), "UNIFIED", "SPLIT")
+	has(t, d, "README.md @ "+git.Short(parent)+" ↔ README.md @ "+git.Short(c.SHA), "UNIFIED", "SPLIT")
 	d.Press("Esc")
-	hasNot(t, d, "DIFF — ")
+	hasNot(t, d, "UNIFIED")
 	// A rename with nothing else changed: its two versions are the same.
 	d.Press("j", "j", "Enter")
 	has(t, d, "No differences between feature.txt @ "+git.Short(parent)+" and renamed.txt @ "+git.Short(c.SHA))
@@ -570,7 +570,7 @@ func TestFirstCommitFiles(t *testing.T) {
 	d.Press("Tab", "Enter")
 	has(t, d, "empty ↔ ", "+ README.md")
 	d.Press("Enter")
-	has(t, d, "DIFF — README.md @ empty ↔ README.md @ ", "+# demo")
+	has(t, d, "README.md @ empty ↔ README.md @ ", "+# demo")
 }
 
 // --- task 7: two commits compared ---
@@ -590,7 +590,7 @@ func TestCompareTwoCommits(t *testing.T) {
 	d.Press("Enter")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
 	d.Press("Enter")
-	has(t, d, "DIFF — README.md @ "+git.Short(a.SHA)+" ↔ README.md @ "+git.Short(b.SHA))
+	has(t, d, "README.md @ "+git.Short(a.SHA)+" ↔ README.md @ "+git.Short(b.SHA))
 	d.Press("Esc", "Esc")
 	if g.history.histP.InMode() == nil {
 		t.Error("Esc out of the files did not go back to the compare mode")
@@ -755,7 +755,7 @@ func TestStashOperations(t *testing.T) {
 	d.Press("Enter")
 	has(t, d, "base of stash@{0} ↔ stash@{0}", "~ README.md")
 	d.Press("Enter")
-	has(t, d, "DIFF — README.md @ base of stash@{0} ↔ README.md @ stash@{0}", "+Stashed.")
+	has(t, d, "README.md @ base of stash@{0} ↔ README.md @ stash@{0}", "+Stashed.")
 	d.Press("Esc", "Esc", "a")
 	done(t, g, d)
 	has(t, d, "Applied stash@{0}")
@@ -1315,9 +1315,9 @@ func TestDiffNewFolder(t *testing.T) {
 	has(t, d, "DIFF: newdir/", "newdir/ @ index ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:compare")
 	d.Press("Tab", "Enter") // into the list
 	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
-	hasNot(t, d, "DIFF — newdir/blob.bin")
+	hasNot(t, d, "blob.bin @ index ↔")
 	d.Press("j", "Enter")
-	has(t, d, "DIFF — one.txt @ index ↔ one.txt", "UNIFIED")
+	has(t, d, "newdir/one.txt @ index ↔ newdir/one.txt", "UNIFIED")
 	d.Press("Esc")
 	d.Press("1", "k") // [1]'s cursor on another row: out of the list
 	d.Press("j")
@@ -1338,9 +1338,9 @@ func TestDiffComparesVersions(t *testing.T) {
 	d.Press("W", "Tab")
 	has(t, d, "Enter:compare")
 	d.Press("Enter")
-	has(t, d, "DIFF — README.md @ index ↔ README.md", "UNIFIED", "+changed")
+	has(t, d, "README.md @ index ↔ README.md", "UNIFIED", "+changed")
 	d.Press("Esc", "1", "Enter", "Tab", "Enter")
-	has(t, d, "DIFF — README.md @ HEAD ↔ README.md @ index")
+	has(t, d, "README.md @ HEAD ↔ README.md @ index")
 }
 
 // --- task 12: stage, unstage, discard ---
@@ -1395,6 +1395,9 @@ func TestCommitMessage(t *testing.T) {
 	g, d := start(t, r, 100, 32)
 	d.Press("W", "c")
 	has(t, d, "Esc:move")
+	d.Press("Esc", "Enter") // nothing typed: an error, the popup kept (tdp K3, K3-7)
+	has(t, d, "Message can't be empty", "i:write")
+	d.Press("i")
 	d.Type("Change the readme")
 	d.Press("Esc", "Enter")
 	done(t, g, d)
@@ -1424,8 +1427,14 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	d.Press("Esc", "Enter")
 	done(t, g, d)
 	has(t, d, "COMMIT FAILED", "no commits today")
+	if err := os.Remove(hook); err != nil {
+		t.Fatal(err)
+	}
 	d.Press("Esc", "c")
 	has(t, d, "Blocked")
+	d.Press("Esc", "Enter") // the message kept, unchanged: it commits (Unchanged)
+	done(t, g, d)
+	has(t, d, "Committed ", "Blocked")
 }
 
 func TestAmendKeepsMessage(t *testing.T) {
@@ -1434,11 +1443,35 @@ func TestAmendKeepsMessage(t *testing.T) {
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Amend") })
-	has(t, d, "Amend the last commit, keeping its message?", "Say even more", "force push")
+	has(t, d, "Amend the last commit?", "Say even more", "force push") // pushed: a warning first
 	d.Press("Enter")
+	has(t, d, "AMEND", "Say even more", "Esc:move") // its message, ready
+	d.Press("Esc", "Enter")                         // unchanged: kept
 	done(t, g, d)
 	has(t, d, "Committed ")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Say even more" {
+		t.Errorf("last commit %q", got)
+	}
+	if got := strings.TrimSpace(r.Git("show", "-s", "--format=%H", "HEAD:README.md")); got == "" {
+		t.Error("no README.md")
+	}
+}
+
+// TestAmendChangesMessage: an amend of a commit not pushed opens its message
+// straight away, to change.
+func TestAmendChangesMessage(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Commit("local.txt", "x\n", "A local commit")
+	r.Write("local.txt", "y\n")
+	r.Git("add", "local.txt")
+	g, d := start(t, r, 100, 32)
+	d.Do(func() tea.Cmd { return runGlobal(t, g, "Amend") })
+	hasNot(t, d, "force push")
+	has(t, d, "AMEND", "A local commit")
+	d.Type(" reworded")
+	d.Press("Esc", "Enter")
+	done(t, g, d)
+	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "A local commit reworded" {
 		t.Errorf("last commit %q", got)
 	}
 }
@@ -1470,8 +1503,8 @@ func TestResolveHunks(t *testing.T) {
 	has(t, d, "Used both in conflict 1 of notes.txt", "Used theirs in conflict 1 of notes.txt")
 	d.Advance(5 * time.Second)
 	d.Press("Esc", "c")
-	has(t, d, "Commit the merge?", "Merge branch 'feature'")
-	d.Press("Enter")
+	has(t, d, "COMMIT", "Merge branch 'feature'") // the message git prepared, ready
+	d.Press("Esc", "Enter")                       // unchanged: it commits
 	done(t, g, d)
 	hasNot(t, d, "Merging:")
 }

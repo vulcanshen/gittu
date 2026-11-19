@@ -123,6 +123,12 @@ user 照原話（附了一張比較的截圖：標題太長，UNIFIED／SPLIT �
 6. 「然後我們要添加 pull all（sync）這種 global operation（或這歸類到 history 的 panel operation）」
    （問做什麼時：「就是 pull --all 的 git 指令啊？」；放哪裡照 tdp P3：作用在整個 repo 是 global operation）
 
+## commit 的 ref 放第二列（2026-11-19）
+
+user 照原話：「我發現如果在 description 裡面放 branch head 和 tag，會讓 description 不夠放，我們是否可以讓有這些 tag 描述的
+commit 兩列，第二列就顯示這些 tag，cursor 移動的時候，focus 也只會移動在 commit 點的那一列，但是第二列（如果有了話），
+會連帶亮一點背景色」
+
 ## 不寫別的工具（2026-11-19）
 
 user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」
