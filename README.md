@@ -5,12 +5,11 @@
 
 **Language**: English · [繁體中文](README-zh_TW.md)
 
-**A git client for the terminal, laid out like SourceTree: the branches beside the history graph, everything you can do
-in the `Space` menu.**
+**A git client for the terminal: the branches beside the history graph, everything you can do in the `Space` menu.**
 
 `gittu` in a repository opens two panels: the branches, remote branches, tags and stashes on the left, the commits
-and their graph on the right. Whatever SourceTree puts on its right-click menu is in gittu's `Space` menu, for the branch or the
-commit under the cursor; what its toolbar does is in the global operations. Look into a commit's files and their diffs,
+and their graph on the right. What you can do with the branch or the commit under the cursor is in the `Space` menu,
+and what works on the whole repository is in its global operations. Look into a commit's files and their diffs,
 compare two commits, stage and commit, merge, and resolve conflicts one block at a time with both sides in sight — with
 no keys to learn first.
 
@@ -18,7 +17,7 @@ no keys to learn first.
 
 ## Features
 
-- **The SourceTree layout**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
+- **Branches beside the graph**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
   the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
 - **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
   commits; main's line kept on the left (All) or the current branch's (Current), the remote branches only when you want
@@ -143,7 +142,7 @@ there opens the comparison itself, UNIFIED or SPLIT.
 
 ### For the whole repository
 
-In every `Space` menu, `Global operation` lists what SourceTree's toolbar does: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
+In every `Space` menu, `Global operation` lists what works on the whole repository: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,

@@ -5,21 +5,21 @@
 
 **Language**: [English](README.md) · 繁體中文
 
-**照 SourceTree 的畫面安排做的終端機 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
+**終端機的 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gittu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。SourceTree 右鍵選單上的動作，
-都在 gittu 的 `Space` 選單裡，對著 cursor 那個分支或 commit；工具列上的動作在 global operation 裡。看一個 commit 改了哪些檔、
+在 repo 裡打 `gittu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。對 cursor 那個分支或
+commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，衝突一塊一塊解、兩邊都看得到 —— 不用先背任何熱鍵。
 
 ![gittu：分支圖、一個 commit 的檔案與差異、要 commit 的檔案、一次 merge 與解衝突](docs/demo.gif)
 
 ## 特色
 
-- **SourceTree 的畫面安排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖；cursor 移到分支上，分支圖就跳到它的
+- **分支與分支圖並排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖；cursor 移到分支上，分支圖就跳到它的
   commit，按 `Enter` 就過去。
 - **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，分支與 tag 標在它們的 commit 上；main 那條固定在最左邊（All），或目前的分支
   那條（Current）；遠端分支要看時才畫。
-- **先看再動手**：一個 commit 的檔案，再進去看每個檔的差異；標兩個 commit 一樣這樣比；`Esc` 一層一層退回。
+- **先看再動手**：一個 commit 的檔案標上 `+` `-` `~`，再左右對照看每個檔的兩個版本；兩個 commit 也一樣這樣比；`Esc` 一層一層退回。
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
 - **Working tree**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
@@ -127,7 +127,7 @@ gittu
 
 ### 整個 repo 的動作
 
-每個 `Space` 選單裡的 `Global operation`，列出 SourceTree 工具列上的動作：`[c]`ommit、Amend、`[p]`ull、`[P]`ush、`[f]`etch、
+每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
 revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[1]` 上 `b` 是 rebase，Branch 從 global operation 執行。
 
