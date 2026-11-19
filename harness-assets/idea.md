@@ -54,6 +54,14 @@ user 看了第一版的回饋，照原話：
 
 參考：GitKraken（user：「可以參考 gitkraken，這款我因為要付費所以沒用的超級酷的 git GUI」）。
 
+## branches panel（2026-11-19）
+
+user 照原話：
+
+1. 「check out 熱鍵用 c」
+2. 「rename 熱鍵用 r」
+3. 「REMOTE 和 TAG 用分頁作，不要都擠在一個 panel」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

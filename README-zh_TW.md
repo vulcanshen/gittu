@@ -97,14 +97,14 @@ gitreu
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| `[1]` 本地分支 | 到 `[2]` 它的 commit | Check `[o]`ut、`[M]erge` 進目前的分支、把目前的分支 `[r]ebase` 到它上面、Re`[n]`ame、`[D]`elete、Push |
-| `[1]` 遠端分支 | 到 `[2]` 它的 commit | Check `[o]`ut 成追蹤它的本地分支、`[M]erge`、`[r]ebase`、`[D]`elete 遠端的分支 |
-| `[1]` tag | 到 `[2]` 它的 commit | Check `[o]`ut（HEAD 會 detached）、`[D]`elete、Push |
-| `[1]` stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
-| `[2]` commit | 它改了的檔案 | `[m]`ark、Check `[o]`ut、`[b]`ranch here、`[t]`ag、`[M]`erge、`[r]`ebase、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
+| `[1]` BRANCHES：本地分支 | 到 `[2]` 它的 commit | `[c]`heck out、`[M]erge` 進目前的分支、把目前的分支 R`[e]`base 到它上面、`[r]`ename、`[D]`elete、Push |
+| `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、R`[e]`base、`[D]`elete 遠端的分支 |
+| `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
+| `[1]` STASHES：stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
+| `[2]` commit | 它改了的檔案 | `[m]`ark、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
 | `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、`[C]`ompare 標起來的兩個 commit、`[/]` 篩選 |
 
-`[1]` 是 BRANCHES，`[2]` 是 COMMITS。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
+`[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換；`[2]` 是 COMMITS。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
 差異；`Esc` 回到檔案，再按一次回到分支圖。
 
 ### Working tree
@@ -123,7 +123,7 @@ gitreu
 
 每個 `Space` 選單裡的 `Global operation`，列出 SourceTree 工具列上的動作：`[c]`ommit、Amend、`[p]`ull、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
-revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準。
+revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行。
 
 gitreu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變。
 

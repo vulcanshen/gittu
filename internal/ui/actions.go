@@ -20,7 +20,7 @@ const (
 // rowKind is the kind and the name of the row under [1]'s cursor; "" when
 // there is none.
 func (h *historyScreen) rowKind() (kind, name string) {
-	r, ok := h.branches.Current()
+	r, ok := h.cur().Current()
 	if !ok || len(r.ID) < 2 {
 		return "", ""
 	}
@@ -89,7 +89,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		{Key: "Enter", Label: "Show", Desc: "its commit in [2] COMMITS", Scope: item, Hint: "show",
 			Hidden: func() bool { k, _ := h.rowKind(); return k == "" || k == kindStash }, Do: h.showRef},
 		// A branch.
-		{Key: "o", Label: "Check out", Desc: "this branch", Scope: item,
+		{Key: "c", Label: "Check out", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent, Do: func() tea.Cmd {
 				n := name()
 				return g.run("Checking out…", "Checkout", func() error { return g.repo.Checkout(n, false) },
@@ -98,10 +98,10 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent, AskFor: func() *terminu.Ask { return h.g.askMerge(name()) },
 			Do: func() tea.Cmd { return g.merge(name()) }},
-		{Key: "r", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
+		{Key: "e", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent, AskFor: func() *terminu.Ask { return g.askRebase(name()) },
 			Do: func() tea.Cmd { return g.rebase(name()) }},
-		{Key: "n", Label: "Rename", Desc: "this branch", Scope: item,
+		{Key: "r", Label: "Rename", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: off, Do: func() tea.Cmd { return h.rename(name()) }},
 		{Key: "D", Label: "Delete", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent,
@@ -120,7 +120,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed "+b.Name+" to "+remote) })
 			}},
 		// A remote branch.
-		{Key: "o", Label: "Check out", Desc: "as a local branch tracking it", Scope: item,
+		{Key: "c", Label: "Check out", Desc: "as a local branch tracking it", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				rb, _ := h.remote()
@@ -140,7 +140,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off, AskFor: func() *terminu.Ask { return g.askMerge(name()) },
 			Do: func() tea.Cmd { return g.merge(name()) }},
-		{Key: "r", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
+		{Key: "e", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(name()) },
 			Do: func() tea.Cmd { return g.rebase(name()) }},
 		{Key: "D", Label: "Delete", Desc: "this branch on its remote", Scope: item,
@@ -156,7 +156,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Deleted "+rb.Branch+" on "+rb.Remote) })
 			}},
 		// A tag.
-		{Key: "o", Label: "Check out", Desc: "this tag, HEAD detached", Scope: item,
+		{Key: "c", Label: "Check out", Desc: "this tag, HEAD detached", Scope: item,
 			Hidden: h.is(kindTag), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Check out", Subject: name(), Question: "Check out " + name() + "?", Verb: "check out",
@@ -222,7 +222,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 // Enter on a branch expects the graph). [2] gone into a commit comes back to
 // the graph first.
 func (h *historyScreen) showRef() tea.Cmd {
-	r, ok := h.branches.Current()
+	r, ok := h.cur().Current()
 	if !ok {
 		return nil
 	}
@@ -265,7 +265,7 @@ func (h *historyScreen) rename(old string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Renaming…", "Rename", func() error { return g.repo.RenameBranch(old, n) },
 				func() tea.Cmd {
-					h.branches.Select(kindBranch + n)
+					h.tabs[0].Select(kindBranch + n)
 					return g.a.Toast(terminu.Success, "Renamed "+old+" to "+n)
 				})
 		}})
@@ -363,7 +363,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 			Hidden: inLevel, Do: h.openDiff},
 		{Key: "m", Label: "Mark", Desc: "it to compare, or take the mark off", Scope: item, Hint: "mark",
 			Hidden: onGraph, Do: func() tea.Cmd { h.commits.ToggleMark(); return nil }},
-		{Key: "o", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
+		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
 			Hidden: onGraph, Disabled: off,
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Check out", Subject: short(), Question: "Check out " + short() + "?", Verb: "check out",
@@ -381,7 +381,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
 			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askMerge(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.merge(c.SHA) }},
-		{Key: "r", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
+		{Key: "e", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
 			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.rebase(c.SHA) }},
 		{Label: "Cherry-pick", Desc: "it onto the current branch", Scope: item,
@@ -505,7 +505,7 @@ func (g *gitreu) newBranch(ref string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Branching…", "Branch", func() error { return g.repo.NewBranch(n, ref) },
 				func() tea.Cmd {
-					g.history.branches.Select(kindBranch + n)
+					g.history.tabs[0].Select(kindBranch + n)
 					return g.a.Toast(terminu.Success, "Made and checked out "+n)
 				})
 		}})
@@ -522,7 +522,7 @@ func (g *gitreu) newTag(ref string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Tagging…", "Tag", func() error { return g.repo.NewTag(n, ref) },
 				func() tea.Cmd {
-					g.history.branches.Select(kindTag + n)
+					g.history.tabs[2].Select(kindTag + n)
 					return g.a.Toast(terminu.Success, "Tagged "+at+" "+n)
 				})
 		}})

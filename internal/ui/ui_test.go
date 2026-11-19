@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -56,9 +57,15 @@ func hasNot(t *testing.T, d *tdptest.Driver, text ...string) {
 	}
 }
 
-// selectBranch puts [1]'s cursor on a row by its ID.
+// selectBranch puts [1] on the tab of a row and its cursor on the row, by its
+// ID.
 func selectBranch(d *tdptest.Driver, g *gitreu, id string) {
-	d.Do(func() tea.Cmd { g.history.branches.Select(id); return nil })
+	d.Do(func() tea.Cmd {
+		i := slices.Index(kinds, id[:2])
+		g.history.branchP.Tab, g.history.branchP.Body = i, g.history.tabs[i]
+		g.history.tabs[i].Select(id)
+		return nil
+	})
 }
 
 // selectCommit puts [2]'s cursor on the commit with this subject.
@@ -122,7 +129,7 @@ func TestStatusbarKeepsItsPlace(t *testing.T) {
 		t.Errorf("the branch and the repository are not both Lavender:\n%q", styled)
 	}
 	selectBranch(d, g, kindBranch+"a-much-longer-branch-name")
-	d.Press("o")
+	d.Press("c")
 	done(t, g, d)
 	top2 := d.Screen()[0]
 	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
@@ -169,7 +176,7 @@ func TestOwnPopupsEverySize(t *testing.T) {
 		{"diff viewer", []string{"Tab", "Enter", "Enter"}},
 		{"new branch", []string{"b"}},
 		{"reset select", []string{"Tab", "s"}},
-		{"checkout confirm", []string{"Tab", "o"}},
+		{"checkout confirm", []string{"Tab", "c"}},
 		{"commit textarea", []string{"W", "Enter", "c"}},
 		{"stash", []string{"S"}},
 	}
@@ -190,15 +197,52 @@ func TestOwnPopupsEverySize(t *testing.T) {
 
 // --- task 3: [1] BRANCHES ---
 
-func TestBranchGroups(t *testing.T) {
+func TestBranchTabs(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
-	_, d := start(t, r, 160, 32)
-	has(t, d, "BRANCHES", "REMOTES", "TAGS", "STASHES", "origin/main", "v0.1.0", "stash@{0}: On main: Half a thought", "main ↑1")
+	g, d := start(t, r, 160, 32)
+	has(t, d, "BRANCHES", "REMOTES", "TAGS", "STASHES", "main ↑1", "feature", "Enter:show h|l:tab")
+	hasNot(t, d, "stash@{0}")
 	styled := strings.Join(d.Styled(), "\n")
 	if !strings.Contains(styled, "●") {
 		t.Error("no flag on the current branch")
 	}
+	for _, step := range []struct {
+		key  string
+		tab  int
+		rows string
+	}{
+		{"l", 1, "origin/main"},
+		{"l", 2, "v0.1.0"},
+		{"l", 3, "stash@{0}: On main: Half a thought"},
+		{"l", 0, "feature"}, // around to the first tab
+		{"h", 3, "stash@{0}: On main: Half a thought"},
+	} {
+		d.Press(step.key)
+		if g.history.branchP.Tab != step.tab {
+			t.Fatalf("after %s, tab %d, want %d", step.key, g.history.branchP.Tab, step.tab)
+		}
+		var ids []string
+		for _, r := range g.history.cur().Rows() {
+			ids = append(ids, r.Cells[0])
+		}
+		if !slices.ContainsFunc(ids, func(c string) bool { return strings.HasPrefix(c, step.rows) }) || len(ids) > 3 {
+			t.Errorf("after %s, [1] lists %v", step.key, ids)
+		}
+		has(t, d, step.rows)
+	}
+}
+
+func TestBranchTabsEmpty(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("a.txt", "a\n", "One")
+	_, d := start(t, r, 160, 32)
+	d.Press("l")
+	has(t, d, "No remote branches", "Press [f] to fetch every remote")
+	d.Press("l")
+	has(t, d, "No tags", "Press [t] to tag HEAD")
+	d.Press("l")
+	has(t, d, "No stashes", "Press [S] to stash the changes")
 }
 
 func TestBranchMovesTheGraph(t *testing.T) {
@@ -396,7 +440,7 @@ func TestCheckoutBranch(t *testing.T) {
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindBranch+"feature")
-	d.Press("o")
+	d.Press("c")
 	done(t, g, d)
 	has(t, d, "Checked out feature", "Branch: feature")
 	if strings.TrimSpace(r.Git("branch", "--show-current")) != "feature" {
@@ -433,7 +477,7 @@ func TestMergeAndRebaseBranch(t *testing.T) {
 	done(t, g, d)
 	d.WaitFor(func() bool { return g.snap.Head == "topic" }, 5*time.Second)
 	selectBranch(d, g, kindBranch+"feature")
-	d.Press("r")
+	d.Press("e")
 	has(t, d, "Rebase topic onto feature?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -444,7 +488,7 @@ func TestRenameBranch(t *testing.T) {
 	r := gittest.Sample(t)
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindBranch+"topic")
-	d.Press("n")
+	d.Press("r")
 	has(t, d, "RENAME: topic")
 	d.Type("feature")
 	d.Press("Enter")
@@ -493,7 +537,7 @@ func TestCheckoutRemoteBranch(t *testing.T) {
 	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindRemote+"origin/topic")
-	d.Press("o")
+	d.Press("c")
 	has(t, d, "Check out origin/topic as topic?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -522,7 +566,7 @@ func TestTagOperations(t *testing.T) {
 	selectBranch(d, g, kindTag+"v0.1.0")
 	d.Press("Space")
 	has(t, d, "Push", "this tag to its remote")
-	d.Press("Esc", "o")
+	d.Press("Esc", "c")
 	has(t, d, "Check out v0.1.0?", "HEAD is left detached")
 	d.Press("Enter")
 	done(t, g, d)
@@ -615,7 +659,7 @@ func TestCommitOperations(t *testing.T) {
 	done(t, g, d)
 	has(t, d, "Reverted")
 	c = selectCommit(t, d, g, "Add the feature")
-	d.Press("o")
+	d.Press("c")
 	has(t, d, "Check out "+git.Short(c.SHA)+"?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -887,7 +931,7 @@ func TestCommitMessage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
-	d.Press("c")
+	d.Press("W", "c")
 	has(t, d, "Esc:move")
 	d.Type("Change the readme")
 	d.Press("Esc", "Enter")
@@ -900,7 +944,7 @@ func TestCommitMessage(t *testing.T) {
 
 func TestCommitOffWithNothingStaged(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 100, 32)
-	d.Press("c")
+	d.Press("W", "c")
 	hasNot(t, d, "Esc:move")
 }
 
@@ -913,7 +957,7 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
-	d.Press("c")
+	d.Press("W", "c")
 	d.Type("Blocked")
 	d.Press("Esc", "Enter")
 	done(t, g, d)

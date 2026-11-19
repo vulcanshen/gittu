@@ -1,6 +1,6 @@
 tasks:
   - id: 1
-    spec: 2
+    spec: 3
     implementation: |
       兩個畫面（tgo Screen）：History（Key H，打開時的畫面；[1] BRANCHES、[2] COMMITS）與 Working tree（Key W；[1] CHANGES、[2] DIFF）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
       每個畫面兩個 panel，Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40）；最低尺寸用 tgo 的預設 60×32，沒有設 NarrowBelow
@@ -26,20 +26,22 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gitreu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gitreu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 2
+    spec: 3
     implementation: |
-      [1] BRANCHES 是 tgo List：單欄、沒有表頭，Flags（標記欄放旗標），Filterable（/ 篩選）
-      四組（Row.Group）：Branches（git for-each-ref refs/heads，照名稱排）、Remotes（refs/remotes，不列 <remote>/HEAD，照名稱排）、
-      Tags（refs/tags，annotated tag 指它的 commit；照版本的數字排，v1.9 在 v1.10 前面）、Stashes（git stash list，stash@{N}: <訊息>）；沒有東西的組 tgo 不畫標題
+      [1] 有四個分頁（tgo Panel.Tabs：label Branches、Tabs Remotes、Tags、Stashes；OnTab 把 Body 換成那一頁的 List），h|l 切換（tgo 做，下框 hint 寫 h|l:tab）；
+      每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
+      BRANCHES（git for-each-ref refs/heads，照名稱排）、REMOTES（refs/remotes，不列 <remote>/HEAD，照名稱排）、
+      TAGS（refs/tags，annotated tag 指它的 commit；照版本的數字排，v1.9 在 v1.10 前面）、STASHES（git stash list，stash@{N}: <訊息>）
+      沒有東西的頁：No remote branches / Press [f] to fetch every remote、No tags / Press [t] to tag HEAD、No stashes / Press [S] to stash the changes
       目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 upstream gone（Peach）
       打開時 cursor 停在目前的分支上
-      cursor 移到分支、遠端分支、tag、stash 上（tgo List.OnMove）：[2] 在分支圖這一層時，[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），focus 留在 [1]
+      cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：[2] 在分支圖這一層時，[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），focus 留在 [1]
       分支、遠端分支、tag 上的 Enter（[Enter] Show — its commit in [2] COMMITS；hint Enter:show；stash 那一列沒有，它的 Enter 是 task 8 的 Show）：
       [2] 進到某個 commit 裡時先退回分支圖；[2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
       tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：只看目前的分支時
       「<名字> is not in the current branch's history」「Press [a] on [2] for all branches」，看全部分支時「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；讀 repo 失敗時兩個 panel 都是 Can't read <repo>: <原因>（Red）/ Press [R] to read it again（tgo Panel.Fail）
-    test: [TestBranchGroups, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnABranchNotInTheGraph, TestReadTheSample, TestVersionCompare]
+    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnABranchNotInTheGraph, TestReadTheSample, TestVersionCompare]
   - id: 4
     spec: 2
     implementation: |
@@ -79,30 +81,30 @@ tasks:
       git diff --name-status -M <舊> <新>，跟 task 6 一樣進到檔案清單，位置列 All branches › <舊的短 hash> ↔ <新的短 hash>；Enter 開 diff 的 viewer，Esc 一層一層退回；標記留著
     test: [TestCompareMarked]
   - id: 8
-    spec: 2
+    spec: 3
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
-      本地分支：Check [o]ut（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
-      [r]ebase（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、Re[n]ame（text input RENAME: <分支>，舊名是灰字提議，
+      本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
+      R[e]base（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、[r]ename（text input RENAME: <分支>，舊名是灰字提議，
       檢查 git check-ref-format --branch 與同名分支，錯誤列 Not a valid branch name／There is a branch <名> already；git branch -m）、[D]elete（confirm「Delete <分支>?」；git branch -d，
       沒合併時再開 confirm「Delete <分支> anyway?」，內容 <分支> is not merged: … are lost.（Peach），Enter 用 git branch -D）、Push（沒有熱鍵；git push <upstream 的 remote 或 origin> refs/heads/<分支>）；
       merge、rebase、delete 在目前的分支上停用
-      遠端分支：Check [o]ut（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
-      [M]erge、[r]ebase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
-      tag：Check [o]ut（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
-      stash：[Enter] Show（git stash show -p，開 Viewer STASH — stash@{N}，Lang diff；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
+      遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
+      [M]erge、R[e]base（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
+      tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>）
+      stash（STASHES 那一頁）：[Enter] Show（git stash show -p，開 Viewer STASH — stash@{N}，Lang diff；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
       merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
       其他失敗開 error popup <動作> FAILED，內容是 git 印的每一列（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列
     test: [TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
   - id: 9
-    spec: 1
+    spec: 3
     implementation: |
-      [2] 的 commit 上（item operation）：[m]ark（task 7）、Check [o]ut（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach <hash>）、
+      [2] 的 commit 上（item operation）：[m]ark（task 7）、[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
       [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> <名>）、
-      [M]erge、[r]ebase（同 task 8，對象是那個 commit）、Cherry-pick（沒有熱鍵；confirm；git cherry-pick，merge commit 加 -m 1）、Revert（沒有熱鍵；confirm；git revert --no-edit，merge commit 加 -m 1）、
+      [M]erge、R[e]base（同 task 8，對象是那個 commit）、Cherry-pick（沒有熱鍵；confirm；git cherry-pick，merge commit 加 -m 1）、Revert（沒有熱鍵；confirm；git revert --no-edit，merge commit 加 -m 1）、
       Re[s]et（tgo Select RESET: <短 hash>，選項 [s]oft: keep the changes, staged、[m]ixed: keep the changes, unstaged、[H]ard: throw the changes away；
       Soft、Mixed 直接 git reset --soft／--mixed；Hard 再開 confirm，內容 Every change not committed is lost…（Peach）；Success Reset <分支> to <短 hash> (<mode>)；還沒有 commit 時停用）、
       Cop[y] hash（tgo Clipboard 放完整的 hash，Success Copied <短 hash>）

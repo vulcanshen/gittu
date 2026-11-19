@@ -107,14 +107,15 @@ the App Log, what gitreu did and what went wrong.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| `[1]` a branch | Its commit in `[2]` | Check `[o]`ut, `[M]erge` into the current branch, `[r]ebase` the current branch onto it, Re`[n]`ame, `[D]`elete, Push |
-| `[1]` a remote branch | Its commit in `[2]` | Check `[o]`ut as a local branch tracking it, `[M]erge`, `[r]ebase`, `[D]`elete it on the remote |
-| `[1]` a tag | Its commit in `[2]` | Check `[o]`ut (HEAD detached), `[D]`elete, Push |
-| `[1]` a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
-| `[2]` a commit | Its files | `[m]`ark, Check `[o]`ut, `[b]`ranch here, `[t]`ag, `[M]`erge, `[r]`ebase, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
+| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, R`[e]`base the current branch onto it, `[r]`ename, `[D]`elete, Push |
+| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, R`[e]`base, `[D]`elete it on the remote |
+| `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
+| `[1]` STASHES: a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
+| `[2]` a commit | Its files | `[m]`ark, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, R`[e]`base, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
 | `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[C]`ompare the two marked commits, `[/]` filter |
 
-`[1]` is BRANCHES, `[2]` COMMITS. A branch whose upstream was deleted on the remote says `upstream gone`. `Enter` on a
+`[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. `[2]` is COMMITS. A branch whose
+upstream was deleted on the remote says `upstream gone`. `Enter` on a
 file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.
 
 ### Working tree
@@ -134,7 +135,7 @@ file of a commit opens its diff; `Esc` goes back to the files, and again to the 
 In every `Space` menu, `Global operation` lists what SourceTree's toolbar does: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
-does not use the same key for its own.
+does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations.
 
 gitreu reads the repository again every 3 seconds, so what you change outside it shows.
 

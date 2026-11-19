@@ -18,14 +18,19 @@ const (
 	kindStash  = "s:"
 )
 
+// kinds are [1]'s tabs, in order: each a kind of row (tdp terms.4).
+var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
+
 // historyScreen is the screen gitreu opens on (tdp terms.2): [1] the branches,
 // [2] the history graph, as SourceTree lays them out.
 type historyScreen struct {
 	g      *gitreu
 	screen *terminu.Screen
 
-	branchP  *terminu.Panel
-	branches *terminu.List
+	branchP *terminu.Panel
+	// tabs are [1]'s lists, one a tab: the branches, the remote branches, the
+	// tags, the stashes (kinds).
+	tabs [4]*terminu.List
 
 	histP   *terminu.Panel
 	commits *terminu.List
@@ -47,16 +52,26 @@ type level struct {
 
 func newHistoryScreen(g *gitreu) *historyScreen {
 	h := &historyScreen{g: g}
-	h.branches = &terminu.List{
-		Columns:    []terminu.Column{{Title: "", Shrink: true}},
-		Flags:      true,
-		Filterable: true,
-		EmptyFact:  "No branches yet",
-		EmptyHint:  "Press [Space] to see what you can do here",
-		OnMove:     h.branchMoved,
+	empty := [4][2]string{
+		{"No branches yet", "Press [Space] to see what you can do here"},
+		{"No remote branches", "Press [f] to fetch every remote"},
+		{"No tags", "Press [t] to tag HEAD"},
+		{"No stashes", "Press [S] to stash the changes"},
 	}
-	h.branchP = &terminu.Panel{Label: "Branches", Body: h.branches}
-	h.branchP.Actions = append(h.branchActions(), h.branches.Actions()...)
+	for i := range h.tabs {
+		h.tabs[i] = &terminu.List{
+			Columns:    []terminu.Column{{Title: "", Shrink: true}},
+			Flags:      i == 0, // the branch checked out has its flag
+			Filterable: true,
+			EmptyFact:  empty[i][0],
+			EmptyHint:  empty[i][1],
+			OnMove:     h.branchMoved,
+		}
+	}
+	h.branchP = &terminu.Panel{Label: "Branches", Tabs: []string{"Remotes", "Tags", "Stashes"}, Body: h.tabs[0],
+		OnTab: func(tab int) tea.Cmd { h.branchP.Body = h.tabs[tab]; return nil }}
+	h.branchP.Actions = append(h.branchActions(), terminu.Action{Key: "/", Label: "Filter", Desc: "narrow the list as you type",
+		Scope: panel, Do: func() tea.Cmd { h.cur().OpenFilter(); return nil }})
 	h.commits = &terminu.List{
 		Columns: []terminu.Column{
 			{Title: "Graph"},
@@ -90,14 +105,26 @@ func oneToTwo(w, h int) []terminu.Rect {
 	return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
 }
 
+// cur is the list of [1]'s tab now.
+func (h *historyScreen) cur() *terminu.List { return h.tabs[h.branchP.Tab] }
+
 // show puts a read of the repository on the screen.
 func (h *historyScreen) show(s *git.Snapshot) {
 	h.branchP.Fail, h.histP.Fail = nil, nil
-	first := h.branches.Empty()
-	h.branches.SetRows(branchRows(s))
+	first := h.tabs[0].Empty()
+	rows := branchRows(s)
+	for i, kind := range kinds {
+		var tab []terminu.Row
+		for _, r := range rows {
+			if r.ID[:2] == kind {
+				tab = append(tab, r)
+			}
+		}
+		h.tabs[i].SetRows(tab)
+	}
 	if first && s.Head != "" {
 		// Open on the branch checked out, the graph on HEAD.
-		h.branches.Select(kindBranch + s.Head)
+		h.tabs[0].Select(kindBranch + s.Head)
 	}
 	h.commits.SetRows(commitRows(s))
 	h.commits.Location = h.scope()
@@ -110,7 +137,9 @@ func (h *historyScreen) show(s *git.Snapshot) {
 func (h *historyScreen) failed() {
 	f := &terminu.Failure{Fact: "Can't read " + h.g.repo.Name() + ": " + firstLine(h.g.readErr), Hint: "Press [R] to read it again"}
 	h.branchP.Fail, h.histP.Fail = f, f
-	h.branches.SetRows(nil)
+	for _, l := range h.tabs {
+		l.SetRows(nil)
+	}
 	h.commits.SetRows(nil)
 }
 
@@ -129,12 +158,12 @@ func firstLine(s string) string {
 }
 
 // branchRows are [1]'s rows: the branches, the remote branches, the tags and
-// the stashes, each a group (tdp panel.11).
+// the stashes, each kind its tab's (the start of the ID).
 func branchRows(s *git.Snapshot) []terminu.Row {
 	var rows []terminu.Row
 	quiet := terminu.Fg(terminu.Overlay0)
 	for _, b := range s.Branches {
-		r := terminu.Row{ID: kindBranch + b.Name, Group: "Branches", Cells: []string{b.Name}}
+		r := terminu.Row{ID: kindBranch + b.Name, Cells: []string{b.Name}}
 		if t := track(b.Ahead, b.Behind, b.Gone); t != "" {
 			st := quiet
 			if b.Gone {
@@ -149,13 +178,13 @@ func branchRows(s *git.Snapshot) []terminu.Row {
 		rows = append(rows, r)
 	}
 	for _, rb := range s.Remotes {
-		rows = append(rows, terminu.Row{ID: kindRemote + rb.Name, Group: "Remotes", Cells: []string{rb.Name}})
+		rows = append(rows, terminu.Row{ID: kindRemote + rb.Name, Cells: []string{rb.Name}})
 	}
 	for _, t := range s.Tags {
-		rows = append(rows, terminu.Row{ID: kindTag + t.Name, Group: "Tags", Cells: []string{t.Name}})
+		rows = append(rows, terminu.Row{ID: kindTag + t.Name, Cells: []string{t.Name}})
 	}
 	for _, st := range s.Stashes {
-		rows = append(rows, terminu.Row{ID: kindStash + st.Ref, Group: "Stashes", Cells: []string{st.Ref + ": " + st.Message}})
+		rows = append(rows, terminu.Row{ID: kindStash + st.Ref, Cells: []string{st.Ref + ": " + st.Message}})
 	}
 	return rows
 }
