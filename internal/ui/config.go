@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	terminu "github.com/vulcanshen/terminu-go"
@@ -33,38 +34,52 @@ func ConfigPath() string { return filepath.Join(configDir(), "config.yaml") }
 
 // readTabWidth reads input_tab_width from the settings file: the default with
 // no file or no key. A value that is not a whole number above 0 does not fit
-// (tdp E3): bad is what it was. err is a file that can't be read.
-func readTabWidth(path string) (width int, bad string, err error) {
+// (tdp E3): bad is what it was. unread are the other keys, which gitreu never
+// read. err is a file that can't be read.
+func readTabWidth(path string) (width int, bad string, unread []string, err error) {
 	b, err := os.ReadFile(path)
 	if errors.Is(err, fs.ErrNotExist) {
-		return defaultTabWidth, "", nil
+		return defaultTabWidth, "", nil, nil
 	}
 	if err != nil {
-		return defaultTabWidth, "", err
+		return defaultTabWidth, "", nil, err
 	}
 	var doc yaml.Node
 	if err := yaml.Unmarshal(b, &doc); err != nil {
-		return defaultTabWidth, "", err
+		return defaultTabWidth, "", nil, err
 	}
 	if len(doc.Content) == 0 {
-		return defaultTabWidth, "", nil // an empty file
+		return defaultTabWidth, "", nil, nil // an empty file
 	}
 	root := doc.Content[0]
 	if root.Kind != yaml.MappingNode {
-		return defaultTabWidth, "", errors.New("it is not a mapping of keys to values")
+		return defaultTabWidth, "", nil, errors.New("it is not a mapping of keys to values")
 	}
+	width = defaultTabWidth
 	for i := 0; i+1 < len(root.Content); i += 2 {
 		if root.Content[i].Value != "input_tab_width" {
+			unread = append(unread, root.Content[i].Value)
 			continue
 		}
 		v := root.Content[i+1]
 		n, err := strconv.Atoi(v.Value)
 		if v.Kind != yaml.ScalarNode || err != nil || n < 1 {
-			return defaultTabWidth, v.Value, nil
+			bad = v.Value
+			continue
 		}
-		return n, "", nil
+		width = n
 	}
-	return defaultTabWidth, "", nil
+	return width, bad, unread, nil
+}
+
+// homeShort writes a path under the home directory from ~.
+func homeShort(p string) string {
+	if home, err := os.UserHomeDir(); err == nil && home != "" {
+		if rel, err := filepath.Rel(home, p); err == nil && rel != ".." && !strings.HasPrefix(rel, "../") {
+			return filepath.Join("~", rel)
+		}
+	}
+	return p
 }
 
 // writeTabWidth writes input_tab_width back as its default, the rest of the
@@ -97,10 +112,11 @@ func writeTabWidth(path string) error {
 
 // loadConfig reads the settings at the start (tdp E3): a file that can't be
 // read asks to be moved aside; a value that does not fit is kept in a copy
-// and written again as its default.
+// and written again as its default; a key gitreu never read is left in the
+// file, an INFO at every start.
 func (g *gitreu) loadConfig() tea.Cmd {
 	path := ConfigPath()
-	width, bad, err := readTabWidth(path)
+	width, bad, unread, err := readTabWidth(path)
 	if err != nil {
 		return g.a.MoveAside(path, err, func() tea.Cmd {
 			g.a.InputTabWidth = defaultTabWidth
@@ -108,6 +124,9 @@ func (g *gitreu) loadConfig() tea.Cmd {
 		})
 	}
 	g.a.InputTabWidth = width
+	for _, k := range unread {
+		g.a.Log(terminu.Info, "Not read: "+k+" in "+homeShort(path)+"; delete it if you don't need it")
+	}
 	if bad == "" {
 		return nil
 	}

@@ -148,7 +148,7 @@ input_tab_width: 4   # commit 訊息裡按 Tab 插入幾個空白，差異裡的
 ```
 
 這是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，gitreu 會問要不要移到 `config.yaml.bak`，不要就離開；值不是
-大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。
+大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。gitreu 不讀的 key（例：打錯字）留在檔案裡，每次啟動 App Log（`!`）會寫出來。
 
 ## 限制
 

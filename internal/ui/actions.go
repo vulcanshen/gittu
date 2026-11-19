@@ -222,17 +222,14 @@ func (h *historyScreen) branchActions() []terminu.Action {
 
 // showRef puts the focus on [2] with its cursor on the commit the row under
 // [1]'s cursor points at, scrolled into sight (tdp K3: the user pressing
-// Enter on a branch expects the graph). [2] gone into a commit comes back to
-// the graph first.
+// Enter on a branch expects the graph). [2] gone into the files of a commit
+// comes back to the graph first (LeaveDiff, tdp note.8).
 func (h *historyScreen) showRef() tea.Cmd {
 	r, ok := h.cur().Current()
 	if !ok {
 		return nil
 	}
 	name := r.ID[2:]
-	// TODO(tgo, sent to the tdp session): [2] gone into the files of a commit (OpenDiff, the compare
-	// mode) is the lib's: the app can neither tell nor go back up, so Enter
-	// here shows that list while the cursor moves on the graph under it.
 	sha := h.shaOf(r.ID)
 	if sha != "" && !h.commits.Select(sha) && h.commits.Filtering() {
 		h.commits.ClearFilter() // the filter hides it: show it all the same
@@ -244,6 +241,7 @@ func (h *historyScreen) showRef() tea.Cmd {
 		}
 		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
 	}
+	h.histP.LeaveDiff()
 	return h.g.a.Focus(h.histP)
 }
 

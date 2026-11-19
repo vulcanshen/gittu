@@ -168,7 +168,7 @@ input_tab_width: 4   # the spaces Tab puts in a commit message, and a tab in a d
 
 It is a key every terminu family app shares. A `config.yaml` gitreu cannot read is offered to be moved aside to
 `config.yaml.bak`, or gitreu quits; a value that is not a whole number above 0 is kept in `config.yaml.bak` and written
-back as 4.
+back as 4. A key gitreu does not read (a typo) is left in the file, and the App Log (`!`) says so at every start.
 
 ## Limits
 

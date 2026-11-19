@@ -26,7 +26,7 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gitreu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gitreu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 6
+    spec: 8
     implementation: |
       [1] 有四個分頁（tgo Panel.Tabs：label Branches、Tabs Remotes、Tags、Stashes；OnTab 把 Body 換成那一頁的 List），h|l 切換（tgo 做，下框 hint 寫 h|l:tab）；
       每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
@@ -35,10 +35,10 @@ tasks:
       沒有東西的頁：No remote branches / Press [f] to fetch every remote、No tags / Press [t] to tag HEAD、No stashes / Press [S] to stash the changes
       目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone（glyph 與字都是 Peach）
       打開時 cursor 停在目前的分支上
-      cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：[2] 在分支圖這一層時，[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），focus 留在 [1]
+      cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），移到了而 [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著）；focus 留在 [1]
       分支、遠端分支、tag 上的 Enter（[Enter] Show — its commit in [2] COMMITS；hint Enter:show；stash 那一列沒有，它的 Enter 是 task 8 的 Show）：
-      [2] 進到某個 commit 裡時先退回分支圖；[2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
-      tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：遠端分支隱藏著、而它是遠端分支時
+      [2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
+      [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著），tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：遠端分支隱藏著、而它是遠端分支時
       「<名字> is not in the graph」「Press [r] on [2] to show remote branches」，其他時候「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；讀 repo 失敗時兩個 panel 都是 Can't read <repo>: <原因>（Red）/ Press [R] to read it again（tgo Panel.Fail）
     test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnARemoteBranchHidden, TestReadTheSample, TestVersionCompare]
@@ -184,15 +184,16 @@ tasks:
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
     test: [TestResolveHunks, TestUseSideWholeFile, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestStatusbarSaysTheMerge]
   - id: 15
-    spec: 1
+    spec: 8
     implementation: |
       啟動時（tgo App.Start）讀設定檔：GITREU__CONFIG，否則 $XDG_CONFIG_HOME/gitreu，否則 ~/.config/gitreu，裡面的 config.yaml；沒有檔、沒有這個 key 時 input_tab_width 是 4；
       讀到的值交給 tgo App.InputTabWidth（textarea 的 Tab、viewer 與 Pager 裡的 Tab）；其他 key 不管、不改
       YAML 讀不了（格式錯、不是 mapping、沒有權限）：tgo MoveAside（MOVE ASIDE 的 confirm，Enter 改名成 .bak 後用預設值、Esc 離開並把路徑與原因交給 main 印到 stderr）
       input_tab_width 不是大於 0 的整數：terminu.KeepAside 複製一份 .bak，用 yaml.Node 把那個值改回 4、其他照舊寫回（同一個權限），
       tgo Notify(MisfitNotice(path, copy, Misfit{input_tab_width, 原本的, 4}))：Warning toast 與 App Log 的 WARN；備份做不出來時不重寫，Notify 一件 Error（KeepAside 的錯誤）加 MisfitNotice(path, "")
+      input_tab_width 以外的 key 不讀、不改（重寫時也留著），每次啟動 tgo App.Log(Info)：Not read: <key> in <路徑，家目錄寫成 ~>; delete it if you don't need it；不跳 toast
       gitreu 不建設定檔，沒有狀態、資料、快取
-    test: [TestTabWidthSetting, TestConfigMisfit, TestConfigCannotBeRead]
+    test: [TestTabWidthSetting, TestConfigMisfit, TestConfigUnreadKey, TestConfigCannotBeRead]
   - id: 16
     spec: 1
     implementation: |

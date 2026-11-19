@@ -318,13 +318,14 @@ func description(refs []ref, subject string) (string, []terminu.Span) {
 
 // branchMoved puts [2]'s cursor on the commit the branch, remote branch or
 // tag under [1]'s cursor points at, as SourceTree's sidebar does; the focus
-// stays (tdp K3, panel.13).
+// stays (tdp K3, panel.13). [2] gone into the files of a commit comes back
+// to the graph (LeaveDiff, tdp note.8).
 func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	if h.g.snap == nil {
 		return nil
 	}
-	if sha := h.shaOf(r.ID); sha != "" {
-		h.commits.Select(sha)
+	if sha := h.shaOf(r.ID); sha != "" && h.commits.Select(sha) {
+		h.histP.LeaveDiff()
 	}
 	return nil
 }

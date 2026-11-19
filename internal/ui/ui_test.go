@@ -301,6 +301,24 @@ func TestEnterShowsTheCommit(t *testing.T) {
 	}
 	d.Press("!")
 	hasNot(t, d, "Checked out")
+	d.Press("Esc")
+
+	// [2] gone into the files of a commit: Enter on a branch comes back to
+	// the graph, on that branch's commit (LeaveDiff, tdp note.8).
+	d.Press("Enter")
+	has(t, d, " ↔ ")
+	d.Press("1")
+	selectBranch(d, g, kindBranch+"topic")
+	d.Press("Enter")
+	hasNot(t, d, " ↔ ")
+	if cur, _ := g.history.commits.Current(); cur.ID != strings.TrimSpace(r.Git("rev-parse", "topic")) {
+		t.Errorf("[2] is on %s, want topic", cur.ID)
+	}
+	// moving on [1] comes back to the graph too (tdp panel.13)
+	d.Press("Enter")
+	has(t, d, " ↔ ")
+	d.Press("1", "k")
+	hasNot(t, d, " ↔ ")
 }
 
 func TestEnterOnARemoteBranchHidden(t *testing.T) {
@@ -1175,6 +1193,32 @@ func TestConfigMisfit(t *testing.T) {
 	}
 	if g.a.InputTabWidth != 4 {
 		t.Errorf("tab width %d", g.a.InputTabWidth)
+	}
+}
+
+// TestConfigUnreadKey: a key gitreu never read stays in the file, no toast,
+// an INFO at every start (tdp E3).
+func TestConfigUnreadKey(t *testing.T) {
+	dir := t.TempDir()
+	t.Setenv("GITREU__CONFIG", dir)
+	path := filepath.Join(dir, "config.yaml")
+	want := []byte("refesh: 5\ninput_tab_width: 2\n")
+	if err := os.WriteFile(path, want, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for range 2 {
+		repo, _ := git.Open(gittest.Sample(t).Dir)
+		g := newGitreu(repo)
+		d := tdptest.Start(t, g.a, 160, 32)
+		hasNot(t, d, "did not fit")
+		d.Press("!")
+		has(t, d, "Not read: refesh in ")
+		if g.a.InputTabWidth != 2 {
+			t.Errorf("tab width %d", g.a.InputTabWidth)
+		}
+		if b, _ := os.ReadFile(path); !bytes.Equal(b, want) {
+			t.Errorf("config.yaml:\n%s", b)
+		}
 	}
 }
 

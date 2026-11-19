@@ -1,0 +1,46 @@
+spec: 7
+tasks:
+  - id: 1
+    accepted: false
+    reason: "tdp 不清楚：merge、rebase、cherry-pick、revert 做到一半時 statusbar 的「Merging: <對方>」用 Peach；tdp screen.4 的 statusbar 顏色只有一般文字 Overlay0、你現在在哪 Lavender、進行中的工作 Green、錯誤與警告的數量 Red、Peach，做到一半的狀態該用哪一個沒寫"
+  - id: 2
+    accepted: true
+  - id: 3
+    accepted: false
+    reason: "違反：[2] 在 tgo 的差異清單裡時，[1] 的 Enter 把 focus 送到 [2] 看到的是差異清單，不是那個 commit（tdp K3、K3-5、panel.13）；原因是已經回報的缺口（app 看不出也退不回那一層，2026-11-19 送 tdp session 轉 terminu-go）。另外 work.yaml 寫「先退回分支圖」跟 remark 矛盾；讀 repo 失敗時沒分開有沒有舊內容（tdp panel.15：舊的內容還在就留著，錯誤用 toast 報）"
+  - id: 4
+    accepted: false
+    reason: "違反：[2] COMMITS 的紀錄還寫可以標記、[m]ark，但已經沒有任何對整批標記的動作（tdp panel.7：可以標記、整批操作的清單；P5）"
+  - id: 5
+    accepted: true
+  - id: 6
+    accepted: true
+  - id: 7
+    accepted: true
+  - id: 8
+    accepted: false
+    reason: "違反：git 失敗時 error popup 放 git 印的每一列；tdp components.5：外面來的好幾行字不整段放進短字，放說原因的那一行，全文寫進 App Log；紀錄也沒寫失敗記進 App Log（tdp F5）"
+  - id: 9
+    accepted: false
+    reason: "違反：失敗的 error popup 放 git 印的每一列（tdp components.5）；commit 上還列著 [m]ark，已經沒有對標記做事的動作（tdp panel.7）"
+  - id: 10
+    accepted: false
+    reason: "違反：FETCH／PULL／PUSH FAILED 放 git 印的每一列（tdp components.5）；Refresh 讀失敗開 error popup（tdp panel.15：舊的內容還在就留著，用 toast）；沒有 remote 時 Push 照樣能執行再報錯（tdp M6：對象存在但現在不能執行要停用）；Stash 的 text input 打開時空的、什麼都沒碰的 Enter 當成確定（tdp K3：值跟打開時一樣就直接關掉；要用 input.6 的建議值）"
+  - id: 11
+    accepted: false
+    reason: "違反：[2] DIFF 用 Pager 顯示 git diff 的 patch，是同一個檔的第二種差異樣子；tdp note.8 的同一項的兩個版本：不用顯示 patch 的 viewer，整個 app 看差異只有一種樣子（note-101）；tgo 的 panel 畫不出 note.8 的 UNIFIED 時是要回報的缺口"
+  - id: 12
+    accepted: true
+  - id: 13
+    accepted: false
+    reason: "違反：textarea 打開時空的、什麼都沒打按 Enter 直接關掉不寫錯誤（tdp K3；已回報 tgo #7）；COMMIT FAILED 放 git 與 hook 印的每一列（tdp components.5）。另外紀錄沒寫出：帶回上次的訊息後不改就按 Enter 不會 commit（tdp K3）"
+  - id: 14
+    accepted: true
+  - id: 15
+    accepted: true
+  - id: 16
+    accepted: true
+  - id: 17
+    accepted: true
+  - id: 18
+    accepted: true
