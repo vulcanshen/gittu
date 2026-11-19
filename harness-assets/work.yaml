@@ -122,10 +122,10 @@ tasks:
       進到 commit 裡時這些都 Hidden；成功、失敗、衝突、重新讀照 task 8
     test: [TestCommitOperations, TestResetHardAsks, TestResetSoft]
   - id: 10
-    spec: 13
+    spec: 15
     implementation: |
       global operation（tgo App.Global；Space menu 的 Global operation 那一列打開，熱鍵在 panel 上也能按，panel 有同一個鍵時以 panel 的為準）：
-      [c]ommit（task 13）、Amend（task 13）、[p]ull（git pull --no-edit；衝突照 task 8；detached、沒有 upstream、upstream 在遠端被刪掉時停用）、[P]ush（還沒有 commit 時停用；有 upstream：git push；沒有：confirm「Push <分支> to <remote> and track it?」，git push -u <remote> <分支>；
+      [c]ommit（task 13）、Amend（task 13）、[p]ull（git pull --no-edit；衝突照 task 8；detached、沒有 upstream、upstream 在遠端被刪掉時停用）、Pull all（沒有熱鍵；git pull --all --no-edit：每個 remote 都 fetch，再 pull 目前的分支；Success Fetched every remote and pulled <分支>；衝突、失敗、停用同 [p]ull）、[P]ush（還沒有 commit 時停用；有 upstream：git push；沒有：confirm「Push <分支> to <remote> and track it?」，git push -u <remote> <分支>；
       detached 時停用；沒有 remote 時停用）、[f]etch（git fetch --all；沒有 remote 時停用）、[b]ranch（從 HEAD，同 task 9 的 text input 與 task 8 的做法：git checkout -b <名>，Success Made and checked out <名>，BRANCHES 先清掉篩選、cursor 移到新的那一列；失敗 BRANCH FAILED；還沒有 commit 時停用）、
       [M]erge（tgo Select MERGE: <目前的分支>，列目前以外的本地分支與遠端分支，選了開 task 8 的 merge confirm；一個都沒有時停用）、[t]ag（在 HEAD，同 task 9：cursor 移到 TAGS 新的那一列；還沒有 commit 時停用）、
       [S]tash（text input STASH，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tgo TextInput.Suggest，灰字）：沒碰就 Enter、或打的跟它一樣時 git stash push（git 寫它自己的），打了別的時 git stash push -m <訊息>；做完 Success Stashed the changes，STASHES 先清掉篩選、cursor 移到新的 stash@{0}（tdp K3、panel.14）；失敗 STASH FAILED；沒有改動、還沒有 commit 時停用）、

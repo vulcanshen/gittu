@@ -903,6 +903,16 @@ func TestFetchPullPush(t *testing.T) {
 	d.Press("p")
 	done(t, g, d)
 	has(t, d, "Pulled main")
+
+	// Pull all: every remote fetched, then the current branch pulled
+	url := strings.TrimSpace(r.Git("remote", "get-url", "origin"))
+	r.Git("remote", "add", "backup", url)
+	d.Do(func() tea.Cmd { return runGlobal(t, g, "Pull all") })
+	done(t, g, d)
+	has(t, d, "Fetched every remote and pulled main")
+	if _, err := r.Try("rev-parse", "--verify", "backup/main"); err != nil {
+		t.Errorf("backup was not fetched: %v", err)
+	}
 }
 
 func TestPushWithNoUpstreamAsks(t *testing.T) {
@@ -953,6 +963,7 @@ func TestPushWithoutRemote(t *testing.T) {
 	}
 	disabled(g.a.Global, "Push")
 	disabled(g.a.Global, "Pull") // nothing to pull from
+	disabled(g.a.Global, "Pull all")
 	disabled(g.a.Global, "Fetch")
 	selectBranch(d, g, kindBranch+"topic")
 	disabled(g.history.branchP.Actions, "Push")
@@ -1157,7 +1168,7 @@ func TestNoCommitYet(t *testing.T) {
 	r.Git("add", "a.txt")
 	g, d := start(t, r, 100, 32)
 	d.WaitFor(func() bool { return g.hasChanges() }, 5*time.Second)
-	for _, label := range []string{"Discard all", "Tag", "Pull", "Push", "Stash", "Merge", "Branch"} {
+	for _, label := range []string{"Discard all", "Tag", "Pull", "Pull all", "Push", "Stash", "Merge", "Branch"} {
 		for _, a := range g.a.Global {
 			if a.Label == label && (a.Disabled == nil || !a.Disabled()) {
 				t.Errorf("%s is not disabled before the first commit", label)

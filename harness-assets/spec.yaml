@@ -1,4 +1,4 @@
-id: 14
+id: 15
 from: v1.2.16
 to: v1.2.17
 tasks:
@@ -119,12 +119,12 @@ tasks:
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
   - id: 10
-    spec: 13
+    spec: 15
     request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
     tdp: [tdp P3, tdp M2, tdp M4, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp note.6, tdp note.7, tdp toast.2, tdp screen.4, tdp F5, tdp P5, tdp components.5, tdp panel.15, tdp K3, tdp input.6, tdp panel.14, tdp T1, tdp F7]
     remark:
       - "照 idea.md：對整個 repo 的動作是 global operation（tdp P3、M4）：[c]ommit（task 13）、[p]ull、[P]ush、[f]etch、[b]ranch（從 HEAD 開分支）、[M]erge（select 選一個分支合進目前的分支）、[S]tash、[t]ag（在 HEAD 打 tag）、Discard all（沒有熱鍵）、[R]efresh。global 熱鍵在 panel 上也能按，跟 panel 自己的熱鍵撞到時 panel 的優先（tdp M4）：[2] 上的 b、t、M 是對 cursor 那個 commit"
-      - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
+      - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Pull all 是 git pull --all（每個 remote 都 fetch，再 pull 目前的分支；使用者 2026-11-19 要的 pull all（sync），作用在整個 repo，照 tdp P3 是 global operation；沒有熱鍵）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
       - "fetch、pull、push 在背景跑：statusbar 寫 Fetching…／Pulling…／Pushing…（Green，tdp screen.4 進行中的工作），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"

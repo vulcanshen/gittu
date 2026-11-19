@@ -550,6 +550,9 @@ func (g *gittu) globalActions() []terminu.Action {
 		{Key: "p", Label: "Pull", Desc: "the current branch from its upstream", Disabled: func() bool {
 			return off() || g.snap == nil || g.snap.Head == "" || g.snap.Upstream == "" || g.upstreamGone() // nothing to pull from (tdp M6)
 		}, Do: g.pull},
+		{Label: "Pull all", Desc: "fetch every remote, then pull the current branch", Disabled: func() bool {
+			return off() || g.snap == nil || g.snap.Head == "" || g.snap.Upstream == "" || g.upstreamGone() // as Pull (tdp M6)
+		}, Do: g.pullAll},
 		{Key: "P", Label: "Push", Desc: "the current branch to its upstream", Disabled: func() bool {
 			return off() || g.snap == nil || g.snap.Head == "" || g.snap.HeadSHA == "" || g.snap.PushRemote(g.snap.Upstream) == "" // nothing to push, or nowhere (tdp M6)
 		}, Do: g.push},
@@ -618,8 +621,14 @@ func (g *gittu) pull() tea.Cmd {
 		conflicts: g.conflictsSaid("Pull")}, "Pulling…", g.repo.Pull)
 }
 
-// push pushes the current branch; one with no upstream asks first to push it
-// to the remote and track it there.
+// pullAll fetches every remote, then pulls the current branch (git pull
+// --all): the user's Pull all (sync).
+func (g *gittu) pullAll() tea.Cmd {
+	return g.runWith(doneMsg{title: "Pull all",
+		ok:        func() tea.Cmd { return g.a.Toast(terminu.Success, "Fetched every remote and pulled "+g.currentName()) },
+		conflicts: g.conflictsSaid("Pull")}, "Pulling…", g.repo.PullAll)
+}
+
 // upstreamGone reports the current branch's upstream deleted on the remote.
 func (g *gittu) upstreamGone() bool {
 	for _, b := range g.snap.Branches {
@@ -629,6 +638,9 @@ func (g *gittu) upstreamGone() bool {
 	}
 	return false
 }
+
+// push pushes the current branch; one with no upstream asks first to push it
+// to the remote and track it there.
 
 func (g *gittu) push() tea.Cmd {
 	branch := g.snap.Head

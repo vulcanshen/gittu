@@ -127,7 +127,7 @@ gittu
 
 ### 整個 repo 的動作
 
-每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、`[P]`ush、`[f]`etch、
+每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、Pull all（每個 remote 都 fetch，再 pull 目前的分支）、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
 revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[1]` 上 `b` 是 rebase，Branch 從 global operation 執行。
 

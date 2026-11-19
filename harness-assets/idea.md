@@ -120,6 +120,8 @@ user 照原話（附了一張比較的截圖：標題太長，UNIFIED／SPLIT �
 3. 「Show [r]emote branches 同上」
 4. 「diff 這種 title，根本看不到 unified/split tab，那個不應該放在 border title 上吧？」
 5. 「diff 的 popup 不夠大」
+6. 「然後我們要添加 pull all（sync）這種 global operation（或這歸類到 history 的 panel operation）」
+   （問做什麼時：「就是 pull --all 的 git 指令啊？」；放哪裡照 tdp P3：作用在整個 repo 是 global operation）
 
 ## 不寫別的工具（2026-11-19）
 

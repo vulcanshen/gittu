@@ -142,7 +142,8 @@ there opens the comparison itself, UNIFIED or SPLIT.
 
 ### For the whole repository
 
-In every `Space` menu, `Global operation` lists what works on the whole repository: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
+In every `Space` menu, `Global operation` lists what works on the whole repository: `[c]`ommit, Amend, `[p]`ull, Pull all (every remote
+fetched, then the current branch pulled), `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,

@@ -195,6 +195,13 @@ func (r *Repo) Pull() error {
 	return r.conflicted(err)
 }
 
+// PullAll is git pull --all: every remote fetched, then the current branch
+// pulled from its upstream.
+func (r *Repo) PullAll() error {
+	_, err := r.Run("pull", "--all", "--no-edit")
+	return r.conflicted(err)
+}
+
 // Push pushes the current branch to its upstream; with setUpstream, to remote
 // and tracking it there.
 func (r *Repo) Push(remote, branch string, setUpstream bool) error {
