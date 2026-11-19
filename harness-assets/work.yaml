@@ -32,7 +32,8 @@ tasks:
       每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
       BRANCHES（git for-each-ref refs/heads，照名稱排）、REMOTES（refs/remotes，不列 <remote>/HEAD，照名稱排）、
       TAGS（refs/tags，annotated tag 指它的 commit；照版本的數字排，v1.9 在 v1.10 前面）、STASHES（git stash list，stash@{N}: <訊息>）
-      沒有東西的頁：No remote branches / Press [f] to fetch every remote、No tags / Press [t] to tag HEAD、No stashes / Press [S] to stash the changes
+      沒有東西的頁：No remote branches / Press [f] to fetch every remote（沒有 remote 時 This repository has no remote / Press [Space] to see what you can do here）、
+      No tags / Press [t] to tag HEAD（還沒有 commit 時提示改成 Press [Space] to see what you can do here）、No stashes / Press [S] to stash the changes（沒有改動或還沒有 commit 時同上）；每次讀完 repo 照當下換
       目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone（glyph 與字都是 Peach）
       打開時 cursor 停在目前的分支上
       cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：它指的 commit 在分支圖裡時，[2] 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），再移 cursor 過去（List.Select；不在分支圖裡就什麼都不動，篩選也不清），移到了而 [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著）；focus 留在 [1]
@@ -42,7 +43,7 @@ tasks:
       「<名字> is not in the graph」「Press [r] on [2] to show remote branches」，其他時候「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；還沒讀到過 repo 就讀失敗時兩個 panel 都是 Can't read <repo>: <說原因的那一行>（Red）/ Press [R] to read it again（tgo Panel.Fail），App Log 記 Error 的同一句與 git 印的全文；
       讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；說原因的那一行同 task 8）
-    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
+    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
   - id: 4
     spec: 8
     implementation: |
@@ -124,7 +125,7 @@ tasks:
     implementation: |
       global operation（tgo App.Global；Space menu 的 Global operation 那一列打開，熱鍵在 panel 上也能按，panel 有同一個鍵時以 panel 的為準）：
       [c]ommit（task 13）、Amend（task 13）、[p]ull（git pull --no-edit；衝突照 task 8；detached、沒有 upstream、upstream 在遠端被刪掉時停用）、[P]ush（還沒有 commit 時停用；有 upstream：git push；沒有：confirm「Push <分支> to <remote> and track it?」，git push -u <remote> <分支>；
-      detached 時停用；沒有 remote 時停用）、[f]etch（git fetch --all）、[b]ranch（從 HEAD，同 task 9 的 text input；還沒有 commit 時停用）、
+      detached 時停用；沒有 remote 時停用）、[f]etch（git fetch --all；沒有 remote 時停用）、[b]ranch（從 HEAD，同 task 9 的 text input；還沒有 commit 時停用）、
       [M]erge（tgo Select MERGE: <目前的分支>，列目前以外的本地分支與遠端分支，選了開 task 8 的 merge confirm；一個都沒有時停用）、[t]ag（在 HEAD；還沒有 commit 時停用）、
       [S]tash（text input STASH，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tgo TextInput.Suggest，灰字）：沒碰就 Enter、或打的跟它一樣時 git stash push（git 寫它自己的），打了別的時 git stash push -m <訊息>；沒有改動、還沒有 commit 時停用）、
       Discard all（沒有熱鍵；confirm，內容寫無法復原、沒追蹤的檔留著（Peach）；git reset --hard HEAD；沒有改動或還沒有 commit 時停用）、[R]efresh（重新讀 repo，Info toast Read <repo> again；讀失敗照 task 3：舊的內容留著、Error toast）

@@ -247,13 +247,28 @@ func TestBranchTabs(t *testing.T) {
 func TestBranchTabsEmpty(t *testing.T) {
 	r := gittest.New(t)
 	r.Commit("a.txt", "a\n", "One")
+	r.Write("a.txt", "changed\n")
 	_, d := start(t, r, 160, 32)
-	d.Press("l")
-	has(t, d, "No remote branches", "Press [f] to fetch every remote")
+	d.Press("l") // no remote: f does nothing, so the hint names Space (tdp screen.8)
+	has(t, d, "This repository has no remote", "Press [Space] to see what you can do here")
 	d.Press("l")
 	has(t, d, "No tags", "Press [t] to tag HEAD")
 	d.Press("l")
 	has(t, d, "No stashes", "Press [S] to stash the changes")
+}
+
+// TestBranchTabsEmptyHints: an empty tab names a key only while it works
+// (tdp screen.8, M6).
+func TestBranchTabsEmptyHints(t *testing.T) {
+	r := gittest.New(t) // no commit yet, nothing changed
+	r.Git("remote", "add", "origin", t.TempDir())
+	g, d := start(t, r, 160, 32)
+	d.Do(func() tea.Cmd { g.history.branchP.Tab, g.history.branchP.Body = 1, g.history.tabs[1]; return nil })
+	has(t, d, "No remote branches", "Press [f] to fetch every remote")
+	d.Do(func() tea.Cmd { g.history.branchP.Tab, g.history.branchP.Body = 2, g.history.tabs[2]; return nil })
+	has(t, d, "No tags", "Press [Space] to see what you can do here")
+	d.Do(func() tea.Cmd { g.history.branchP.Tab, g.history.branchP.Body = 3, g.history.tabs[3]; return nil })
+	has(t, d, "No stashes", "Press [Space] to see what you can do here")
 }
 
 func TestBranchMovesTheGraph(t *testing.T) {
@@ -928,6 +943,7 @@ func TestPushWithoutRemote(t *testing.T) {
 	}
 	disabled(g.a.Global, "Push")
 	disabled(g.a.Global, "Pull") // nothing to pull from
+	disabled(g.a.Global, "Fetch")
 	selectBranch(d, g, kindBranch+"topic")
 	disabled(g.history.branchP.Actions, "Push")
 	selectBranch(d, g, kindTag+"v0.1.0")

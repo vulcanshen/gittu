@@ -555,7 +555,9 @@ func (g *gittu) globalActions() []terminu.Action {
 		{Key: "P", Label: "Push", Desc: "the current branch to its upstream", Disabled: func() bool {
 			return off() || g.snap == nil || g.snap.Head == "" || g.snap.HeadSHA == "" || g.snap.PushRemote(g.snap.Upstream) == "" // nothing to push, or nowhere (tdp M6)
 		}, Do: g.push},
-		{Key: "f", Label: "Fetch", Desc: "every remote", Disabled: off, Do: func() tea.Cmd {
+		{Key: "f", Label: "Fetch", Desc: "every remote", Disabled: func() bool {
+			return off() || g.snap == nil || len(g.snap.RemoteNames) == 0 // no remote to fetch from (tdp M6)
+		}, Do: func() tea.Cmd {
 			return g.run("Fetching…", "Fetch", g.repo.Fetch, func() tea.Cmd { return g.a.Toast(terminu.Success, "Fetched every remote") })
 		}},
 		{Key: "b", Label: "Branch", Desc: "a new one at HEAD, and check it out", Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },

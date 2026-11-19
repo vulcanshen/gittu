@@ -40,7 +40,7 @@ tasks:
     tdp: [tdp panel.1, tdp panel.4, tdp panel.5, tdp panel.7, tdp panel.13, tdp panel.14, tdp terms.4, tdp K12, tdp screen.8, tdp components.5, tdp P5, tdp K3, tdp toast.2, tdp panel.15, tdp M5, tdp note.8, tdp note.7, tdp F5, tdp panel.10, tdp panel.9]
     remark:
       - "[1] 有四個分頁（tdp terms.4、panel.4）：BRANCHES（本地分支）、REMOTES（遠端分支，origin/main）、TAGS、STASHES，照 SourceTree 側欄的順序；h|l 切換（tdp K12：一維清單放在有 tab 的 panel 裡，h|l 給 tab），下框 hint 在 Enter 後面寫 h|l:tab（tdp panel.1）。原本是一個清單分四組，使用者 2026-11-19 要 REMOTE 和 TAG 分頁、不要都擠在一個 panel；stash 也是另一種東西，一起拆成分頁。每個分頁是一般清單（tdp panel.5），照名稱排（tag 照版本的數字排，v1.10 在 v1.9 後面；stash 照 stash@{N} 的 N），tdp panel.5 的順序固定；每個分頁有自己的 cursor 與 / 篩選"
-      - "沒有東西的分頁是空狀態（tdp screen.8）：No remote branches / Press [f] to fetch every remote；No tags / Press [t] to tag HEAD；No stashes / Press [S] to stash the changes（提示裡的鍵是 global operation 的熱鍵，在 [1] 上按得到）"
+      - "沒有東西的分頁是空狀態（tdp screen.8）：No remote branches / Press [f] to fetch every remote；No tags / Press [t] to tag HEAD；No stashes / Press [S] to stash the changes；提示點名的鍵現在按不動時（沒有 remote、還沒有 commit、沒有改動，tdp M6 停用）改點名 Space（Press [Space] to see what you can do here），沒有 remote 的事實改寫 This repository has no remote（提示裡的鍵是 global operation 的熱鍵，在 [1] 上按得到）"
       - "單欄、不畫表頭（tdp panel.5：單欄的表頭 app 可以自行決定）。目前的分支在標記欄畫 Green 的 ●（tdp panel.7：不能標記的清單，app 可以把一種旗標畫在標記欄，glyph 與顏色 app 可以自行決定；跟 locku 的啟用中 profile 一樣）"
       - "本地分支有 upstream 時，名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）：SourceTree 側欄也這樣標（tdp P5 領域的符號與顏色）。upstream 在遠端被刪掉了（git 寫 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone，用 Peach（glyph 是使用者 2026-11-19 要的，跟分支圖的 ref 一樣有 glyph）（值得注意：多半是合併完、遠端刪掉的分支，可以刪了）；原本只寫 gone，使用者看不懂（2026-11-19）"
       - "stash 一列寫 stash@{N}: <訊息>，訊息太長從尾端截（tdp panel.5）"
@@ -127,7 +127,7 @@ tasks:
       - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
       - "fetch、pull、push 在背景跑：statusbar 寫 Fetching…／Pulling…／Pushing…（Green，tdp screen.4 進行中的工作），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
-      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變（SourceTree 也會），怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用（tdp M6）"
+      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變（SourceTree 也會），怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
     spec: 12
     request: 看工作區的檔案（SourceTree 的 File Status，git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼

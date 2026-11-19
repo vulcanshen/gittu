@@ -136,6 +136,7 @@ func (h *historyScreen) cur() *terminu.List { return h.tabs[h.branchP.Tab] }
 // show puts a read of the repository on the screen.
 func (h *historyScreen) show(s *git.Snapshot) {
 	h.branchP.Fail, h.histP.Fail = nil, nil
+	h.emptyHints(s)
 	first := h.tabs[0].Empty()
 	rows := branchRows(s)
 	for i, kind := range kinds {
@@ -153,6 +154,26 @@ func (h *historyScreen) show(s *git.Snapshot) {
 	}
 	h.commits.SetRows(h.commitRows(s))
 	h.commits.Location = h.scope()
+}
+
+// emptyHints name in the empty tabs a key that works now (tdp screen.8):
+// fetch with a remote, tag with a commit, stash with changes; otherwise
+// Space, to see what can be done.
+func (h *historyScreen) emptyHints(s *git.Snapshot) {
+	const space = "Press [Space] to see what you can do here"
+	if len(s.RemoteNames) == 0 {
+		h.tabs[1].EmptyFact, h.tabs[1].EmptyHint = "This repository has no remote", space
+	} else {
+		h.tabs[1].EmptyFact, h.tabs[1].EmptyHint = "No remote branches", "Press [f] to fetch every remote"
+	}
+	h.tabs[2].EmptyHint = "Press [t] to tag HEAD"
+	if s.HeadSHA == "" {
+		h.tabs[2].EmptyHint = space
+	}
+	h.tabs[3].EmptyHint = "Press [S] to stash the changes"
+	if s.HeadSHA == "" || !slices.ContainsFunc(s.Files, func(f git.File) bool { return !f.Untracked() }) {
+		h.tabs[3].EmptyHint = space
+	}
 }
 
 // failed says the repository could not be read (tdp panel.15).
