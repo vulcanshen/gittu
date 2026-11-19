@@ -1,0 +1,183 @@
+# gitreu
+
+[![Release](https://img.shields.io/github/v/release/vulcanshen/gitreu)](https://github.com/vulcanshen/gitreu/releases)
+[![License](https://img.shields.io/github/license/vulcanshen/gitreu)](LICENSE)
+
+**Language**: English · [繁體中文](README-zh_TW.md)
+
+**A git client for the terminal, laid out like SourceTree: the branches beside the history graph, everything you can do
+in the `Space` menu.**
+
+`gitreu` in a repository opens two panels: the branches, remote branches, tags and stashes on the left, the history
+graph on the right. Whatever SourceTree puts on its right-click menu is in gitreu's `Space` menu, for the branch or the
+commit under the cursor; what its toolbar does is in the global operations. Look into a commit's files and their diffs,
+compare two commits, stage and commit, merge, and resolve conflicts one block at a time with both sides in sight — with
+no keys to learn first.
+
+![gitreu: the history graph, a commit's files and a diff, the files to commit, a merge and its conflicts resolved](docs/demo.gif)
+
+## Features
+
+- **The SourceTree layout**: the branches, remote branches, tags and stashes on the left, the history graph on the right;
+  the cursor on a branch takes the graph to its commit.
+- **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
+  commits; every branch or only the current one.
+- **Look before you act**: a commit's files, then a file's diff; two commits marked and compared the same way; `Esc`
+  goes back one level at a time.
+- **Every operation from the `Space` menu**: check out, merge, rebase, cherry-pick, revert, reset, branch, tag, rename,
+  delete, stash, fetch, pull, push — each with the question it needs before it runs.
+- **File status**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
+  stage, unstage, discard and commit.
+- **Conflicts one block at a time**: mine above theirs, both in sight; use mine, theirs or both, and the file is staged
+  when the last block is done. Abort or continue a merge, rebase, cherry-pick or revert.
+- **Your git**: gitreu runs the git you have, so your hooks, credential helper, ssh keys and settings work as they do
+  in the shell.
+
+## Install
+
+### Requirements
+
+- macOS or Linux (WSL too).
+- git on your `PATH`.
+- A [Nerd Font](https://www.nerdfonts.com) terminal profile: the icons and the frames are Nerd Font glyphs.
+- A truecolor (24-bit) terminal: the faded colours and the layer colours cannot be told apart in 256 colours.
+- A terminal at least 60 columns wide and 32 rows high; in a smaller one gitreu shows only its name, the size it needs
+  and how to quit, and comes back as it was once the terminal grows.
+
+gitreu measures how many cells an icon and a powerline symbol take when it starts. When it gets them wrong, set them:
+
+| Variable | What it sets |
+|---|---|
+| `GITREU__ICON_WIDTH` | The cells an icon takes, for gitreu |
+| `GITREU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for gitreu |
+| `TERMINU__ICON_WIDTH` | The cells an icon takes, for every terminu family app: set it once and they all read it |
+| `TERMINU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for every terminu family app |
+
+Run inside a family app's terminal, gitreu gets the `TERMINU__` ones from the app around it.
+
+### Homebrew
+
+```sh
+brew install vulcanshen/tap/gitreu
+```
+
+### Script
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/install.sh | sh
+```
+
+No sudo: it installs to `~/.local/bin`.
+
+### The first start
+
+`gitreu` opens the repository the current directory is in; `gitreu <path>` opens the one `<path>` is in. Outside a
+repository it says so and quits. gitreu writes nothing of its own: it changes your repository only when you run an
+operation.
+
+### Uninstall
+
+```sh
+brew uninstall gitreu
+```
+
+Installed with the script:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/vulcanshen/gitreu/main/uninstall.sh | sh
+```
+
+## Quick start
+
+```sh
+cd your-repository
+gitreu
+```
+
+Move with `j`/`k`, press `Space` to see what you can do with the branch or commit under the cursor, `Enter` on a commit
+to see its files. `Tab` goes to the other panel, `F` to File status, `H` back to the history. `?` lists every key, `q`
+quits.
+
+## Usage
+
+The bottom line always shows `Space:menu ?:help !:log`: `Space` lists what you can do where you are, `?` the keys, `!`
+the App Log, what gitreu did and what went wrong.
+
+### History
+
+| Where | `Enter` | In the `Space` menu |
+|---|---|---|
+| `[1]` a branch | Check out | `[M]erge` into the current branch, `[r]ebase` the current branch onto it, Re`[n]`ame, `[D]`elete, Push |
+| `[1]` a remote branch | Check out as a local branch tracking it | `[M]erge`, `[r]ebase`, `[D]`elete it on the remote |
+| `[1]` a tag | Check out (HEAD detached) | `[D]`elete, Push |
+| `[1]` a stash | Show what it keeps | `[a]`pply, P`[o]`p, `[D]`rop |
+| `[2]` a commit | Its files | `[m]`ark, Check `[o]`ut, `[b]`ranch here, `[t]`ag, `[M]`erge, `[r]`ebase, Cherry-pick, Revert, Re`[s]`et to here, Cop`[y]` hash |
+| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[C]`ompare the two marked commits, `[/]` filter |
+
+`Enter` on a file of a commit opens its diff; `Esc` goes back to the files, and again to the graph.
+
+### File status
+
+| Where | `Enter` | In the `Space` menu |
+|---|---|---|
+| An unstaged file | Stage | `[D]`iscard |
+| A staged file | Unstage | `[D]`iscard |
+| A conflicted file | Resolve its conflicts one by one | Use `[m]`ine, use `[t]`heirs, for the whole file |
+| A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
+| The panel | | Stage `[a]`ll, Unstage all |
+
+`[2]` shows the diff of the file under the cursor; `Enter` there opens it in a viewer to search and copy from.
+
+### For the whole repository
+
+In every `Space` menu, `Global operation` lists what SourceTree's toolbar does: `[c]`ommit, Amend, `[p]`ull, `[P]`ush,
+`[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
+rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
+does not use the same key for its own.
+
+gitreu reads the repository again every 3 seconds, so what you change outside it shows.
+
+## Troubleshooting
+
+- **A push or a pull asks for a password**: gitreu cannot ask for one, so git fails and says so. Use an ssh agent, or a
+  credential helper for https.
+- **A commit hook stops a commit**: its output is in the error; the message you wrote comes back the next time you
+  press `[c]`.
+
+## Settings and data
+
+gitreu keeps no data, no state and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/gitreu` (or
+`~/.config/gitreu`; `GITREU__CONFIG` names another directory). gitreu never makes it; with no file, it uses the default.
+
+```yaml
+input_tab_width: 4   # the spaces Tab puts in a commit message, and a tab in a diff is drawn as
+```
+
+It is a key every terminu family app shares. A `config.yaml` gitreu cannot read is offered to be moved aside to
+`config.yaml.bak`, or gitreu quits; a value that is not a whole number above 0 is kept in `config.yaml.bak` and written
+back as 4.
+
+## Limits
+
+- The history graph reads the newest 1000 commits.
+- gitreu cannot ask for a password or a passphrase: use an ssh agent or a credential helper.
+- A conflict shows mine and theirs, not the common ancestor.
+- No interactive rebase, submodules, worktrees or git-flow.
+- macOS and Linux only (WSL too); there is no Windows build.
+
+## Links
+
+- [CHANGELOG](CHANGELOG.md)
+
+## The terminu family
+
+gitreu follows terminu design:
+
+- [terminu design](https://github.com/vulcanshen/terminu): the family's design rules
+- [terminu-go](https://github.com/vulcanshen/terminu-go): the Go library gitreu is built with
+- [terminu-harness](https://github.com/vulcanshen/terminu-harness): the Claude Code plugin for building apps to terminu
+  design
+
+## License
+
+[GPL-3.0](LICENSE)
