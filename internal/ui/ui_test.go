@@ -1259,10 +1259,33 @@ func TestDiffNotText(t *testing.T) {
 	d.Press("j", "k")
 	has(t, d, "DIFF: blob.bin", "Not a text file", "Press [1] to go to the files")
 	hasNot(t, d, "Enter:compare")
+}
+
+// TestDiffNewFolder is task 11 on tdp note.8 (note-106): an untracked
+// folder's files are listed with their marks, all +, and Enter goes into
+// that list as into a commit; [1]'s cursor moving on leaves it.
+func TestDiffNewFolder(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("newdir/one.txt", "1\n")
+	r.Write("newdir/two.txt", "2\n")
+	r.Write("newdir/blob.bin", "a\x00b")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "newdir/"); return nil })
 	d.Press("j", "k")
-	has(t, d, "DIFF: newdir/", "newdir/one.txt", "newdir/two.txt")
-	hasNot(t, d, "Enter:compare")
+	has(t, d, "DIFF: newdir/", "newdir/ @ index ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:compare")
+	d.Press("Tab", "Enter") // into the list
+	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
+	hasNot(t, d, "DIFF — newdir/blob.bin")
+	d.Press("j", "Enter")
+	has(t, d, "DIFF — newdir/one.txt @ index ↔ newdir/one.txt", "UNIFIED")
+	d.Press("Esc")
+	d.Press("1", "k") // [1]'s cursor on another row: out of the list
+	d.Press("j")
+	has(t, d, "+ newdir/one.txt")
+	if g.a.Screen().Focused() != g.status.filesP {
+		t.Error("the focus left [1]")
+	}
 }
 
 // TestDiffComparesVersions is task 11 on tdp note.8: Enter on [2] DIFF compares

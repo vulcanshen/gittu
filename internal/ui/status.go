@@ -1,6 +1,9 @@
 package ui
 
 import (
+	"io"
+	"os"
+	"path/filepath"
 	"slices"
 	"strconv"
 	"strings"
@@ -240,6 +243,9 @@ func (s *statusScreen) showDiff(again bool) {
 	} else if f, group, in := s.file(); in {
 		id, name = group+f.Path, f.Path
 	}
+	if !again || id != s.shown {
+		s.diffP.LeaveDiff() // another row: out of the list [2] went into for the last one
+	}
 	s.diffP.Label, s.diffP.Name, s.diffP.Fail = label, name, nil
 	s.diff.EmptyFact, s.diff.EmptyHint = "No file to show", "Press [1] to go to the files"
 	s.text = false
@@ -259,14 +265,14 @@ func (s *statusScreen) showDiff(again bool) {
 	if !ok {
 		s.diffP.Location = ""
 		s.shown, s.was, s.now = id, "", ""
-		if f, _, in := s.file(); in && f.Untracked() && s.g.repo.IsDir(f.Path) {
-			s.untrackedDir(f.Path) // a folder holds many: what is in it
-			return
-		}
 		s.diff.SetLines(nil)
 		return
 	}
 	s.diffP.Location = item.Anchor + " ↔ " + item.Other
+	if item.Items != nil { // a new folder holds many: its files, each + (tdp note.8, panel.9)
+		s.showItems(again, id, name, item)
+		return
+	}
 	was, now, err := item.Text()
 	if err != nil {
 		lines := gitLines(err)
@@ -326,17 +332,71 @@ func (s *statusScreen) mineName(h git.Hunk) string {
 	return mine
 }
 
-// untrackedDir shows in [2] the files of an untracked folder, as git only
-// says it is new.
-func (s *statusScreen) untrackedDir(dir string) {
-	files, err := s.g.repo.UntrackedFiles(dir)
+// showItems shows in [2] the items that differ in what holds many, each
+// with its mark (tdp note.8 "In a panel"): an untracked folder's files, all
+// +. Enter goes into the same list (openDiff).
+func (s *statusScreen) showItems(again bool, id, name string, item terminu.DiffItem) {
+	items, err := item.Items()
 	if err != nil {
-		s.diffP.Fail = &terminu.Failure{Fact: "Can't show the change: " + reason(gitLines(err)), Hint: "Press [R] to read it again"}
+		lines := gitLines(err)
+		s.g.a.Log(terminu.Error, "Can't show the change to "+name+": "+reason(lines))
+		s.g.logAll(lines)
+		s.diffP.Fail = &terminu.Failure{Fact: "Can't show the change: " + reason(lines), Hint: "Press [R] to read it again"}
+		s.shown, s.was, s.now = id, "", ""
 		s.diff.SetLines(nil)
 		return
 	}
-	s.diffP.Location = dir
-	s.diff.SetLines(files)
+	s.text = true
+	s.diff.EmptyFact, s.diff.EmptyHint = "No files in it to show", "Press [1] to go to the files"
+	names := make([]string, len(items))
+	for i, it := range items {
+		names[i] = it.Name
+	}
+	listed := strings.Join(names, "\n")
+	if again && id == s.shown && listed == s.now {
+		return
+	}
+	if again && id == s.shown {
+		s.reread = name
+	}
+	s.shown, s.was, s.now = id, "", listed
+	s.diff.SetDiffItems(items)
+}
+
+// folderItems are the files of an untracked folder, each as added: nothing
+// in the index, the file in the working tree; one git takes for binary has
+// no comparison (tdp panel.9).
+func (s *statusScreen) folderItems(dir string) ([]terminu.DiffItem, error) {
+	repo := s.g.repo
+	files, err := repo.UntrackedFiles(dir)
+	if err != nil {
+		return nil, err
+	}
+	items := make([]terminu.DiffItem, 0, len(files))
+	for _, p := range files {
+		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: p + " @ index", Other: p}
+		if !binaryFile(filepath.Join(repo.Dir, filepath.FromSlash(p))) {
+			it.Text = func() (string, string, error) {
+				b, err := repo.WorkFile(p)
+				return "", b, err
+			}
+		}
+		items = append(items, it)
+	}
+	return items, nil
+}
+
+// binaryFile reports a file git would take for binary, from its first 8000
+// bytes.
+func binaryFile(path string) bool {
+	f, err := os.Open(path)
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	b := make([]byte, 8000)
+	n, _ := io.ReadFull(f, b)
+	return binaryText(string(b[:n]))
 }
 
 // takeReread is the file whose text changed on the last read, once.
@@ -387,7 +447,8 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 	} else if f, group, ok := s.file(); ok {
 		path := f.Path
 		if f.Untracked() && repo.IsDir(path) {
-			return item, false
+			return terminu.DiffItem{Anchor: path + " @ index", Other: path,
+				Items: func() ([]terminu.DiffItem, error) { return s.folderItems(path) }}, true
 		}
 		switch group {
 		case inStaged:
