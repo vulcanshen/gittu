@@ -420,6 +420,53 @@ func TestHistoryFilter(t *testing.T) {
 	hasNot(t, d, "Say even more")
 }
 
+// TestActionsClearTheFilter is tdp panel.14 (panel-180): an action of
+// gittu's own that puts [2]'s cursor on a commit clears [2]'s filter first,
+// whether the filter hides that commit or not; the focus leaving keeps it.
+func TestActionsClearTheFilter(t *testing.T) {
+	r := gittest.Sample(t)
+	g, d := start(t, r, 120, 32)
+	commits := g.history.commits
+	filter := func(text string) {
+		t.Helper()
+		d.Press("2", "/")
+		d.Type(text)
+		d.Press("Enter")
+		if !commits.Filtering() {
+			t.Fatalf("no filter %q", text)
+		}
+	}
+	on := func(branch string) {
+		t.Helper()
+		if cur, _ := commits.Current(); cur.ID != strings.TrimSpace(r.Git("rev-parse", branch)) {
+			t.Errorf("[2] is not on %s", branch)
+		}
+	}
+	// [1] lists feature, main, topic; the cursor starts on main.
+	filter("topic")
+	d.Press("1")
+	if !commits.Filtering() {
+		t.Error("the focus leaving [2] cleared its filter")
+	}
+	d.Press("k") // to feature, its commit hidden by the filter
+	if commits.Filtering() {
+		t.Error("moving to feature kept [2]'s filter")
+	}
+	on("feature")
+	filter("Say")
+	d.Press("1", "j") // to main, its commit not hidden: cleared all the same
+	if commits.Filtering() {
+		t.Error("moving to main kept [2]'s filter")
+	}
+	on("main")
+	filter("Try")
+	d.Press("1", "Enter") // Enter on main
+	if commits.Filtering() {
+		t.Error("Enter on main kept [2]'s filter")
+	}
+	on("main")
+}
+
 // --- task 5: all branches or the current one ---
 
 // TestAllOrCurrentBranch: both draw every branch, the main line on the left
@@ -1088,20 +1135,34 @@ func TestRefreshFailureKeepsContent(t *testing.T) {
 	if err := os.WriteFile(head, []byte("broken\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	d.Press("R")
+	refresh := func() {
+		t.Helper()
+		d.Advance(refreshEvery + time.Second)
+		d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+	}
+	refresh()
 	d.WaitFor(func() bool { return d.Has("Can't read") }, 5*time.Second)
 	has(t, d, "Can't read", "feature", "topic")
 	hasNot(t, d, "READ FAILED")
 	if g.snap == nil || g.history.branchP.Fail != nil {
 		t.Error("the old content is gone")
 	}
+	d.Press("Esc")
+	refresh() // the same failure again: nothing more (tdp note-105)
+	refresh()
 	if err := os.WriteFile(head, was, 0o644); err != nil {
 		t.Fatal(err)
 	}
-	d.Press("Esc", "R")
-	d.WaitFor(func() bool { return d.Has("Read ") }, 5*time.Second)
+	refresh() // it reads again: one INFO, no toast
 	if g.readErr != "" {
 		t.Errorf("readErr %q after a good read", g.readErr)
+	}
+	hasNot(t, d, "can be read again") // not a toast
+	d.Press("!")
+	has(t, d, "INFO The repository can be read again")
+	screen := strings.Join(d.Screen(), "\n")
+	if n := strings.Count(screen, "ERR  Can't read"); n != 1 {
+		t.Errorf("%d ERR entries of the same failure, want 1:\n%s", n, screen)
 	}
 }
 

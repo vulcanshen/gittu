@@ -193,6 +193,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 				// on, which holds many: the files that differ (tdp note.8).
 				st, _ := h.stash()
 				base, name := st.SHA+"^1", "base of "+st.Ref
+				h.tabs[3].ClearFilter() // going in to it (tdp panel.14, panel.10)
 				g.a.Log(terminu.Info, "Opened "+st.Ref)
 				return g.a.OpenDiff(h.branchP, terminu.DiffItem{Anchor: name, Other: st.Ref,
 					Items: func() ([]terminu.DiffItem, error) { return h.commitItems(base, st.SHA, name, st.Ref) }})
@@ -230,16 +231,14 @@ func (h *historyScreen) showRef() tea.Cmd {
 	}
 	name := r.ID[2:]
 	sha := h.shaOf(r.ID)
-	if sha != "" && !h.commits.Select(sha) && h.commits.Filtering() {
-		h.commits.ClearFilter() // the filter hides it: show it all the same
-		h.histP.Body = h.commits
-	}
-	if sha == "" || !h.commits.Select(sha) {
+	if !h.inGraph(sha) {
 		if r.ID[:2] == kindRemote && !h.g.remote {
 			return h.g.a.Toast(terminu.Info, name+" is not in the graph", "Press [r] on [2] to show remote branches")
 		}
 		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
 	}
+	h.commits.ClearFilter() // an action of gittu's own puts the cursor on it (tdp panel.14)
+	h.commits.Select(sha)
 	h.histP.LeaveDiff()
 	return h.g.a.Focus(h.histP)
 }
@@ -267,6 +266,7 @@ func (h *historyScreen) rename(old string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Renaming…", "Rename", func() error { return g.repo.RenameBranch(old, n) },
 				func() tea.Cmd {
+					h.tabs[0].ClearFilter() // the cursor goes on the new name (tdp panel.14)
 					h.tabs[0].Select(kindBranch + n)
 					return g.a.Toast(terminu.Success, "Renamed "+old+" to "+n)
 				})
@@ -444,6 +444,7 @@ func (h *historyScreen) setAll(all bool) tea.Cmd {
 func (h *historyScreen) setRemote(remote bool) tea.Cmd {
 	g := h.g
 	g.remote = remote
+	h.commits.ClearFilter() // what [2] lists changes (tdp panel.14)
 	snap, err := g.repo.Read(remote)
 	g.show(snap, err)
 	g.status.takeReread() // read at the user's word, not a change from outside
@@ -502,6 +503,7 @@ func (g *gittu) newBranch(ref string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Branching…", "Branch", func() error { return g.repo.NewBranch(n, ref) },
 				func() tea.Cmd {
+					g.history.tabs[0].ClearFilter() // the cursor goes on the new branch (tdp panel.14)
 					g.history.tabs[0].Select(kindBranch + n)
 					return g.a.Toast(terminu.Success, "Made and checked out "+n)
 				})
@@ -519,6 +521,7 @@ func (g *gittu) newTag(ref string) tea.Cmd {
 		Done: func(n string) tea.Cmd {
 			return g.run("Tagging…", "Tag", func() error { return g.repo.NewTag(n, ref) },
 				func() tea.Cmd {
+					g.history.tabs[2].ClearFilter() // the cursor goes on the new tag (tdp panel.14)
 					g.history.tabs[2].Select(kindTag + n)
 					return g.a.Toast(terminu.Success, "Tagged "+at+" "+n)
 				})

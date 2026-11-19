@@ -286,6 +286,9 @@ func (s *statusScreen) showDiff(again bool) {
 		s.diff.SetLines(nil)
 		return
 	}
+	if s.failedWas != "" { // it failed before: one INFO, no toast (tdp note.7, note-105)
+		s.g.a.Log(terminu.Info, "The change to "+name+" can be shown again")
+	}
 	s.failedWas = ""
 	if binaryText(was) || binaryText(now) {
 		s.diff.EmptyFact, s.diff.EmptyHint = "Not a text file: no lines to compare", "Press [1] to go to the files"

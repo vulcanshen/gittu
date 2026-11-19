@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"slices"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -324,10 +325,17 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	if h.g.snap == nil {
 		return nil
 	}
-	if sha := h.shaOf(r.ID); sha != "" && h.commits.Select(sha) {
+	if sha := h.shaOf(r.ID); h.inGraph(sha) {
+		h.commits.ClearFilter() // it puts [2]'s cursor on that commit (tdp panel.14)
+		h.commits.Select(sha)
 		h.histP.LeaveDiff()
 	}
 	return nil
+}
+
+// inGraph reports the commit sha among the graph's rows, a filter or not.
+func (h *historyScreen) inGraph(sha string) bool {
+	return sha != "" && h.g.snap != nil && slices.ContainsFunc(h.g.snap.Commits, func(c git.Commit) bool { return c.SHA == sha })
 }
 
 // shaOf is the commit a row of [1] points at.
@@ -452,6 +460,7 @@ func (h *historyScreen) showCommit() tea.Cmd {
 		from, fromName = c.Parents[0], git.Short(c.Parents[0])
 	}
 	h.g.a.Log(terminu.Info, "Opened the changes of "+git.Short(c.SHA)+" "+c.Subject)
+	h.commits.ClearFilter() // going in to it (tdp panel.14, panel.10)
 	return h.g.a.OpenDiff(h.histP, terminu.DiffItem{Anchor: fromName, Other: git.Short(c.SHA),
 		Items: func() ([]terminu.DiffItem, error) { return h.commitItems(from, c.SHA, fromName, git.Short(c.SHA)) }})
 }

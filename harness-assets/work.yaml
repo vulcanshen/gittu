@@ -26,7 +26,7 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gittu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gittu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 9
+    spec: 12
     implementation: |
       [1] 有四個分頁（tgo Panel.Tabs：label Branches、Tabs Remotes、Tags、Stashes；OnTab 把 Body 換成那一頁的 List），h|l 切換（tgo 做，下框 hint 寫 h|l:tab）；
       每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
@@ -35,14 +35,14 @@ tasks:
       沒有東西的頁：No remote branches / Press [f] to fetch every remote、No tags / Press [t] to tag HEAD、No stashes / Press [S] to stash the changes
       目前的分支在標記欄畫 Green 的 ●；有 upstream 的本地分支名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）；upstream 在遠端被刪掉了（git 的 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone（glyph 與字都是 Peach）
       打開時 cursor 停在目前的分支上
-      cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：[2] 的 cursor 移到它指的 commit（List.Select；不在分支圖裡就不動），移到了而 [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著）；focus 留在 [1]
+      cursor 移到分支、遠端分支、tag、stash 上（每一頁的 tgo List.OnMove；換分頁時是換到的那一頁的 cursor）：它指的 commit 在分支圖裡時，[2] 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），再移 cursor 過去（List.Select；不在分支圖裡就什麼都不動，篩選也不清），移到了而 [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著）；focus 留在 [1]
       分支、遠端分支、tag 上的 Enter（[Enter] Show — its commit in [2] COMMITS；hint Enter:show；stash 那一列沒有，它的 Enter 是 task 8 的 Show）：
-      [2] 有篩選、篩掉了那個 commit 時清掉篩選；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
+      [2] 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），不管篩選有沒有擋住那個 commit；[2] 的 cursor 停在它指的 commit（List.Select，下一格畫面捲到看得到），
       [2] 在差異清單裡時 tgo Panel.LeaveDiff 退回分支圖（比較模式留著），tgo App.Focus 把 focus 移到 [2]；不記 App Log。那個 commit 不在分支圖裡時不移動 focus，Info toast：遠端分支隱藏著、而它是遠端分支時
       「<名字> is not in the graph」「Press [r] on [2] to show remote branches」，其他時候「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；還沒讀到過 repo 就讀失敗時兩個 panel 都是 Can't read <repo>: <說原因的那一行>（Red）/ Press [R] to read it again（tgo Panel.Fail），App Log 記 Error 的同一句與 git 印的全文；
-      讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、原因跟上一次一樣時不再跳，原因換了才再跳一次（tdp 不清楚，暫時這樣）；說原因的那一行同 task 8）
-    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
+      讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；說原因的那一行同 task 8）
+    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
   - id: 4
     spec: 8
     implementation: |
@@ -68,10 +68,10 @@ tasks:
       預設 All，不存檔
     test: [TestAllOrCurrentBranch, TestGraphMainLine]
   - id: 6
-    spec: 11
+    spec: 12
     implementation: |
       [2] 的 commit 上 Enter（Space menu：[Enter] Files — this commit changed, each before and after；hint Enter:files）：
-      tgo App.OpenDiff(histP, DiffItem{Anchor: <第一個 parent 的短 hash>（第一個 commit 是 empty）, Other: <commit 的短 hash>, Items})；
+      [2] 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），再 tgo App.OpenDiff(histP, DiffItem{Anchor: <第一個 parent 的短 hash>（第一個 commit 是 empty）, Other: <commit 的短 hash>, Items})；
       Items 是 git diff --name-status -M -z <parent> <commit>（第一個 commit 用 git diff-tree --root），加 --numstat 認出二進位檔：
       每一項 DiffItem{Mark, Name: <路徑>（改名寫 <舊> → <新>）, Anchor: <舊路徑> @ <parent>, Other: <路徑> @ <commit>}；
       Mark：A（第一個 commit 的 C 也是）DiffAdded、D DiffRemoved、copy DiffAdded、其他（M、R、T）DiffChanged；
@@ -90,7 +90,7 @@ tasks:
       原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉
     test: [TestCompareTwoCommits]
   - id: 8
-    spec: 8
+    spec: 12
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
       本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
@@ -101,18 +101,18 @@ tasks:
       遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
       [M]erge、Re[b]ase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
       tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>；沒有 remote 時停用）
-      stash（STASHES 那一頁）：[Enter] Show（what it keeps, file by file：tgo App.OpenDiff(branchP, DiffItem{Anchor: base of stash@{N}, Other: stash@{N}, Items})，Items 跟 task 6 一樣是 <stash>^1 對 <stash> 的檔案；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
+      stash（STASHES 那一頁）：[Enter] Show（what it keeps, file by file：STASHES 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），再 tgo App.OpenDiff(branchP, DiffItem{Anchor: base of stash@{N}, Other: stash@{N}, Items})，Items 跟 task 6 一樣是 <stash>^1 對 <stash> 的檔案；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
       merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
-      其他失敗開 error popup <動作> FAILED，內容是git 說原因的那一行（第一個 fatal: 或 error: 開頭的，沒有就第一個不是 hint: 的），git 印的全文一列一筆記進 App Log（Error）（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列
+      其他失敗開 error popup <動作> FAILED，內容是git 說原因的那一行（第一個 fatal: 或 error: 開頭的，沒有就第一個不是 hint: 的），git 印的全文一列一筆記進 App Log（Error）（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180）
     test: [TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
   - id: 9
-    spec: 8
+    spec: 12
     implementation: |
       [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
-      [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> <名>）、
+      [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> <名>；cursor 移到 TAGS 新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180））、
       [M]erge、R[e]base（同 task 8，對象是那個 commit）、Cherry-pick（沒有熱鍵；confirm；git cherry-pick，merge commit 加 -m 1）、Revert（沒有熱鍵；confirm；git revert --no-edit，merge commit 加 -m 1）、
       Re[s]et（tgo Select RESET: <短 hash>，選項 [s]oft: keep the changes, staged、[m]ixed: keep the changes, unstaged、[H]ard: throw the changes away；
       Soft、Mixed 直接 git reset --soft／--mixed；Hard 再開 confirm，內容 Every change not committed is lost…（Peach）；Success Reset <分支> to <短 hash> (<mode>)；還沒有 commit 時停用）、
@@ -120,7 +120,7 @@ tasks:
       進到 commit 裡時這些都 Hidden；成功、失敗、衝突、重新讀照 task 8
     test: [TestCommitOperations, TestResetHardAsks, TestResetSoft]
   - id: 10
-    spec: 11
+    spec: 12
     implementation: |
       global operation（tgo App.Global；Space menu 的 Global operation 那一列打開，熱鍵在 panel 上也能按，panel 有同一個鍵時以 panel 的為準）：
       [c]ommit（task 13）、Amend（task 13）、[p]ull（git pull --no-edit；衝突照 task 8；detached、沒有 upstream、upstream 在遠端被刪掉時停用）、[P]ush（還沒有 commit 時停用；有 upstream：git push；沒有：confirm「Push <分支> to <remote> and track it?」，git push -u <remote> <分支>；
@@ -134,7 +134,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 9
+    spec: 12
     implementation: |
       Working tree 畫面：[1] CHANGES 是 tgo List（Flags，一欄 PATH，Path 從前面截），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -144,7 +144,7 @@ tasks:
       兩邊一樣時 EmptyFact No differences between the two / Press [1] to go to the files；任一邊前 8000 位元組有 NUL（二進位檔）時 SetLines(nil)、Not a text file: no lines to compare / Press [1] to go to the files；
       沒追蹤的資料夾 SetLines(git ls-files --others --exclude-standard -- <資料夾>)，位置列 <資料夾>；
       讀不到時：換了一列（沒有舊內容）Panel.Fail Can't show the change: <說原因的那一行> / Press [R] to read it again；同一列重新讀時讀不到，舊的內容留著，Error toast「Can't show the change to <路徑>: <說原因的那一行>」「Press [R] to read it again」
-      （原因跟上一次一樣時不再跳，同 task 3）；兩種都把那一句（Error）與 git 印的全文記進 App Log
+      （原因跟上一次一樣時不跳也不記，同 task 3；又讀得到時 App Log 記 INFO The change to <路徑> can be shown again，不跳 toast）；兩種都把那一句（Error）與 git 印的全文記進 App Log
       背景重新讀時（task 19），同一列的兩邊文字變了才再 SetDiff（view 留在原處，tdp note.9），換了一列也是 SetDiff；衝突區塊那一層照 task 14
       [2] 上的 Enter（[Enter] Compare — its two versions, UNIFIED or SPLIT；hint Enter:compare；沒有內容、二進位檔、沒追蹤的資料夾時 Hidden）：
       tgo App.OpenDiff(diffP, DiffItem{Anchor, Other, Text})：STAGED <舊路徑> @ HEAD ↔ <路徑> @ index（git show HEAD:<舊路徑>、git show :<路徑>）；
@@ -219,21 +219,21 @@ tasks:
       App Log 記 Info：Zoomed [2] COMMITS、Zoomed [2] COMMITS to the whole screen、Back to both panels
     test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep]
   - id: 18
-    spec: 6
+    spec: 12
     implementation: |
       [2] COMMITS 的 panel operation，同一個鍵 r 用 Hidden 分開：遠端分支隱藏時列 Show [r]emote branches（in the graph），畫出來時列 Hide [r]emote branches（from the graph）；
       進到 commit 裡時兩個都 Hidden
-      隱藏（預設）時 git.Read 不帶 --remotes：只畫本地分支、tag、HEAD 走得到的 commit，DESCRIPTION 不寫遠端分支的 ref；切換時馬上重新讀 repo（同步）
+      隱藏（預設）時 git.Read 不帶 --remotes：只畫本地分支、tag、HEAD 走得到的 commit，DESCRIPTION 不寫遠端分支的 ref；切換時 [2] 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180）（[2] 列的 commit 換了），再馬上重新讀 repo（同步）
       位置列在畫出來時接 · with remote branches；App Log 記 Info：Showing remote branches／Hiding remote branches；不存檔
       [1] 的 REMOTES 分頁與 statusbar、[1] 的 ↑N ↓N 不受影響
     test: [TestRemoteBranchesToggle, TestEnterOnARemoteBranchHidden, TestReadTheSample]
   - id: 19
-    spec: 11
+    spec: 12
     implementation: |
       啟動時（tgo App.Start）起一個 tgo App.Tick，每 3 秒在背景重新讀一次 repo（git.Read 在另一個 goroutine），沒有 git 指令在跑、上一次還沒讀完時不讀
       讀回來時（不是按 R 的）拿上一次的 Snapshot 比：每個檔的狀態（路徑、X、Y；多出來、不見了、變了的）、[2] DIFF 正在畫的那個檔兩邊的文字（同一列重新讀時變了，task 11 記下它的路徑）、
       HEAD（換了分支寫 HEAD (on <分支>)、變成 detached 寫 HEAD (detached)，detached 時移動寫 HEAD）、本地分支／遠端分支／tag（branch <名> (new)、(deleted)，指的 commit 變了寫 branch <名>）、
       stash（筆數或最上面那筆變了寫 stashes）、做到一半的操作（a <op> under way、the <op> ended）；有不一樣才 App Log 記 Info：Changed outside gittu: <最多三項>（多的接 and N more）
       gittu 自己的操作做完時（doneMsg）與切換遠端分支時（task 18）讀的那一次換上新的 Snapshot、丟掉 [2] 的變動，所以下一次刷新不會把自己的操作記成外面的變動
-      讀失敗照 task 3：舊的內容留著；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不再跳 Error toast，換了才再跳；按 R 的失敗都跳
-    test: [TestRefreshAndReadingAgain, TestRefreshLogsOnlyChanges, TestChanges, TestDiffFollowsCursor, TestRefreshFailureKeepsContent]
+      讀失敗照 task 3：舊的內容留著；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳
+    test: [TestRefreshAndReadingAgain, TestRefreshLogsOnlyChanges, TestChanges, TestDiffFollowsCursor, TestRefreshFailureKeepsContent, TestFirstReadFails]

@@ -238,6 +238,9 @@ func (g *gittu) show(snap *git.Snapshot, err error) {
 		}
 		return
 	}
+	if g.readErr != "" { // it failed before: one INFO, no toast (tdp note.7, note-105)
+		g.a.Log(terminu.Info, "The repository can be read again")
+	}
 	g.readErr = ""
 	g.snap = snap
 	g.history.show(snap)

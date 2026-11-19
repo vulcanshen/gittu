@@ -96,6 +96,22 @@ user 照原話：
 2. 「我們可以現在改名，再 push」
 3. 新名字：「gittu: git terminu ui，icon 你不用管，我會用 kamonu 作」；新的 repo 公開
 
+## 篩選（2026-11-19）
+
+在分支上按 Enter、[2] 的篩選擋住那個 commit 時要不要清掉篩選（review 判 tdp 不清楚），user 照原話：「對，我搞不清楚你的篩選是在說什麼」。
+說明之後，user 在 tdp session 選了 A：app 自己的動作要換掉 panel 列的東西、或把 cursor 放到某一項上時，先清掉那個 panel 的篩選
+（不管有沒有擋住那一項）；只是 focus 離開不清。tdp main 7e62a11 寫進 panel.14（checklist panel-180），還沒發版。
+
+## 背景刷新的紀錄與沒追蹤的資料夾（2026-11-19）
+
+review 判 tdp 不清楚的另外三題，user 先問了「repo 壞掉？是怎麼壞掉？」、「沒有追蹤的整個資料夾，啊就沒有追蹤了，顯示什麼？」，
+說明之後在 tdp session 都選了 A（tdp main，還沒發版）：
+
+1. 自己重讀的內容，讀到變了才記一筆 INFO 寫出變了什麼，沒變不記（note.7，note-104）
+2. 自己重讀失敗：第一次跳 Error toast、記一筆 ERR，同一個失敗再發生不跳不記，換一種再跳再記，又讀得到時記一筆 INFO、不跳 toast（note.7，note-105）
+3. 明細 panel 顯示裝著許多項目的東西（沒追蹤的資料夾、commit）時，照 panel.9 列出有差異的項目、各有標記；沒追蹤的資料夾裡的檔都是 `+`；
+   Enter 進到那份清單（note.8，note-106）。terminu-go 要新的 API，v1.2.19-beta.2 才有
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。
