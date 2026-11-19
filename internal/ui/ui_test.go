@@ -401,9 +401,41 @@ func TestRemoteBranchesToggle(t *testing.T) {
 func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 160, 32)
-	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", glyphBranch+" main Say even more",
-		glyphRefTag+" v0.1.0 Merge branch 'feature'", string(git.Node)+"─┴─╮")
+	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", string(git.Node)+"─┴─╮")
 	hasNot(t, d, "origin/main") // the remote branches are hidden at first
+	// A commit's branches and tags on the row under it (tdp main panel.5),
+	// the graph's lines running on through it.
+	g := d.Screen()
+	under := func(subject, refs string) {
+		t.Helper()
+		for i, row := range g {
+			if strings.Contains(row, subject) {
+				if i+1 >= len(g) || !strings.Contains(g[i+1], refs) || strings.Contains(row, refs) {
+					t.Errorf("%q is not on the row under %q:\n%s", refs, subject, strings.Join(g, "\n"))
+				}
+				if i+1 < len(g) && !strings.Contains(g[i+1], "│") {
+					t.Errorf("the graph does not run on under %q", subject)
+				}
+				return
+			}
+		}
+		t.Errorf("no %q", subject)
+	}
+	under("Say even more", glyphBranch+" main")
+	under("Merge branch 'feature'", glyphRefTag+" v0.1.0")
+}
+
+// TestFilterFindsARef: the filter matches a commit by the row of its refs
+// (tdp main panel.5).
+func TestFilterFindsARef(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 160, 32)
+	d.Press("Tab", "/")
+	d.Type("v0.1.0")
+	d.Press("Enter")
+	cur, _ := g.history.commits.Current()
+	if !strings.Contains(cur.Cells[2], "Merge branch") {
+		t.Errorf("the filter for v0.1.0 is on %q", cur.Cells[2])
+	}
 }
 
 // TestGraphWithWideIcons is tdp E5: whatever cells an icon takes, the

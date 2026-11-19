@@ -265,3 +265,19 @@ func TestGraphMainLine(t *testing.T) {
 		}
 	}
 }
+
+// TestThrough: under a commit, only the lines going on down are drawn.
+func TestThrough(t *testing.T) {
+	row := []git.Cell{{Rune: git.Node, Line: 0}, {Rune: '─', Line: 1}, {Rune: '┴', Line: 1}, {Rune: '─', Line: 2},
+		{Rune: '┼', Line: 3}, {Rune: '─', Line: 2}, {Rune: '╮', Line: 2}, {Rune: ' ', Line: -1}, {Rune: '│', Line: 4}}
+	got := ""
+	for _, c := range git.Through(row, true) {
+		got += string(c.Rune)
+	}
+	if want := "│   │ │ │"; got != want {
+		t.Errorf("through %q, want %q", got, want)
+	}
+	if root := git.Through([]git.Cell{{Rune: git.Node, Line: 0}}, false); root[0].Rune != ' ' {
+		t.Errorf("under a root commit %q", root[0].Rune)
+	}
+}

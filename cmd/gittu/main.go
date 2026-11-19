@@ -40,10 +40,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 			fmt.Fprint(stdout, usage)
 			return 0
 		case strings.HasPrefix(a, "-"):
-			fmt.Fprintf(stderr, "gittu: unknown flag %q\n\n%s", a, usage)
+			fmt.Fprintf(stderr, "gittu: Unknown flag %q\n\n%s", a, usage)
 			return 2
 		case len(args) > 1:
-			fmt.Fprintf(stderr, "gittu: one path at most\n\n%s", usage)
+			fmt.Fprintf(stderr, "gittu: One path at most\n\n%s", usage)
 			return 2
 		default:
 			dir = a

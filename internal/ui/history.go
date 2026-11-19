@@ -253,12 +253,22 @@ func (h *historyScreen) commitRows(s *git.Snapshot) []terminu.Row {
 	rows := make([]terminu.Row, len(s.Commits))
 	for i, c := range s.Commits {
 		gText, gSpans := graphSpans(graph[i])
-		desc, descSpans := description(refs[c.SHA], c.Subject)
 		date := c.Date.Format("2006-01-02")
 		rows[i] = terminu.Row{
 			ID:     c.SHA,
-			Cells:  []string{gText, git.Short(c.SHA), desc, c.Author, date},
-			Styled: [][]terminu.Span{gSpans, nil, descSpans, nil, {{Text: date, Style: terminu.Fg(terminu.Overlay0)}}},
+			Cells:  []string{gText, git.Short(c.SHA), c.Subject, c.Author, date},
+			Styled: [][]terminu.Span{gSpans, nil, nil, nil, {{Text: date, Style: terminu.Fg(terminu.Overlay0)}}},
+		}
+		// Its branches and tags on a row of their own under it, the
+		// subject keeping DESCRIPTION's width (the user; tdp main panel.5,
+		// an item of several rows): the graph's lines run on through it.
+		if rs := refs[c.SHA]; len(rs) > 0 {
+			tText, tSpans := graphSpans(git.Through(graph[i], len(c.Parents) > 0))
+			rText, rSpans := refsText(rs)
+			rows[i].Below = []terminu.BelowRow{{
+				Cells:  []string{tText, "", rText},
+				Styled: [][]terminu.Span{tSpans, nil, rSpans},
+			}}
 		}
 	}
 	return rows
@@ -311,14 +321,18 @@ func refsByCommit(s *git.Snapshot) map[string][]ref {
 	return m
 }
 
-// description is a commit's refs, then its subject: a branch glyph before a
-// local branch (Green) and a remote one (Mauve), a tag glyph before a tag
+// refsText is a commit's refs, for the row under it: a branch glyph before
+// a local branch (Green) and a remote one (Mauve), a tag glyph before a tag
 // (Peach), the branch HEAD is on bold (tdp P5). Not a capsule: that is tdp's
-// for a name (tdp P4; a badge of its own is asked of tdp).
-func description(refs []ref, subject string) (string, []terminu.Span) {
+// for a name (tdp P4).
+func refsText(refs []ref) (string, []terminu.Span) {
 	var b strings.Builder
 	var spans []terminu.Span
-	for _, r := range refs {
+	for i, r := range refs {
+		if i > 0 {
+			b.WriteString(" ")
+			spans = append(spans, terminu.Span{Text: " "})
+		}
 		st, glyph := terminu.Fg(terminu.Green), glyphBranch
 		switch r.kind {
 		case kindRemote:
@@ -330,11 +344,9 @@ func description(refs []ref, subject string) (string, []terminu.Span) {
 			st = st.Bolded()
 		}
 		text := glyph + " " + r.name
-		b.WriteString(text + " ")
-		spans = append(spans, terminu.Span{Text: text, Style: st}, terminu.Span{Text: " "})
+		b.WriteString(text)
+		spans = append(spans, terminu.Span{Text: text, Style: st})
 	}
-	b.WriteString(subject)
-	spans = append(spans, terminu.Span{Text: subject})
 	return b.String(), spans
 }
 

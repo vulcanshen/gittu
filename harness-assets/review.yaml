@@ -1,4 +1,4 @@
-spec: 13
+spec: 16
 tasks:
   - id: 1
     accepted: true
@@ -15,22 +15,25 @@ tasks:
   - id: 7
     accepted: true
   - id: 8
-    accepted: true
+    accepted: false
+    reason: "tdp 不清楚：Cherry-pick、Revert、不是 fast-forward 的 Merge、Pull、Commit 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）的「新增一項之後，cursor 移到新的那一項」例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
   - id: 9
     accepted: false
-    reason: "tdp 不清楚：Cherry-pick、Revert、不是 fast-forward 的 Merge 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）寫新增一項之後 cursor 移到新的那一項，例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
+    reason: "tdp 不清楚：Cherry-pick、Revert、不是 fast-forward 的 Merge、Pull、Commit 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）的「新增一項之後，cursor 移到新的那一項」例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
   - id: 10
     accepted: false
-    reason: "違反：global 的 [b]ranch 建好之後的 cursor、toast、失敗，[S]tash 與 Discard all 的成功與失敗、App Log，紀錄沒寫（tdp K3、note.7、F5）；[M]erge 做出 merge commit 之後 cursor 要不要移過去，同 task 9 的 tdp 不清楚"
+    reason: "tdp 不清楚：Cherry-pick、Revert、不是 fast-forward 的 Merge、Pull、Commit 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）的「新增一項之後，cursor 移到新的那一項」例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
   - id: 11
     accepted: true
   - id: 12
-    accepted: true
+    accepted: false
+    reason: "違反：Stage、Unstage、Discard、Stage all、Unstage all 的 git 失敗怎麼報、App Log 記什麼，紀錄沒寫（tdp F5）"
   - id: 13
     accepted: false
-    reason: "違反：commit 的 textarea 打開時空的、什麼都沒打按 Enter，tgo 直接關掉、不寫錯誤（tdp K3、K3-7）；原因是已回報的 tgo #7"
+    reason: "違反：Amend 的結果與失敗、清空訊息怎麼擋，紀錄沒寫（tdp note.7、F5、K3）。tdp 不清楚：textarea 帶著準備好的訊息（merge 的、上次沒 commit 成功的、amend 的）沒改就送出時照那份訊息 commit（Textarea.Unchanged）；K3-8 寫沒改就直接關掉，建議值（input.6）只用在單行的 input。另外 Cherry-pick、Revert、不是 fast-forward 的 Merge、Pull、Commit 做出新的 commit 之後，[2] 的 cursor 留在原處；tdp K3（K3-15）的「新增一項之後，cursor 移到新的那一項」例子都是專門新增一項的動作（New、Copy、Import），git 動作順帶做出的 commit 算不算沒寫"
   - id: 14
-    accepted: true
+    accepted: false
+    reason: "違反：改寫衝突的檔、最後一個區塊的 git add、整個檔用一邊、Abort、Continue（不是停在衝突的）失敗時怎麼報、App Log 記什麼，紀錄沒寫（tdp F5）"
   - id: 15
     accepted: true
   - id: 16

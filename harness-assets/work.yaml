@@ -17,12 +17,13 @@ tasks:
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
     test: [TestHistoryLayout, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
-    spec: 11
+    spec: 17
     implementation: |
       cmd/gittu/main.go：
       gittu：打開目前目錄所在的 repo；gittu <路徑>：打開那個路徑所在的 repo（git rev-parse --show-toplevel 往上找；bare repo 不算）
       gittu version、-v、--version：印 internal/version.Display()；gittu help、-h、--help：印用法，寫明資料夾叫 version、help 時打 ./version
-      - 開頭的不認得的旗標：stderr 印 gittu: unknown flag "<旗標>" 加用法，結束碼 2；兩個以上的路徑：gittu: one path at most 加用法，結束碼 2
+      - 開頭的不認得的旗標：stderr 印 gittu: Unknown flag "<旗標>"、空一行、用法，結束碼 2；兩個以上的路徑：gittu: One path at most、空一行、用法，結束碼 2
+      句子照 toast 一列的寫法開頭大寫（名字或路徑開頭時照它的大小寫）；結果（版號、用法）寫到 stdout，錯誤寫到 stderr、開頭 gittu: （tdp main 的 E1、E1-4 到 E1-8）
       不是 repo、路徑不在：不開畫面，stderr 印 gittu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gittu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
@@ -45,20 +46,22 @@ tasks:
       讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；說原因的那一行同 task 8）
     test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
   - id: 4
-    spec: 8
+    spec: 17
     implementation: |
       [2] COMMITS 是 tgo List，Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
       讀 git log --topo-order -n 1001 --format=%H %P %an %at %s --branches --tags HEAD，遠端分支畫出來時（task 18）再加 --remotes；多於 1000 個只留 1000 個
       分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit ◉（U+25C9）、往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
       橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；超過 10 條線時第 10 條的位置畫 …（Overlay0）；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
-      DESCRIPTION 前面接指著這個 commit 的 ref：分支是 nf-dev-git_branch（U+E725）加名字，本地分支 Green、遠端分支 Mauve；tag 是 nf-md-tag（U+F04F9）加名字，Peach；
-      HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面；遠端分支隱藏時不寫遠端分支的 ref
+      DESCRIPTION 只寫標題；有 ref 指著的 commit 佔兩列（tgo Row.Below）：第二列 GRAPH 那一格是往下的線（git.Through：有往下筆畫的 │ ╮ ╭ ┬ ┼ ├ ┤，
+      與有 parent 的 commit 點，畫成同一條線顏色的 │，其他空白），DESCRIPTION 那一格是 ref：分支是 nf-dev-git_branch（U+E725）加名字，本地分支 Green、遠端分支 Mauve；
+      tag 是 nf-md-tag（U+F04F9）加名字，Peach；ref 之間空一格；HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面；遠端分支隱藏時不寫遠端分支的 ref
+      cursor 只畫在第一列，第二列跟著畫 Surface1 底（tgo）；j|k gg|G 一次移一筆、N of M 算筆數；篩選也比對第二列，打分支或 tag 的名字找得到它的 commit
       主線（git.Graph 的 main：All 是 main 或 master 的 commit，Current 是 HEAD，task 5）：它與它的第一個 parent 一路往下一律在第一欄，其他線不佔第一欄（主線出現之前那一欄空白）；
       主線 commit 出現時，其他等著它的欄合進第一欄
       位置列（List.Location）：All branches 或 Current branch，遠端分支畫出來時接 · with remote branches；進到 commit 裡時接上那一層（task 6）
       空的 repo：空狀態 No commits yet / Press [W] to see the files to commit；讀失敗同 task 3
-    test: [TestGraphRows, TestGraphMainLine, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
+    test: [TestGraphRows, TestFilterFindsARef, TestThrough, TestGraphMainLine, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
   - id: 5
     spec: 6
     implementation: |
@@ -158,13 +161,14 @@ tasks:
       沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
     test: [TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
-    spec: 8
+    spec: 16
     implementation: |
       [1] CHANGES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
       Conflicts → Resolve（task 14；hint Enter:resolve）；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀，cursor 留在原本的位置
       [D]iscard（衝突的列沒有）：confirm DISCARD: <路徑>，「Discard the change to <路徑>?」（沒追蹤的是「Delete <路徑>?」），內容寫無法復原（Peach）；
       Unstaged 的 git restore -- <路徑>、沒追蹤的刪掉檔案、Staged 的 git restore --staged --worktree --source=HEAD（新加的檔 git rm -f）；Success Discarded the change to <路徑>
       panel operation：St[a]ge all（git add -A；沒有 Unstaged 時停用；App Log Staged every change）、Unstage all（沒有熱鍵；git reset -q，還沒有 commit 時 git rm --cached -r .；沒有 Staged 時停用；App Log Unstaged every change）；進到衝突的檔裡時兩個都 Hidden
+      Stage、Unstage、Discard、Stage all、Unstage all 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
     test: [TestStageUnstage, TestDiscardFile]
   - id: 13
     spec: 16
@@ -177,10 +181,11 @@ tasks:
       失敗（hook 擋下）error popup COMMIT FAILED，內容是 git 與 hook 說原因的那一行，全文記進 App Log（同 task 8）；訊息留著，下次按 [c] 打開時就在裡面
       Amend（沒有熱鍵；還沒有 commit 時停用）：HEAD 已經在 upstream 上（git merge-base --is-ancestor HEAD @{upstream}）時先 confirm AMEND「Amend the last commit?」，
       內容是上一個訊息的第一行與 It is on <upstream> already: pushing it again takes a force push.（Peach）；沒推上去時不問；接著 tgo Textarea AMEND 帶著上一個訊息打開，
-      沒改就送出用原本的訊息、改過的用改過的 git commit --amend
+      沒改就送出用原本的訊息、改過的用改過的 git commit --amend；清空了送出同 COMMIT 用 Check 擋（Message can't be empty）；
+      成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 2
+    spec: 16
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Resolve）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
       [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 All changes › <路徑>，Panel.OnEsc 設好；
@@ -193,6 +198,8 @@ tasks:
       做到一半的操作（.git 裡有 rebase-merge／rebase-apply、MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD）：global operation [A]bort <merge／rebase／cherry-pick／revert>
       （只有那一種時看得到；confirm「Abort the <op>?」，內容寫做到一半的會還原（Peach）；git <op> --abort；Success Aborted the <op>）、
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
+      失敗：改寫衝突的檔失敗開 error popup RESOLVE FAILED: <路徑>（原因，tgo 記進 App Log）；最後一個區塊解完的 git add、整個檔用一邊、Abort、Continue（不是停在衝突的）
+      失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
     test: [TestResolveHunks, TestUseSideWholeFile, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestStatusbarSaysTheMerge]
   - id: 15
     spec: 11

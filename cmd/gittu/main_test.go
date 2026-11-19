@@ -46,11 +46,11 @@ func TestNoGit(t *testing.T) {
 
 func TestBadArguments(t *testing.T) {
 	var out, errOut bytes.Buffer
-	if code := run([]string{"--nope"}, &out, &errOut); code != 2 || !strings.Contains(errOut.String(), "unknown flag") {
+	if code := run([]string{"--nope"}, &out, &errOut); code != 2 || !strings.Contains(errOut.String(), "Unknown flag") {
 		t.Errorf("exit %d, %q", code, errOut.String())
 	}
 	errOut.Reset()
-	if code := run([]string{"a", "b"}, &out, &errOut); code != 2 || !strings.Contains(errOut.String(), "one path at most") {
+	if code := run([]string{"a", "b"}, &out, &errOut); code != 2 || !strings.Contains(errOut.String(), "One path at most") {
 		t.Errorf("exit %d, %q", code, errOut.String())
 	}
 }

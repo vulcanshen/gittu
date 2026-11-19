@@ -21,6 +21,27 @@ const MaxLines = 10
 // one cell everywhere.
 const Node = '◉'
 
+// Through is the graph under a commit's row, on a row of its own below it
+// (its refs): each line going on down drawn │ in its colour, the rest blank.
+// A line goes on down from a column that has a stroke downwards: │ ╮ ╭ ┬ ┼
+// ├ ┤, and the node when the commit has a parent. The cells between the
+// columns are blank; a row ending in … keeps it.
+func Through(row []Cell, parent bool) []Cell {
+	out := make([]Cell, len(row))
+	for i, c := range row {
+		out[i] = Cell{Rune: ' ', Line: -1}
+		switch {
+		case c.Rune == '…':
+			out[i] = c
+		case i%2 != 0: // between two columns
+		case c.Rune == Node && parent, c.Rune == '│', c.Rune == '╮', c.Rune == '╭', c.Rune == '┬', c.Rune == '┼',
+			c.Rune == '├', c.Rune == '┤':
+			out[i] = Cell{Rune: '│', Line: c.Line}
+		}
+	}
+	return out
+}
+
 // Graph lays out the commits, in the order given (a child before its
 // parents), and gives each its row of cells. main, when not "", is the commit
 // whose line is the main line: it and its first parents, down to the end, are
