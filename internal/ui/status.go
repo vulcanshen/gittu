@@ -37,6 +37,17 @@ type statusScreen struct {
 	// shown is what [2] shows, the row's ID it is of, to tell new content
 	// from the same read again (tdp note.9).
 	shown string
+	// was and now are the two versions [2] draws; text, that they are text
+	// to compare (tdp panel.9: what is not text has no comparison).
+	was, now string
+	text     bool
+	// reread is the file [2] shows when its text changed on a read again,
+	// for the App Log to say (task 19).
+	reread string
+	// failed is why [2] could not be read again, what was read before
+	// staying: an Error toast to show (tdp panel.15). failedWas is the last
+	// such reason, said once while it stays the same.
+	failed, failedWas string
 }
 
 func newStatusScreen(g *gitreu) *statusScreen {
@@ -58,8 +69,8 @@ func newStatusScreen(g *gitreu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = s.fileActions()
 	s.diffP.Actions = []terminu.Action{
-		{Key: "Enter", Label: "Compare", Desc: "its two versions side by side", Scope: panel, Hint: "compare",
-			Hidden: func() bool { return s.diff.Empty() || s.binary() }, Do: s.openDiff},
+		{Key: "Enter", Label: "Compare", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "compare",
+			Hidden: func() bool { return s.diff.Empty() || !s.text }, Do: s.openDiff},
 	}
 	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
 		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: oneToTwo}
@@ -217,59 +228,164 @@ func (s *statusScreen) fileActions() []terminu.Action {
 	}
 }
 
-// showDiff shows in [2] the change of the row under [1]'s cursor; again, it
-// is the same row read again (tdp note.9).
+// showDiff shows in [2] the change of the row under [1]'s cursor, its two
+// versions drawn as UNIFIED (tdp note.8 "In a panel"), the location row
+// naming them; again, it is the same row read again (tdp note.9).
 func (s *statusScreen) showDiff(again bool) {
-	id, label, name, lines := "", "Diff", "", []string(nil)
-	if h, i, ok := s.hunk(); ok {
-		id, label, name, lines = "h:"+s.conflict+":"+strconv.Itoa(i), "Conflict", s.conflict, s.hunkLines(h)
-	} else if f, group, ok := s.file(); ok {
+	id, label, name := "", "Diff", ""
+	item, ok := s.item()
+	h, i, inHunk := s.hunk()
+	if inHunk {
+		id, label, name = "h:"+s.conflict+":"+strconv.Itoa(i), "Conflict", s.conflict
+	} else if f, group, in := s.file(); in {
 		id, name = group+f.Path, f.Path
-		var err error
-		lines, err = s.g.repo.WorkDiff(f, group == inStaged)
-		if err != nil {
-			lines = append([]string{"Can't show the change:"}, errLines(err)...)
-		}
-		lines = terminu.Syntax("diff", lines)
 	}
-	s.diffP.Label, s.diffP.Name = label, name
-	if again && id == s.shown {
-		if !slices.Equal(lines, s.diff.Lines()) {
-			s.diff.ReadAgain(lines)
+	s.diffP.Label, s.diffP.Name, s.diffP.Fail = label, name, nil
+	s.diff.EmptyFact, s.diff.EmptyHint = "No file to show", "Press [1] to go to the files"
+	s.text = false
+	if inHunk { // a conflict: its two sides, each under its heading
+		s.diffP.Location, s.text = "", true
+		lines := s.hunkLines(h)
+		if again && id == s.shown {
+			if !slices.Equal(lines, s.diff.Lines()) {
+				s.diff.ReadAgain(lines)
+			}
+			return
 		}
+		s.shown, s.was, s.now = id, "", ""
+		s.diff.SetLines(lines)
 		return
 	}
-	s.shown = id
-	s.diff.SetLines(lines)
+	if !ok {
+		s.diffP.Location = ""
+		s.shown, s.was, s.now = id, "", ""
+		if f, _, in := s.file(); in && f.Untracked() && s.g.repo.IsDir(f.Path) {
+			s.untrackedDir(f.Path) // a folder holds many: what is in it
+			return
+		}
+		s.diff.SetLines(nil)
+		return
+	}
+	s.diffP.Location = item.Anchor + " ↔ " + item.Other
+	was, now, err := item.Text()
+	if err != nil {
+		lines := gitLines(err)
+		why := "Can't show the change to " + name + ": " + reason(lines)
+		if again && id == s.shown && (s.was != "" || s.now != "") { // what was read before stays (tdp panel.15)
+			s.text = true
+			if why != s.failedWas {
+				s.failed, s.failedWas = why, why
+				s.g.logAll(lines)
+			}
+			return
+		}
+		s.g.a.Log(terminu.Error, why)
+		s.g.logAll(lines)
+		s.diffP.Fail = &terminu.Failure{Fact: "Can't show the change: " + reason(lines), Hint: "Press [R] to read it again"}
+		s.shown, s.was, s.now = id, "", ""
+		s.diff.SetLines(nil)
+		return
+	}
+	s.failedWas = ""
+	if binaryText(was) || binaryText(now) {
+		s.diff.EmptyFact, s.diff.EmptyHint = "Not a text file: no lines to compare", "Press [1] to go to the files"
+		s.shown, s.was, s.now = id, "", ""
+		s.diff.SetLines(nil)
+		return
+	}
+	s.text = true
+	s.diff.EmptyFact, s.diff.EmptyHint = "No differences between the two", "Press [1] to go to the files"
+	if again && id == s.shown && was == s.was && now == s.now {
+		return
+	}
+	if again && id == s.shown {
+		s.reread = name
+	}
+	s.shown, s.was, s.now = id, was, now
+	s.diff.SetDiff(was, now)
 }
 
 // hunkLines are a conflicted block as [2] shows it: mine above theirs, each
 // under its heading (tdp P5: their colours are the app's).
 func (s *statusScreen) hunkLines(h git.Hunk) []string {
-	mine := "MINE · " + h.MineLabel
-	if h.MineLabel == "HEAD" && s.g.snap != nil && s.g.snap.Head != "" {
-		mine += " (" + s.g.snap.Head + ")"
-	}
-	lines := []string{terminu.Fg(teal).Bolded().Render(terminu.Escape(mine))}
+	lines := []string{terminu.Fg(teal).Bolded().Render(terminu.Escape(s.mineName(h)))}
 	lines = append(lines, h.Mine...)
 	lines = append(lines, "", terminu.Fg(mauve).Bolded().Render(terminu.Escape("THEIRS · "+h.TheirsLabel)))
 	return append(lines, h.Theirs...)
 }
 
+// mineName names a conflict's own side: MINE · HEAD (main).
+func (s *statusScreen) mineName(h git.Hunk) string {
+	mine := "MINE · " + h.MineLabel
+	if h.MineLabel == "HEAD" && s.g.snap != nil && s.g.snap.Head != "" {
+		mine += " (" + s.g.snap.Head + ")"
+	}
+	return mine
+}
+
+// untrackedDir shows in [2] the files of an untracked folder, as git only
+// says it is new.
+func (s *statusScreen) untrackedDir(dir string) {
+	files, err := s.g.repo.UntrackedFiles(dir)
+	if err != nil {
+		s.diffP.Fail = &terminu.Failure{Fact: "Can't show the change: " + reason(gitLines(err)), Hint: "Press [R] to read it again"}
+		s.diff.SetLines(nil)
+		return
+	}
+	s.diffP.Location = dir
+	s.diff.SetLines(files)
+}
+
+// takeReread is the file whose text changed on the last read, once.
+func (s *statusScreen) takeReread() string {
+	r := s.reread
+	s.reread = ""
+	return r
+}
+
+// said is the Error toast of [2] read again in vain, if there is one.
+func (s *statusScreen) said() tea.Cmd {
+	if s.failed == "" {
+		return nil
+	}
+	why := s.failed
+	s.failed = ""
+	return s.g.a.Toast(terminu.Error, why, "Press [R] to read it again")
+}
+
+// binaryText reports text git would take for binary: a NUL in its first
+// 8000 bytes, as git looks.
+func binaryText(t string) bool {
+	return strings.IndexByte(t[:min(len(t), 8000)], 0) >= 0
+}
+
 // openDiff opens the two versions of what [2] shows, the older the anchor
-// (tdp note.8; tdp K3: Enter on a panel with no items): a staged change HEAD
-// against the index, an unstaged one the index against the working tree, a
-// conflicted file HEAD against the working tree, a conflict mine against
-// theirs.
+// (tdp note.8; tdp K3: Enter on a panel with no items).
 func (s *statusScreen) openDiff() tea.Cmd {
+	item, ok := s.item()
+	if !ok {
+		return nil
+	}
+	s.g.a.Log(terminu.Info, "Compared "+item.Anchor+" with "+item.Other)
+	return s.g.a.OpenDiff(s.diffP, item)
+}
+
+// item is the two versions of the row under [1]'s cursor, the older the
+// anchor: a staged change HEAD against the index, an unstaged one the index
+// against the working tree, a conflicted file HEAD against the working tree,
+// a conflict mine against theirs. An untracked folder has none.
+func (s *statusScreen) item() (terminu.DiffItem, bool) {
 	repo := s.g.repo
 	var item terminu.DiffItem
 	if h, _, ok := s.hunk(); ok {
 		mine, theirs := strings.Join(h.Mine, "\n"), strings.Join(h.Theirs, "\n")
-		item = terminu.DiffItem{Anchor: "MINE · " + h.MineLabel, Other: "THEIRS · " + h.TheirsLabel,
+		item = terminu.DiffItem{Anchor: s.mineName(h), Other: "THEIRS · " + h.TheirsLabel,
 			Text: func() (string, string, error) { return mine, theirs, nil }}
 	} else if f, group, ok := s.file(); ok {
 		path := f.Path
+		if f.Untracked() && repo.IsDir(path) {
+			return item, false
+		}
 		switch group {
 		case inStaged:
 			old := path
@@ -304,21 +420,9 @@ func (s *statusScreen) openDiff() tea.Cmd {
 			}}
 		}
 	} else {
-		return nil
+		return item, false
 	}
-	s.g.a.Log(terminu.Info, "Compared "+item.Anchor+" with "+item.Other)
-	return s.g.a.OpenDiff(s.diffP, item)
-}
-
-// binary reports [2] showing a binary file's change, which has no lines to
-// compare (tdp panel.9: not text, no comparison).
-func (s *statusScreen) binary() bool {
-	for _, l := range s.diff.Lines() {
-		if strings.HasPrefix(terminu.StripStyles(l), "Binary files ") {
-			return true
-		}
-	}
-	return false
+	return item, true
 }
 
 // goIn shows a conflicted file's blocks in [1] (tdp panel.10).

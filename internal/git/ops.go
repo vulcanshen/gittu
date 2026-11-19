@@ -158,14 +158,10 @@ func (r *Repo) PushBranch(remote, name string) error {
 	return err
 }
 
-// Remote is the remote to push to when nothing says which: the one the
+// PushRemote is the remote to push to when nothing says which: the one the
 // upstream is on, else origin, else the only one; "" for none.
-func (r *Repo) Remote(upstream string) string {
-	out, err := r.Run("remote")
-	if err != nil {
-		return ""
-	}
-	remotes := Lines(out)
+func (s *Snapshot) PushRemote(upstream string) string {
+	remotes := s.RemoteNames
 	if upstream != "" {
 		if name, _, ok := strings.Cut(upstream, "/"); ok {
 			for _, rm := range remotes {

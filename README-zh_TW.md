@@ -122,8 +122,8 @@ gitreu
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | Stage `[a]`ll、Unstage all |
 
-`[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔的差異；在那裡按 `Enter`，左右對照打開它的兩個版本（已經 stage 的是 HEAD 與 index，
-還沒 stage 的是 index 與工作區）。
+`[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔改了什麼，畫法跟比較一樣（只畫有差異的段落、兩欄行號）：已經 stage 的是 HEAD 對 index，
+還沒 stage 的是 index 對工作區。在那裡按 `Enter` 打開比較本身，UNIFIED 或 SPLIT。
 
 ### 整個 repo 的動作
 
@@ -131,7 +131,7 @@ gitreu
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
 revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 History 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[1]` 上 `b` 是 rebase，Branch 從 global operation 執行。
 
-gitreu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變。
+gitreu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
 
 ## 疑難排解
 

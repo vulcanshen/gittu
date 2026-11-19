@@ -137,8 +137,9 @@ time.
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | Stage `[a]`ll, Unstage all |
 
-`[1]` is CHANGES, `[2]` DIFF: the diff of the file under the cursor; `Enter` there opens its two versions side by side
-(HEAD and the index when staged, the index and the working tree when not).
+`[1]` is CHANGES, `[2]` DIFF: what changed in the file under the cursor, drawn as a comparison is (only the parts that
+differ, both line numbers): HEAD against the index when staged, the index against the working tree when not. `Enter`
+there opens the comparison itself, UNIFIED or SPLIT.
 
 ### For the whole repository
 
@@ -148,7 +149,8 @@ rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys
 does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,
 `b` rebases, and Branch is in the global operations.
 
-gitreu reads the repository again every 3 seconds, so what you change outside it shows.
+gitreu reads the repository again every 3 seconds, so what you change outside it shows, and the App Log (`!`) says
+what changed.
 
 ## Troubleshooting
 

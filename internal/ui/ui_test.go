@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"slices"
@@ -107,7 +108,17 @@ func TestFileStatusScreen(t *testing.T) {
 
 func TestStatusbarSaysTheMerge(t *testing.T) {
 	r := gittest.Conflicted(t)
-	_, d := start(t, r, 120, 32)
+	g, d := start(t, r, 120, 32)
+	has(t, d, "Merging: feature")
+	// work in progress: Green (tdp screen.4)
+	if !strings.Contains(strings.Join(d.Styled(), "\n"), "38;2;166;227;161m  Merging: feature") {
+		t.Error("Merging: feature is not Green")
+	}
+	// one last field (tdp L2): what git does takes its place while it runs
+	d.Do(func() tea.Cmd { g.busy = "Committing…"; return nil })
+	has(t, d, "Committing…")
+	hasNot(t, d, "Merging: feature")
+	d.Do(func() tea.Cmd { g.busy = ""; return nil })
 	has(t, d, "Merging: feature")
 }
 
@@ -842,7 +853,40 @@ func TestPushFailsWithItsLines(t *testing.T) {
 	g, d := start(t, r, 100, 32)
 	d.Press("P")
 	done(t, g, d)
-	has(t, d, "PUSH FAILED")
+	// the line that says why, git's whole text in the App Log (tdp components.5)
+	has(t, d, "PUSH FAILED", "does not appear to be a git repository")
+	hasNot(t, d, "Please make sure you have the correct access rights")
+	d.Press("Esc", "!")
+	has(t, d, "Please make sure you have the correct access rights")
+}
+
+// TestPushWithoutRemote: with no remote, every Push is there but disabled
+// (tdp M6).
+func TestPushWithoutRemote(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Git("remote", "remove", "origin")
+	g, d := start(t, r, 100, 32)
+	disabled := func(acts []terminu.Action, label string) {
+		t.Helper()
+		for _, a := range acts {
+			if a.Label == label && (a.Hidden == nil || !a.Hidden()) {
+				if a.Disabled == nil || !a.Disabled() {
+					t.Errorf("%s is not disabled", label)
+				}
+				return
+			}
+		}
+		t.Errorf("no %s", label)
+	}
+	disabled(g.a.Global, "Push")
+	disabled(g.a.Global, "Pull") // nothing to pull from
+	selectBranch(d, g, kindBranch+"topic")
+	disabled(g.history.branchP.Actions, "Push")
+	selectBranch(d, g, kindTag+"v0.1.0")
+	disabled(g.history.branchP.Actions, "Push")
+	d.Press("P")
+	hasNot(t, d, "PUSH FAILED", "Push topic")
 }
 
 func TestNewBranchAndTagAtHead(t *testing.T) {
@@ -882,12 +926,18 @@ func TestStashAndDiscardAll(t *testing.T) {
 	r.Write("README.md", "dirty\n")
 	g, d := start(t, r, 100, 32)
 	d.Press("S")
-	has(t, d, "STASH")
+	// git's own message is the suggested value: Enter untouched takes it
+	// (tdp input.6)
+	own := "WIP on main: " + git.Short(g.snap.HeadSHA)
+	has(t, d, "STASH", own)
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Stashed the changes")
 	if n := len(g.snap.Stashes); n != 2 {
 		t.Errorf("%d stashes", n)
+	}
+	if m := g.snap.Stashes[0].Message; !strings.HasPrefix(m, own) {
+		t.Errorf("stash message %q, want git's own", m)
 	}
 	r.Write("README.md", "dirty again\n")
 	d.Press("R")
@@ -918,17 +968,141 @@ func runGlobal(t *testing.T, g *gitreu, label string) tea.Cmd {
 	return nil
 }
 
+// TestRefreshAndReadingAgain is task 19: every 3 seconds the repository is
+// read again, and what changed outside gitreu is logged; R reads it at once.
 func TestRefreshAndReadingAgain(t *testing.T) {
 	r := gittest.Sample(t)
 	g, d := start(t, r, 100, 32)
 	r.Git("branch", "later")
 	d.Advance(refreshEvery + time.Second)
-	d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
-	has(t, d, "later")
+	d.WaitFor(func() bool { return !g.reading && d.Has("later") }, 5*time.Second)
+	d.Press("!")
+	has(t, d, "INFO Changed outside gitreu: branch later (new)")
+	d.Press("Esc")
 	r.Git("branch", "later2")
 	d.Press("R")
 	d.WaitFor(func() bool { return d.Has("later2") }, 5*time.Second)
 	has(t, d, "Read ")
+}
+
+// TestRefreshLogsOnlyChanges: a read again that finds nothing new, what git
+// ignores, and gitreu's own operations are not logged (task 19).
+func TestRefreshLogsOnlyChanges(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Commit(".gitignore", "build/\n", "Ignore build")
+	g, d := start(t, r, 120, 32)
+	refresh := func() {
+		t.Helper()
+		d.Advance(refreshEvery + time.Second)
+		d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+	}
+	refresh() // nothing changed
+	r.Write("build/new.o", "y\n")
+	refresh() // only what git ignores
+	r.Write("README.md", "outside\n")
+	refresh()
+	d.Press("W", "Enter") // stage README.md: gitreu's own change
+	done(t, g, d)
+	refresh()
+	d.Press("!")
+	has(t, d, "Changed outside gitreu: README.md", "Staged README.md")
+	screen := strings.Join(d.Screen(), "\n")
+	if n := strings.Count(screen, "Changed outside gitreu"); n != 1 {
+		t.Errorf("%d entries of changes, want 1:\n%s", n, screen)
+	}
+	hasNot(t, d, "build/")
+}
+
+// TestChanges: what two reads differ in, as the App Log says it.
+func TestChanges(t *testing.T) {
+	old := &git.Snapshot{Head: "main", HeadSHA: "a",
+		Branches: []git.Branch{{Name: "main", SHA: "a"}, {Name: "gone", SHA: "g"}},
+		Tags:     []git.Tag{{Name: "v1", SHA: "a"}},
+		Files:    []git.File{{Path: "kept.txt", X: ' ', Y: 'M'}, {Path: "done.txt", X: 'M', Y: ' '}}}
+	now := &git.Snapshot{Head: "feature", HeadSHA: "b",
+		Branches: []git.Branch{{Name: "main", SHA: "b"}, {Name: "feature", SHA: "b"}},
+		Tags:     []git.Tag{{Name: "v1", SHA: "a"}},
+		Files:    []git.File{{Path: "kept.txt", X: ' ', Y: 'M'}, {Path: "new.txt", X: '?', Y: '?'}},
+		State:    git.State{Op: "merge", Other: "x"}}
+	got := changes(old, now, "kept.txt")
+	want := []string{"new.txt", "done.txt", "kept.txt", "HEAD (on feature)", "branch feature (new)", "branch gone (deleted)", "branch main", "a merge under way"}
+	if !slices.Equal(got, want) {
+		t.Errorf("changes:\n got %q\nwant %q", got, want)
+	}
+	if s := said(want); s != "new.txt, done.txt, kept.txt and 5 more" {
+		t.Errorf("said %q", s)
+	}
+	if got := changes(old, old, ""); len(got) != 0 {
+		t.Errorf("the same read twice: %q", got)
+	}
+}
+
+// TestFirstReadFails: with nothing read yet the panels say why, and the
+// App Log has it (tdp panel.15, F5).
+func TestFirstReadFails(t *testing.T) {
+	r := gittest.Sample(t)
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	repo, err := git.Open(r.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(r.Dir, ".git", "HEAD"), []byte("broken\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := newGitreu(repo)
+	d := tdptest.Start(t, g.a, 120, 32)
+	d.WaitFor(func() bool { return d.Has("Can't read") }, 5*time.Second)
+	has(t, d, "Can't read", "Press [R] to read it again")
+	d.Press("!")
+	has(t, d, "ERR  Can't read")
+}
+
+// TestNoCommitYet: before the first commit there is no HEAD to go back to or
+// to tag: Discard all and Tag are off (tdp M6).
+func TestNoCommitYet(t *testing.T) {
+	r := gittest.New(t)
+	r.Write("a.txt", "a\n")
+	r.Git("add", "a.txt")
+	g, d := start(t, r, 100, 32)
+	d.WaitFor(func() bool { return g.hasChanges() }, 5*time.Second)
+	for _, label := range []string{"Discard all", "Tag", "Pull", "Push", "Stash", "Merge", "Branch"} {
+		for _, a := range g.a.Global {
+			if a.Label == label && (a.Disabled == nil || !a.Disabled()) {
+				t.Errorf("%s is not disabled before the first commit", label)
+			}
+		}
+	}
+}
+
+// TestRefreshFailureKeepsContent: a read that fails leaves what was read
+// before and says why in an Error toast (tdp panel.15).
+func TestRefreshFailureKeepsContent(t *testing.T) {
+	r := gittest.Sample(t)
+	g, d := start(t, r, 120, 32)
+	head := filepath.Join(r.Dir, ".git", "HEAD")
+	was, err := os.ReadFile(head)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(head, []byte("broken\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d.Press("R")
+	d.WaitFor(func() bool { return d.Has("Can't read") }, 5*time.Second)
+	has(t, d, "Can't read", "feature", "topic")
+	hasNot(t, d, "READ FAILED")
+	if g.snap == nil || g.history.branchP.Fail != nil {
+		t.Error("the old content is gone")
+	}
+	if err := os.WriteFile(head, was, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	d.Press("Esc", "R")
+	d.WaitFor(func() bool { return d.Has("Read ") }, 5*time.Second)
+	if g.readErr != "" {
+		t.Errorf("readErr %q after a good read", g.readErr)
+	}
 }
 
 // --- task 11: the working tree's files ---
@@ -963,7 +1137,55 @@ func TestDiffFollowsCursor(t *testing.T) {
 	r.Write("new.txt", "brand new\nread again\n")
 	d.Advance(refreshEvery + time.Second)
 	d.WaitFor(func() bool { return d.Has("+read again") }, 5*time.Second)
+	d.Press("!")
+	has(t, d, "Changed outside gitreu: new.txt") // its status the same, its text not
 	has(t, d, "+read again")
+}
+
+// TestDiffDrawnAsUnified is task 11 on tdp note.8 "In a panel": [2] DIFF
+// draws the two versions as UNIFIED does, both line numbers and the
+// separators, never git's own output; the location row names the two.
+func TestDiffDrawnAsUnified(t *testing.T) {
+	r := gittest.Sample(t)
+	var was, now strings.Builder
+	for i := 1; i <= 30; i++ {
+		fmt.Fprintf(&was, "line %d\n", i)
+		if i == 5 || i == 25 {
+			fmt.Fprintf(&now, "changed %d\n", i)
+		} else {
+			fmt.Fprintf(&now, "line %d\n", i)
+		}
+	}
+	r.Commit("long.txt", was.String(), "Add a long file")
+	r.Write("long.txt", now.String())
+	g, d := start(t, r, 120, 40)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "long.txt"); return nil })
+	d.Press("j", "k")
+	has(t, d, "DIFF: long.txt", "long.txt @ index ↔ long.txt", "-line 5", "+changed 5", "-line 25", "+changed 25", "────")
+	hasNot(t, d, "@@", "diff --git", "line 15")
+	if !strings.Contains(strings.Join(d.Screen(), "\n"), " 5    -line 5") {
+		t.Errorf("no line numbers:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+}
+
+// TestDiffNotText: a binary file has no lines to compare (tdp panel.9): [2]
+// says so and has no Enter; an untracked folder lists its files.
+func TestDiffNotText(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("blob.bin", "a\x00b")
+	r.Write("newdir/one.txt", "1\n")
+	r.Write("newdir/two.txt", "2\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "blob.bin"); return nil })
+	d.Press("j", "k")
+	has(t, d, "DIFF: blob.bin", "Not a text file", "Press [1] to go to the files")
+	hasNot(t, d, "Enter:compare")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "newdir/"); return nil })
+	d.Press("j", "k")
+	has(t, d, "DIFF: newdir/", "newdir/one.txt", "newdir/two.txt")
+	hasNot(t, d, "Enter:compare")
 }
 
 // TestDiffComparesVersions is task 11 on tdp note.8: Enter on [2] DIFF compares

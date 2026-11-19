@@ -46,8 +46,8 @@ var (
 	lineColours = []terminu.Color{terminu.Blue, terminu.Green, mauve, terminu.Peach, teal, pink, terminu.Sapphire, flamingo}
 )
 
-// refresh is how often the repository is read again by itself, so that what
-// is changed outside gitreu shows (tdp K3: it moves nothing).
+// refreshEvery is how often the repository is read again by itself, so that
+// what is changed outside gitreu shows (task 19; tdp K3: it moves nothing).
 const refreshEvery = 3 * time.Second
 
 // gitreu is the app and the repository it shows.
@@ -93,6 +93,9 @@ func newGitreu(repo *git.Repo) *gitreu {
 	g.a.InputTabWidth = 4
 	snap, err := repo.Read(g.remote)
 	g.show(snap, err)
+	if err != nil {
+		g.readFailed(err) // the panels say why; the App Log has it
+	}
 	return g
 }
 
@@ -151,29 +154,43 @@ func (g *gitreu) onMsg(msg tea.Msg) tea.Cmd {
 		if g.busy != "" {
 			return nil // an operation is on its way: its own read comes after it
 		}
+		was, old := g.readErr, g.snap
 		g.show(m.snap, m.err)
+		reread := g.status.takeReread()
+		if !m.asked && m.err == nil {
+			// What changed outside gitreu since the last read: its own
+			// operations read the repository as they end (task 19).
+			if what := changes(old, m.snap, reread); len(what) > 0 {
+				g.a.Log(terminu.Info, "Changed outside gitreu: "+said(what))
+			}
+		}
 		if m.asked && m.err == nil {
 			return g.a.Toast(terminu.Info, "Read "+g.repo.Name()+" again")
 		}
-		if m.err != nil && m.asked {
-			return g.a.Error("Read failed", errLines(m.err)...)
+		if m.err != nil && (m.asked || g.readErr != was) {
+			return g.readFailed(m.err)
 		}
-		return nil
+		return g.status.said()
 	case doneMsg:
 		g.busy = ""
+		was := g.readErr
 		g.show(m.snap, m.rerr)
+		g.status.takeReread() // gitreu's own change
 		var c *git.Conflicts
 		switch {
+		case m.err == nil && m.rerr != nil && g.readErr != was:
+			return g.readFailed(m.rerr)
 		case m.err == nil:
 			if m.ok != nil {
-				return m.ok()
+				return tea.Batch(m.ok(), g.status.said())
 			}
+			return g.status.said()
 		case errors.As(m.err, &c) && m.conflicts != nil:
 			return m.conflicts(c.Files)
 		case m.failed != nil:
 			return m.failed(m.err)
 		default:
-			return g.a.Error(m.title+" failed", errLines(m.err)...)
+			return g.fail(m.title, "", m.err)
 		}
 	}
 	return nil
@@ -210,11 +227,15 @@ func (g *gitreu) runWith(m doneMsg, doing string, op func() error) tea.Cmd {
 // off while one does (tdp M6).
 func (g *gitreu) idle() bool { return g.busy == "" }
 
-// show puts a read of the repository on every panel.
+// show puts a read of the repository on every panel. A read that failed
+// leaves what was read before (tdp panel.15); with nothing read yet the
+// panels say why.
 func (g *gitreu) show(snap *git.Snapshot, err error) {
 	if err != nil {
-		g.readErr = err.Error()
-		g.history.failed()
+		g.readErr = reason(gitLines(err))
+		if g.snap == nil {
+			g.history.failed()
+		}
 		return
 	}
 	g.readErr = ""
@@ -232,8 +253,8 @@ func (g *gitreu) conflictsSaid(what string) func(int) tea.Cmd {
 }
 
 // statusbar is the right of the screen chips (tdp screen.4): where HEAD is,
-// the repository (both Lavender: where you are), an operation stopped half
-// way, what git is doing.
+// the repository (both Lavender: where you are), and the work in progress
+// (Green): what git is doing, else an operation stopped half way.
 //
 // The lib draws it on the right, so a longer text moves all of it: it is
 // always the w cells given, its fields from the left and blanks after them,
@@ -273,13 +294,14 @@ func (g *gitreu) statusbar(w int) []terminu.Span {
 	add(strings.Repeat(" ", max(len("Branch: ")+field-used, 0)), terminu.Style{})
 	add("  Repo: ", quiet)
 	add(repo, here)
-	if g.snap != nil {
-		if st := g.snap.State; st.Op != "" {
-			add("  "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Peach))
-		}
-	}
-	if g.busy != "" {
+	// The work in progress is one field, the last (tdp L2, screen.4): what
+	// git is doing while it runs, else an operation stopped half way.
+	switch {
+	case g.busy != "":
 		add("  "+g.busy, terminu.Fg(terminu.Green))
+	case g.snap != nil && g.snap.State.Op != "":
+		st := g.snap.State
+		add("  "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Green))
 	}
 	add(strings.Repeat(" ", max(w-used, 0)), terminu.Style{})
 	return spans
@@ -337,17 +359,71 @@ func (g *gitreu) quit() tea.Cmd {
 		Details: []string{"git is still at work: " + g.busy}, Warn: []int{0}}, func() tea.Cmd { return tea.Quit })
 }
 
-// errLines are an error's lines, for an error popup.
-func errLines(err error) []string {
+// fail opens the error popup of a git operation that failed: the line that
+// says why, git's whole text in the App Log (tdp components.5, F5).
+func (g *gitreu) fail(title, subject string, err error) tea.Cmd {
+	lines := gitLines(err)
+	say := []string{reason(lines)}
+	if needsCredentials(lines) {
+		say = append(say, "gitreu can't ask for a password: use an ssh agent or a credential helper")
+	}
+	cmd := g.a.ErrorAbout(title+" failed", subject, say...)
+	g.logAll(lines)
+	return cmd
+}
+
+// readFailed reports a read that failed: with what was read before staying,
+// an Error toast with the line that says why; with nothing read yet the
+// panels say it. git's whole text goes in the App Log (tdp panel.15,
+// components.5, F5).
+func (g *gitreu) readFailed(err error) tea.Cmd {
+	lines := gitLines(err)
+	if g.snap == nil { // nothing read yet: the panels say why (tdp panel.15)
+		g.a.Log(terminu.Error, "Can't read "+g.repo.Name()+": "+reason(lines))
+		g.logAll(lines)
+		return nil
+	}
+	cmd := g.a.Toast(terminu.Error, "Can't read "+g.repo.Name()+": "+reason(lines), "Press [R] to read it again")
+	g.logAll(lines)
+	return cmd
+}
+
+// logAll writes git's text, more than the one line shown, in the App Log.
+func (g *gitreu) logAll(lines []string) {
+	if len(lines) < 2 {
+		return
+	}
+	for _, l := range lines {
+		g.a.Log(terminu.Error, l)
+	}
+}
+
+// gitLines are what git printed for an error, else the error's own lines.
+func gitLines(err error) []string {
 	var e *git.Error
 	if errors.As(err, &e) && len(e.Lines) > 0 {
-		lines := append([]string(nil), e.Lines...)
-		if needsCredentials(lines) {
-			lines = append(lines, "gitreu can't ask for a password: use an ssh agent or a credential helper")
-		}
-		return lines
+		return e.Lines
 	}
 	return git.Lines(err.Error())
+}
+
+// reason is the line of git's text that says why: the first fatal: or
+// error: line, else the first one that is not a hint.
+func reason(lines []string) string {
+	for _, l := range lines {
+		if strings.HasPrefix(l, "fatal:") || strings.HasPrefix(l, "error:") {
+			return l
+		}
+	}
+	for _, l := range lines {
+		if !strings.HasPrefix(l, "hint:") && strings.TrimSpace(l) != "" {
+			return l
+		}
+	}
+	if len(lines) > 0 {
+		return lines[0]
+	}
+	return "git failed"
 }
 
 // needsCredentials reports git failing for want of a password or a passphrase.

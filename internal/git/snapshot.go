@@ -22,6 +22,9 @@ type Snapshot struct {
 	// its upstream.
 	Ahead, Behind int
 
+	// RemoteNames are the remotes configured (git remote).
+	RemoteNames []string
+
 	Branches []Branch
 	Remotes  []RemoteBranch
 	Tags     []Tag
@@ -122,6 +125,11 @@ func (r *Repo) Read(remote bool) (*Snapshot, error) {
 	if err := r.readRefs(s); err != nil {
 		return nil, err
 	}
+	out, err := r.Run("remote")
+	if err != nil {
+		return nil, err
+	}
+	s.RemoteNames = Lines(out)
 	if err := r.readStashes(s); err != nil {
 		return nil, err
 	}

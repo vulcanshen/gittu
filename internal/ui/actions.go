@@ -110,12 +110,12 @@ func (h *historyScreen) branchActions() []terminu.Action {
 			},
 			Do: func() tea.Cmd { return h.deleteBranch(name()) }},
 		{Label: "Push", Desc: "this branch to its remote", Scope: item,
-			Hidden: h.is(kindBranch), Disabled: off, Do: func() tea.Cmd {
+			Hidden: h.is(kindBranch), Disabled: func() bool {
 				b, _ := h.branch()
-				remote := g.repo.Remote(b.Upstream)
-				if remote == "" {
-					return g.a.ErrorAbout("Push failed", b.Name, "This repository has no remote to push to")
-				}
+				return off() || g.snap == nil || g.snap.PushRemote(b.Upstream) == "" // no remote (tdp M6)
+			}, Do: func() tea.Cmd {
+				b, _ := h.branch()
+				remote := g.snap.PushRemote(b.Upstream)
 				return g.run("Pushing…", "Push", func() error { return g.repo.PushBranch(remote, b.Name) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed "+b.Name+" to "+remote) })
 			}},
@@ -178,12 +178,11 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Deleted the tag "+n) })
 			}},
 		{Label: "Push", Desc: "this tag to its remote", Scope: item,
-			Hidden: h.is(kindTag), Disabled: off, Do: func() tea.Cmd {
+			Hidden: h.is(kindTag), Disabled: func() bool {
+				return off() || g.snap == nil || g.snap.PushRemote(g.snap.Upstream) == "" // no remote (tdp M6)
+			}, Do: func() tea.Cmd {
 				n := name()
-				remote := g.repo.Remote(g.snap.Upstream)
-				if remote == "" {
-					return g.a.ErrorAbout("Push failed", n, "This repository has no remote to push to")
-				}
+				remote := g.snap.PushRemote(g.snap.Upstream)
 				return g.run("Pushing…", "Push", func() error { return g.repo.PushTag(remote, n) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed the tag "+n+" to "+remote) })
 			}},
@@ -282,7 +281,7 @@ func (h *historyScreen) deleteBranch(name string) tea.Cmd {
 		ok: func() tea.Cmd { return g.a.Toast(terminu.Success, "Deleted "+name) },
 		failed: func(err error) tea.Cmd {
 			if !errors.Is(err, git.ErrNotMerged) {
-				return g.a.ErrorAbout("Delete failed", name, errLines(err)...)
+				return g.fail("Delete", name, err)
 			}
 			return g.a.Confirm(terminu.Ask{Title: "Delete", Subject: name, Question: "Delete " + name + " anyway?", Verb: "delete",
 				Details: []string{name + " is not merged: its commits that are on no other branch are lost."}, Warn: []int{0}},
@@ -447,6 +446,10 @@ func (h *historyScreen) setRemote(remote bool) tea.Cmd {
 	g.remote = remote
 	snap, err := g.repo.Read(remote)
 	g.show(snap, err)
+	g.status.takeReread() // read at the user's word, not a change from outside
+	if err != nil {
+		return g.readFailed(err)
+	}
 	if remote {
 		g.a.Log(terminu.Info, "Showing remote branches")
 	} else {
@@ -543,18 +546,28 @@ func (g *gitreu) globalActions() []terminu.Action {
 				return a
 			},
 			Do: func() tea.Cmd { return g.doCommit(g.repo.LastMessage(), true) }},
-		{Key: "p", Label: "Pull", Desc: "the current branch from its upstream", Disabled: off, Do: g.pull},
-		{Key: "P", Label: "Push", Desc: "the current branch to its upstream", Disabled: func() bool { return off() || g.snap == nil || g.snap.Head == "" }, Do: g.push},
+		{Key: "p", Label: "Pull", Desc: "the current branch from its upstream", Disabled: func() bool {
+			return off() || g.snap == nil || g.snap.Head == "" || g.snap.Upstream == "" || g.upstreamGone() // nothing to pull from (tdp M6)
+		}, Do: g.pull},
+		{Key: "P", Label: "Push", Desc: "the current branch to its upstream", Disabled: func() bool {
+			return off() || g.snap == nil || g.snap.Head == "" || g.snap.HeadSHA == "" || g.snap.PushRemote(g.snap.Upstream) == "" // nothing to push, or nowhere (tdp M6)
+		}, Do: g.push},
 		{Key: "f", Label: "Fetch", Desc: "every remote", Disabled: off, Do: func() tea.Cmd {
 			return g.run("Fetching…", "Fetch", g.repo.Fetch, func() tea.Cmd { return g.a.Toast(terminu.Success, "Fetched every remote") })
 		}},
 		{Key: "b", Label: "Branch", Desc: "a new one at HEAD, and check it out", Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return g.newBranch("") }},
-		{Key: "M", Label: "Merge", Desc: "a branch into the current one", Disabled: off, Do: g.pickMerge},
+		{Key: "M", Label: "Merge", Desc: "a branch into the current one", Disabled: func() bool {
+			return off() || len(g.mergeable()) == 0 // no other branch (tdp M6)
+		}, Do: g.pickMerge},
 		{Key: "t", Label: "Tag", Desc: "HEAD", Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return g.newTag("") }},
-		{Key: "S", Label: "Stash", Desc: "the uncommitted changes", Disabled: func() bool { return off() || !g.hasChanges() }, Do: g.stash},
-		{Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool { return off() || !g.hasChanges() },
+		{Key: "S", Label: "Stash", Desc: "the uncommitted changes", Disabled: func() bool {
+			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // git stashes nothing before the first commit (tdp M6)
+		}, Do: g.stash},
+		{Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool {
+			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // no commit to go back to (tdp M6)
+		},
 			Ask: &terminu.Ask{Title: "Discard all", Question: "Discard every change to the tracked files?", Verb: "discard",
 				Details: []string{"What is not committed is lost: it can't be undone. Untracked files stay."}, Warn: []int{0}},
 			Do: func() tea.Cmd {
@@ -604,16 +617,23 @@ func (g *gitreu) pull() tea.Cmd {
 
 // push pushes the current branch; one with no upstream asks first to push it
 // to the remote and track it there.
+// upstreamGone reports the current branch's upstream deleted on the remote.
+func (g *gitreu) upstreamGone() bool {
+	for _, b := range g.snap.Branches {
+		if b.Current {
+			return b.Gone
+		}
+	}
+	return false
+}
+
 func (g *gitreu) push() tea.Cmd {
 	branch := g.snap.Head
 	if g.snap.Upstream != "" {
 		return g.run("Pushing…", "Push", func() error { return g.repo.Push("", branch, false) },
 			func() tea.Cmd { return g.a.Toast(terminu.Success, "Pushed "+branch+" to "+g.snap.Upstream) })
 	}
-	remote := g.repo.Remote("")
-	if remote == "" {
-		return g.a.ErrorAbout("Push failed", branch, "This repository has no remote to push to")
-	}
+	remote := g.snap.PushRemote("")
 	return g.a.Confirm(terminu.Ask{Title: "Push", Subject: branch, Question: "Push " + branch + " to " + remote + " and track it?", Verb: "push",
 		Details: []string{branch + " has no upstream yet: it becomes " + remote + "/" + branch + "."}},
 		func() tea.Cmd {
@@ -624,6 +644,19 @@ func (g *gitreu) push() tea.Cmd {
 
 // pickMerge asks which branch to merge into the current one (tdp select).
 func (g *gitreu) pickMerge() tea.Cmd {
+	names := g.mergeable()
+	return g.a.Select(terminu.Select{Title: "Merge", Subject: g.currentName(), Glyph: glyphBranch, Options: names, Selected: -1,
+		Done: func(i int) tea.Cmd {
+			return g.a.Confirm(*g.askMerge(names[i]), func() tea.Cmd { return g.merge(names[i]) })
+		}})
+}
+
+// mergeable are the branches the current one can take in: the other local
+// ones, then the remote ones.
+func (g *gitreu) mergeable() []string {
+	if g.snap == nil {
+		return nil
+	}
 	var names []string
 	for _, b := range g.snap.Branches {
 		if !b.Current {
@@ -633,22 +666,41 @@ func (g *gitreu) pickMerge() tea.Cmd {
 	for _, rb := range g.snap.Remotes {
 		names = append(names, rb.Name)
 	}
-	if len(names) == 0 {
-		return g.a.Toast(terminu.Info, "No other branch to merge")
-	}
-	return g.a.Select(terminu.Select{Title: "Merge", Subject: g.currentName(), Glyph: glyphBranch, Options: names, Selected: -1,
-		Done: func(i int) tea.Cmd {
-			return g.a.Confirm(*g.askMerge(names[i]), func() tea.Cmd { return g.merge(names[i]) })
-		}})
+	return names
 }
 
 // stash asks for a message and puts the uncommitted changes away.
 func (g *gitreu) stash() tea.Cmd {
+	own := g.stashMessage()
 	do := func(msg string) tea.Cmd {
 		msg = strings.TrimSpace(msg)
+		if msg == own {
+			msg = "" // git writes its own: the same words
+		}
 		return g.run("Stashing…", "Stash", func() error { return g.repo.Stash(msg) },
 			func() tea.Cmd { return g.a.Toast(terminu.Success, "Stashed the changes") })
 	}
-	return g.a.Text(terminu.TextInput{Title: "Stash", Glyph: glyphStash, Prompt: "A message, or nothing for git's own",
-		Verb: "stash", Name: "Message", Done: do, Unchanged: func() tea.Cmd { return do("") }})
+	return g.a.Text(terminu.TextInput{Title: "Stash", Glyph: glyphStash, Prompt: "A message for the stash",
+		Verb: "stash", Name: "Message", Suggest: own, Done: do})
+}
+
+// stashMessage is the message git gives a stash with none, offered as the
+// suggested value (tdp input.6): WIP on <branch>: <short hash> <subject>.
+func (g *gitreu) stashMessage() string {
+	s := g.snap
+	if s == nil || s.HeadSHA == "" {
+		return ""
+	}
+	branch := s.Head
+	if branch == "" {
+		branch = "(no branch)"
+	}
+	msg := "WIP on " + branch + ": " + git.Short(s.HeadSHA)
+	for _, c := range s.Commits {
+		if c.SHA == s.HeadSHA {
+			msg += " " + c.Subject
+			break
+		}
+	}
+	return msg
 }

@@ -156,7 +156,7 @@ func (h *historyScreen) show(s *git.Snapshot) {
 
 // failed says the repository could not be read (tdp panel.15).
 func (h *historyScreen) failed() {
-	f := &terminu.Failure{Fact: "Can't read " + h.g.repo.Name() + ": " + firstLine(h.g.readErr), Hint: "Press [R] to read it again"}
+	f := &terminu.Failure{Fact: "Can't read " + h.g.repo.Name() + ": " + h.g.readErr, Hint: "Press [R] to read it again"}
 	h.branchP.Fail, h.histP.Fail = f, f
 	for _, l := range h.tabs {
 		l.SetRows(nil)

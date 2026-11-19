@@ -111,42 +111,18 @@ func parseNameStatus(out string) []Change {
 	return cs
 }
 
-// WorkDiff is the patch of a working tree file: its staged change when staged,
-// otherwise its change in the working tree; an untracked file whole, as added.
-func (r *Repo) WorkDiff(f File, staged bool) ([]string, error) {
-	switch {
-	case f.Untracked():
-		if st, err := os.Stat(filepath.Join(r.Dir, f.Path)); err == nil && st.IsDir() {
-			return r.untrackedDir(f.Path)
-		}
-		out, err := r.Run("diff", "--no-color", "--no-ext-diff", "--no-index", "--", os.DevNull, f.Path)
-		var e *Error
-		if errors.As(err, &e) && e.Code == 1 {
-			err = nil // --no-index exits 1 when the two differ, which they do
-		}
-		if err != nil {
-			return nil, err
-		}
-		return Lines(out), nil
-	case staged:
-		out, err := r.Run("diff", "--cached", "--no-color", "--no-ext-diff", "-M", "--", f.Path)
-		return Lines(out), err
-	default:
-		out, err := r.Run("diff", "--no-color", "--no-ext-diff", "--", f.Path)
-		return Lines(out), err
-	}
+// IsDir reports whether path in the working tree is a directory: git says an
+// untracked folder is new without its files.
+func (r *Repo) IsDir(path string) bool {
+	st, err := os.Stat(filepath.Join(r.Dir, path))
+	return err == nil && st.IsDir()
 }
 
-// untrackedDir lists what an untracked directory holds, as a diff would only
-// say it is new.
-func (r *Repo) untrackedDir(dir string) ([]string, error) {
+// UntrackedFiles are the files an untracked directory holds.
+func (r *Repo) UntrackedFiles(dir string) ([]string, error) {
 	out, err := r.Run("ls-files", "--others", "--exclude-standard", "--", dir)
 	if err != nil {
 		return nil, err
 	}
-	lines := []string{"Untracked directory " + dir + ":"}
-	for _, l := range Lines(out) {
-		lines = append(lines, "+ "+l)
-	}
-	return lines, nil
+	return Lines(out), nil
 }
