@@ -681,7 +681,11 @@ func (g *gittu) stash() tea.Cmd {
 			msg = "" // git writes its own: the same words
 		}
 		return g.run("Stashing…", "Stash", func() error { return g.repo.Stash(msg) },
-			func() tea.Cmd { return g.a.Toast(terminu.Success, "Stashed the changes") })
+			func() tea.Cmd {
+				g.history.tabs[3].ClearFilter() // the cursor goes on the new stash (tdp K3, panel.14)
+				g.history.tabs[3].Select(kindStash + "stash@{0}")
+				return g.a.Toast(terminu.Success, "Stashed the changes")
+			})
 	}
 	return g.a.Text(terminu.TextInput{Title: "Stash", Glyph: glyphStash, Prompt: "A message for the stash",
 		Verb: "stash", Name: "Message", Suggest: own, Done: do})

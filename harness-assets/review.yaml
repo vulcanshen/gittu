@@ -1,12 +1,11 @@
-spec: 9
+spec: 12
 tasks:
   - id: 1
     accepted: true
   - id: 2
     accepted: true
   - id: 3
-    accepted: false
-    reason: "tdp 不清楚：在分支上按 Enter，[2] 的篩選擋住那個 commit 時 app 清掉篩選；tdp panel.14 只寫清單上的 Esc 清篩選、focus 離開時篩選留著，沒寫 app 的動作能不能清別的 panel 的篩選（使用者要先弄懂篩選再決定要不要回報）"
+    accepted: true
   - id: 4
     accepted: true
   - id: 5
@@ -20,16 +19,15 @@ tasks:
   - id: 9
     accepted: true
   - id: 10
-    accepted: false
-    reason: "違反：repo 沒有 remote 時 [f]etch 沒有可以抓的對象卻沒停用（tdp M6）；REMOTES 分頁空狀態的提示 Press [f] to fetch every remote 在沒有 remote 時也按了沒作用"
+    accepted: true
   - id: 11
     accepted: false
-    reason: "tdp 不清楚：沒追蹤的資料夾那一列在 [2] DIFF 該畫什麼 tdp 沒寫；note.8「在 panel 裡」只講文字檔，裝著許多項目的照 panel.9 是按 Enter 進去的一層，不是跟著 cursor 的明細；gittu 現在把資料夾裡的檔名一列一列放進 [2]、Enter 隱藏"
+    reason: "違反：沒追蹤的資料夾裡沒有檔時，[2] 的空狀態只寫一句事實 No files in it to show，紀錄沒寫點名按鍵的提示（tdp screen.8、screen-27）"
   - id: 12
     accepted: true
   - id: 13
     accepted: false
-    reason: "違反：textarea 打開時空的、什麼都沒打按 Enter，tgo 直接關掉不寫錯誤（tdp K3）；原因是已回報的 tgo #7"
+    reason: "違反：commit 的 textarea 打開時空的、什麼都沒打按 Enter，tgo 直接關掉、不寫錯誤（tdp K3、K3-7）；原因是已回報的 tgo #7"
   - id: 14
     accepted: true
   - id: 15
@@ -41,5 +39,4 @@ tasks:
   - id: 18
     accepted: true
   - id: 19
-    accepted: false
-    reason: "tdp 不清楚：監看開不起來、退回每 3 秒重讀時，只在退回時記一筆 WARN，之後每次重讀都不記；tdp note.7 沒寫定期的背景重讀要每次記、只記開始，還是只記有變動的。另外背景重讀接連失敗時要不要每次跳 toast，tdp F5、panel.15 沒寫"
+    accepted: true

@@ -85,9 +85,9 @@ tasks:
       - "記 App Log：Opened the changes of <短 hash> <標題>（tdp note.7：只看不改的動作也記）；進出那一層不記（換看的範圍）"
       - "清單、標記、比較 popup 都由 tgo 畫（App.OpenDiff；terminu-go v1.2.18-beta.1 起），gittu 只給每一項的名字、兩邊的名字與兩邊的內容（tdp E8：用 lib 的 app 不另外做 lib 做到的）"
   - id: 7
-    spec: 7
+    spec: 13
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
-    tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179]
+    tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel.14]
     remark:
       - "tdp #20 定案（使用者選 A；tdp main 的 panel.9「裝著許多項目的列」與 note.8，還沒發版）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
       - "[2] 的 commit 上按 [C]ompare（比較鍵 app 可以自行決定，tdp panel.9；跟 kbu 一樣是 C）進入比較模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 C 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，標題 DIFF — <路徑> @ <anchor> ↔ <路徑> @ <另一個>；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
@@ -109,9 +109,9 @@ tasks:
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 印出來的每一列；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、到 Working tree [W] 解（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9
-    spec: 12
+    spec: 13
     request: 對 commit 能做的事，都在分支圖的 Space 選單
-    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14]
+    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14, tdp K3]
     remark:
       - "[2] COMMITS 的 commit 上（item operation，tdp M2）：Enter：Files（task 6）、[C]ompare（task 7）、[c]heck out（HEAD 會 detached，先 confirm；跟 [1] 同一個鍵，task 8）、[b]ranch here（text input，建好就 checkout）、[t]ag here（text input）、[M]erge into the current branch、R[e]base the current branch onto it、Cherry-pick、Revert、Re[s]et the current branch to here、Cop[y] hash"
       - "Reset 先開 select（tdp select）選 [s]oft／[m]ixed／[H]ard，每個選項一句說明；Hard 再 confirm，警告那一句寫沒 commit 的改動會不見（tdp F6、confirm.2）。Hard 的熱鍵是 H 不是 h：h 是移動鍵（tdp K12），大寫也比較不會誤按"
@@ -119,7 +119,7 @@ tasks:
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
   - id: 10
-    spec: 12
+    spec: 13
     request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
     tdp: [tdp P3, tdp M2, tdp M4, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp note.6, tdp note.7, tdp toast.2, tdp screen.4, tdp F5, tdp P5, tdp components.5, tdp panel.15, tdp K3, tdp input.6]
     remark:
@@ -129,9 +129,9 @@ tasks:
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 12
+    spec: 13
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
-    tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1]
+    tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2]
     remark:
       - |
         Working tree 畫面（task 1 的第二個畫面）：
@@ -198,7 +198,6 @@ tasks:
     request: 跟 terminu 家族其他 app 一樣的 splash
     tdp: [tdp S1, tdp S2, tdp S3, tdp S4, tdp S5, tdp E6]
     remark:
-      - "docs/icon.svg：U 框照 tdp principle/icon.svg；框裡的金字是 G I T（上排）與 R E（下排），最後的 u 就是 U 框，跟 demou、tetru 一樣（tdp S5：框裡的字各 app 自己設計）"
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17

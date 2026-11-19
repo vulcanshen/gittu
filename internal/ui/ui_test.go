@@ -1002,6 +1002,9 @@ func TestStashAndDiscardAll(t *testing.T) {
 	if m := g.snap.Stashes[0].Message; !strings.HasPrefix(m, own) {
 		t.Errorf("stash message %q, want git's own", m)
 	}
+	if cur, _ := g.history.tabs[3].Current(); cur.ID != kindStash+"stash@{0}" {
+		t.Errorf("STASHES is on %q, not the new stash", cur.ID)
+	}
 	r.Write("README.md", "dirty again\n")
 	d.Press("R")
 	d.WaitFor(func() bool { return g.hasChanges() }, 5*time.Second)
