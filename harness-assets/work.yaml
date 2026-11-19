@@ -188,3 +188,15 @@ tasks:
       docs/icon.svg：U 框照家族的（#205090），框裡的金字（#f2b753）照註解的順序 G、I、T（上排）、R、E（下排），最後的 u 是 U 框
       internal/ui/icon.svg 是它的副本（go:embed），terminu.NewSplash(icon, "gitreu", version.Display(), "A git client laid out like SourceTree")；V 打開由 tgo 做
     test: [TestSplashIsDocsIcon, TestSplashOpens]
+  - id: 17
+    spec: 5
+    implementation: |
+      History 的 tgo Screen.Layout 照 zoom 的階段排（historyScreen.zoom）：0 照 1:2；1 是 [1] min(20, 寬度/3) 欄、[2] 拿剩下的；
+      2 是有 focus 的那一個佔滿 panel 區，另一個給 0 欄（tgo 不畫寬度不到 2 的 panel）
+      [2] COMMITS 的 panel operation，同一個鍵 z 依階段用 Hidden 分開：沒放大時 Zoom — wider, [1] at its least（到第一段）；
+      第一段時、或沒放大而終端機窄（寬度/3 ≤ 20，也就是不到 63 欄）時 Zoom — to the whole screen（到第二段）；第二段時 Unzoom — back to both panels（回到 1:2）；
+      下框 hint 寫 z:zoom 或 z:unzoom
+      [1] 在放大時也有 panel operation z Unzoom — back to both panels（沒放大時 Hidden）
+      第二段時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [1] 時 [1] 佔滿；[1] 上 Enter（task 3）把 focus 送回 [2]，[2] 佔滿
+      App Log 記 Info：Zoomed [2] COMMITS、Zoomed [2] COMMITS to the whole screen、Back to both panels
+    test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep]

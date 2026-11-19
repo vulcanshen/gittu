@@ -214,6 +214,9 @@ func (h *historyScreen) branchActions() []terminu.Action {
 				return g.run("Dropping…", "Drop", func() error { return g.repo.StashDrop(st.Ref) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Dropped "+st.Ref) })
 			}},
+		// The panel: [2] zoomed can be put back from here too (tdp screen.6).
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
 	}
 }
 
@@ -419,6 +422,12 @@ func (h *historyScreen) commitActions() []terminu.Action {
 			Hidden: func() bool { return h.in != nil || !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
 		{Key: "a", Label: "All branches", Desc: "every branch, remote branch and tag", Scope: panel,
 			Hidden: func() bool { return h.in != nil || g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
+		{Key: "z", Label: "Zoom", Desc: "wider, [1] at its least", Scope: panel, Hint: "zoom",
+			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},
+		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
+			Hidden: func() bool { return !(h.zoom == 1 || h.zoom == 0 && h.narrowZoom()) }, Do: func() tea.Cmd { return h.zoomTo(2) }},
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
+			Hidden: func() bool { return h.zoom != 2 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
 		{Key: "C", Label: "Compare", Desc: "the two marked commits", Scope: panel,
 			Hidden: func() bool { return h.in != nil }, Disabled: func() bool { return len(h.commits.Marked()) != 2 },
 			Do: h.compare},

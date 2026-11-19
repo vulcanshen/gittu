@@ -63,6 +63,13 @@ user 照原話：
 3. 「REMOTE 和 TAG 用分頁作，不要都擠在一個 panel」
 4. 「history [1] panel：R[e]base -> Re[b]ase」
 
+## history [2] commits（2026-11-19）
+
+user 照原話：
+
+1. 「graph 的線似乎太多了，分支好多，sourcetree 和 gitkraken 有處理這個問題嗎？」（先回答、再決定要做什麼）
+2. 「需要可以 zoom，但是 zoom 分兩段，第一段是還保留 panel 1 最小寬度，第二段是完全展開，panel 1 就完全被覆蓋，當窄寬時，就不會有 panel 1 最小寬度那一段」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

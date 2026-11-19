@@ -1144,3 +1144,62 @@ func TestSplashOpens(t *testing.T) {
 	}
 	has(t, d, "[1] BRANCHES")
 }
+
+// --- task 17: zoom ---
+
+// leftWidth is [1]'s width on the screen: where [2]'s frame starts, 0 when
+// [1] is not drawn.
+func leftWidth(d *tdptest.Driver) int {
+	row := d.Screen()[2]
+	if strings.HasPrefix(row, "┏") && !strings.Contains(row, "┐") && !strings.Contains(row, "┓┌") && strings.Count(row, "┏") == 1 {
+		return 0 // one panel across the whole area
+	}
+	for _, corner := range []string{"┓┌", "┐┏"} {
+		if i := strings.Index(row, corner); i >= 0 {
+			return terminu.Width(row[:i]) + 1
+		}
+	}
+	return -1
+}
+
+func TestZoomTwoSteps(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	if w := leftWidth(d); w != 40 {
+		t.Fatalf("[1] is %d wide before zooming", w)
+	}
+	d.Press("Tab", "z")
+	if w := leftWidth(d); w != leftLeast {
+		t.Fatalf("first step: [1] is %d wide, want %d", w, leftLeast)
+	}
+	has(t, d, "z:zoom")
+	d.Press("z")
+	if w := leftWidth(d); w != 0 || !d.Has("[2] COMMITS") || d.Has("[1] BRANCHES") {
+		t.Fatalf("second step: [1] still drawn (%d):\n%s", w, strings.Join(d.Screen(), "\n"))
+	}
+	has(t, d, "z:unzoom")
+	d.Press("Tab")
+	if !d.Has("[1] BRANCHES") || d.Has("[2] COMMITS") {
+		t.Fatalf("Tab on the whole screen does not show [1] alone:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+	d.Press("z")
+	if w := leftWidth(d); w != 40 {
+		t.Fatalf("z on [1] did not put both panels back: [1] is %d wide", w)
+	}
+	if g.history.zoom != 0 {
+		t.Errorf("zoom %d", g.history.zoom)
+	}
+	d.Press("!")
+	has(t, d, "Zoomed [2] COMMITS", "Zoomed [2] COMMITS to the whole screen", "Back to both panels")
+}
+
+func TestZoomNarrowSkipsTheFirstStep(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 60, 32)
+	d.Press("Tab", "z")
+	if g.history.zoom != 2 || d.Has("[1] BRANCHES") {
+		t.Fatalf("at 60 columns z went to step %d:\n%s", g.history.zoom, strings.Join(d.Screen(), "\n"))
+	}
+	d.Press("z")
+	if g.history.zoom != 0 {
+		t.Errorf("z did not put it back: %d", g.history.zoom)
+	}
+}

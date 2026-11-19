@@ -102,9 +102,9 @@ gitreu
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 看它存了什麼 | `[a]`pply、P`[o]`p、`[D]`rop |
 | `[2]` commit | 它改了的檔案 | `[m]`ark、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、R`[e]`base、Cherry-pick、Revert、Re`[s]`et 到這裡、Cop`[y]` hash |
-| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、`[C]`ompare 標起來的兩個 commit、`[/]` 篩選 |
+| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、`[z]`oom、`[C]`ompare 標起來的兩個 commit、`[/]` 篩選 |
 
-`[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換；`[2]` 是 COMMITS。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
+`[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換；`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。在 commit 的檔案上按 `Enter` 打開它的
 差異；`Esc` 回到檔案，再按一次回到分支圖。
 
 ### Working tree

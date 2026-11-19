@@ -38,7 +38,14 @@ type historyScreen struct {
 	in *level
 	// files lists the files of the level gone into.
 	files *terminu.List
+	// zoom is how far [2] is zoomed (tdp screen.6): 0 not, 1 with [1] at its
+	// least width, 2 the focused panel on the whole panel area.
+	zoom int
 }
+
+// leftLeast is [1]'s width when [2] is zoomed with [1] still beside it: what
+// [1] has at 60 columns, branch names still readable (tdp L1).
+const leftLeast = 20
 
 // level is a commit, or two commits compared, that [2] has gone into: the
 // files that differ from one to the other.
@@ -94,15 +101,54 @@ func newHistoryScreen(g *gitreu) *historyScreen {
 	h.histP = &terminu.Panel{Label: "Commits", Body: h.commits}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
 	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
-		Panels: []*terminu.Panel{h.branchP, h.histP}, Layout: oneToTwo}
+		Panels: []*terminu.Panel{h.branchP, h.histP}, Layout: h.layout}
 	return h
 }
 
 // oneToTwo puts the panels side by side, the first a third of the width (tdp
 // L1: 20 and 40 at 60 columns).
-func oneToTwo(w, h int) []terminu.Rect {
-	left := w / 3
+func oneToTwo(w, h int) []terminu.Rect { return beside(w/3, w, h) }
+
+// beside puts [1] left wide on the left, [2] the rest on the right.
+func beside(left, w, h int) []terminu.Rect {
 	return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
+}
+
+// layout is History's panels as zoomed (tdp screen.6): side by side 1:2,
+// [1] at its least width, or the focused one alone on the whole area (the
+// other drawn nowhere).
+func (h *historyScreen) layout(w, ht int) []terminu.Rect {
+	switch h.zoom {
+	case 1:
+		return beside(min(leftLeast, w/3), w, ht)
+	case 2:
+		if h.screen.Focused() == h.branchP {
+			return []terminu.Rect{{X: 0, Y: 0, W: w, H: ht}, {X: w, Y: 0, W: 0, H: ht}}
+		}
+		return []terminu.Rect{{X: 0, Y: 0, W: 0, H: ht}, {X: 0, Y: 0, W: w, H: ht}}
+	}
+	return oneToTwo(w, ht)
+}
+
+// narrowZoom reports a terminal where [1] is at its least width already: the
+// zoom has no step with [1] beside [2].
+func (h *historyScreen) narrowZoom() bool {
+	w, _ := h.g.a.Size()
+	return w/3 <= leftLeast
+}
+
+// zoomTo zooms History to step z and says so in the App Log (tdp note.7).
+func (h *historyScreen) zoomTo(z int) tea.Cmd {
+	h.zoom = z
+	switch z {
+	case 0:
+		h.g.a.Log(terminu.Info, "Back to both panels")
+	case 1:
+		h.g.a.Log(terminu.Info, "Zoomed [2] COMMITS")
+	case 2:
+		h.g.a.Log(terminu.Info, "Zoomed [2] COMMITS to the whole screen")
+	}
+	return nil
 }
 
 // cur is the list of [1]'s tab now.
