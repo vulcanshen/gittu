@@ -17,7 +17,7 @@ commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global
 
 - **分支與分支圖並排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖；cursor 移到分支上，分支圖就跳到它的
   commit，按 `Enter` 就過去。
-- **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，分支與 tag 標在它們的 commit 上；CURRENT 分頁把 `[1]` cursor 所在的分支那條
+- **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，`[2]` 放得下幾條線就畫幾條，分支與 tag 標在它們的 commit 上；CURRENT 分頁把 `[1]` cursor 所在的分支那條
   固定在最左邊，ALL 分頁是 main 那條；遠端分支要看時才畫。
 - **先看再動手**：一個 commit 的檔案標上 `+` `-` `~`，再左右對照看每個檔的兩個版本；兩個 commit 也一樣這樣比；`Esc` 一層一層退回。
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、

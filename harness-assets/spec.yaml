@@ -1,4 +1,4 @@
-id: 19
+id: 20
 from: v1.2.16
 to: v1.2.17
 tasks:
@@ -50,12 +50,12 @@ tasks:
       - "[2] 在 commit 的差異清單裡（task 6、7，tgo 的 App.OpenDiff）時，Enter 與移動 cursor 先用 tgo Panel.LeaveDiff 退回分支圖：2026-11-19 回報給 tdp session 的缺口（app 看不出也退不回那一層），terminu-go v1.2.18 加了 LeaveDiff"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
   - id: 4
-    spec: 17
+    spec: 20
     request: 右邊是分支圖，在終端機裡把分支線畫得清楚又好看，大 repo 裡也要夠快；commit 點不要只是單調的圓點
     tdp: [tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.14, tdp panel.15, tdp screen.8, tdp components.5, tdp P4, tdp P5, tdp L2, tdp components.2, tdp F5]
     remark:
       - "[2] COMMITS 是一般清單（tdp panel.5），一個 commit 一列，欄：GRAPH、HASH（短 hash，7 格；panel 叫 COMMITS，欄不再叫 COMMIT）、DESCRIPTION（ref 加上標題，可以截短）、AUTHOR（可以截短）、DATE（YYYY-MM-DD）。欄放不下時先收 DATE、再收 AUTHOR（tdp panel.5 的整欄收）"
-      - "分支線自己排，一個 commit 一列，不用 git log --graph 的輸出：git 的圖會多出只有線、沒有 commit 的列，cursor 會停在不是 commit 的地方。畫法：每一條線一欄兩格，commit 是 ◉（U+25C9）：使用者 2026-11-19 嫌 ● 單調，看了 Nerd Font 的圓圈（nf-md-source_commit、nf-md-record_circle……）在自己終端機上的預覽後選的。Nerd Font 的 icon 在會讓 icon 溢出到下一格的終端機上，下一格空白時畫得大、下一格是線（─）時縮成一格，同一個 glyph 一個大一個小；◉ 是一般的 Unicode，一律畫在一格裡。往下的線 │，合進來、分出去用 ─ ╮ ╯ ╭ ╰，線交叉 ┼；每條線一個顏色，照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo（tdp P5：內容的符號與顏色是領域的；不用模式的 Yellow 與使用者足跡的 Lavender，tdp P4）。線超過 10 條時只畫前 10 條，最後一格畫 …（L2：GRAPH 欄不會無限變寬）"
+      - "分支線自己排，一個 commit 一列，不用 git log --graph 的輸出：git 的圖會多出只有線、沒有 commit 的列，cursor 會停在不是 commit 的地方。畫法：每一條線一欄兩格，commit 是 ◉（U+25C9）：使用者 2026-11-19 嫌 ● 單調，看了 Nerd Font 的圓圈（nf-md-source_commit、nf-md-record_circle……）在自己終端機上的預覽後選的。Nerd Font 的 icon 在會讓 icon 溢出到下一格的終端機上，下一格空白時畫得大、下一格是線（─）時縮成一格，同一個 glyph 一個大一個小；◉ 是一般的 Unicode，一律畫在一格裡。往下的線 │，合進來、分出去用 ─ ╮ ╯ ╭ ╰，線交叉 ┼；每條線一個顏色，照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo（tdp P5：內容的符號與顏色是領域的；不用模式的 Yellow 與使用者足跡的 Lavender，tdp P4）。線線畫幾條照 [2] 的寬度（使用者 2026-11-20）：HASH、DESCRIPTION（照最長的標題）、AUTHOR、DATE 放完之後剩下的寬度，一條線兩格，至少 10 條；還放不下的線，最後一格畫 …（L2：GRAPH 欄不會無限變寬、也不擠其他欄）；[2] 變寬變窄（終端機縮放、放大）時重排"
       - "指著這個 commit 的 ref（tdp P5 的符號與顏色）：分支前面一個 nf-dev-git_branch（U+E725），本地分支 Green、遠端分支 Mauve；tag 前面一個 nf-md-tag（U+F04F9），Peach；glyph 與名字之間一格（tdp components.2），HEAD 所在的分支粗體；ref 之間空一格。遠端分支隱藏時（task 18）不寫遠端分支的 ref"
       - "使用者 2026-11-19 想讓 tag 像膠囊一樣顯示。膠囊是 tdp 的介面元素，意思是名稱（panel、分頁、畫面；tdp P4、panel.4），內容不能借用；用 glyph 加顏色（tdp P5：內容的符號與顏色是 app 的）。回報給 tdp session 後（2026-11-19）定案就是這樣：P5 已經放行，tdp 不改、不開 issue"
       - "順序：git log --topo-order（同一條分支的 commit 排在一起，線比較直；tdp panel.5 的順序固定：資料本身有順序）。大 repo：一次讀 1000 個 commit（README 的限制寫明），讀 log 加排線在 1000 個以內一下就好"

@@ -19,7 +19,8 @@ no keys to learn first.
 
 - **Branches beside the graph**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
   the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
-- **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
+- **A graph you can read**: one row a commit, each line of history in its own colour, as many lines drawn as `[2]`
+  has room for, the branches and tags on their
   commits; on the CURRENT tab the line of the branch under `[1]`'s cursor kept on the left, on the ALL tab main's,
   the remote branches only when you want them.
 - **Look before you act**: a commit's files marked `+` `-` `~`, then a file's two versions side by side; two commits

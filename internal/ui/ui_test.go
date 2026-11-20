@@ -439,6 +439,34 @@ func TestFilterFindsARef(t *testing.T) {
 
 // TestGraphWithWideIcons is tdp E5: whatever cells an icon takes, the
 // lines and the columns after the graph stay where they are on every row.
+// TestGraphWidensWithRoom: the graph draws as many lines as [2] has room
+// for, 10 at the least (the user): zoomed to the whole screen, all 14.
+func TestGraphWidensWithRoom(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("base.txt", "base\n", "Base")
+	for i := range 14 {
+		r.Git("checkout", "-q", "-b", fmt.Sprintf("b%02d", i), "main")
+		r.Commit(fmt.Sprintf("f%02d.txt", i), "x\n", fmt.Sprintf("Work %02d", i))
+	}
+	r.Git("checkout", "-q", "main")
+	g, d := start(t, r, 90, 32)
+	graphHas := func(text string) bool {
+		for _, row := range g.history.commits.Rows() {
+			if strings.Contains(row.Cells[0], text) {
+				return true
+			}
+		}
+		return false
+	}
+	if !graphHas("…") {
+		t.Fatalf("[2] beside [1] at 90 columns drew all 14 lines:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+	d.Press("Tab", "z", "z") // [2] on the whole screen
+	if graphHas("…") {
+		t.Errorf("[2] on the whole screen still cut the lines:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+}
+
 func TestGraphWithWideIcons(t *testing.T) {
 	r := gittest.Sample(t)
 	tdptest.EachIconWidth(t, func(t *testing.T) {

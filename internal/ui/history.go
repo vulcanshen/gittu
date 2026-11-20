@@ -25,6 +25,8 @@ var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 // [2] the history graph beside them.
 type historyScreen struct {
 	// line is the [1] row the Current tab follows (its ID), "" for HEAD.
+	// width is [2]'s, as laid out last: how many of the graph's lines fit.
+	width  int
 	line   string
 	g      *gittu
 	screen *terminu.Screen
@@ -103,16 +105,46 @@ func beside(left, w, h int) []terminu.Rect {
 // [1] at its least width, or the focused one alone on the whole area (the
 // other drawn nowhere).
 func (h *historyScreen) layout(w, ht int) []terminu.Rect {
+	var rects []terminu.Rect
 	switch h.zoom {
 	case 1:
-		return beside(min(leftLeast, w/3), w, ht)
+		rects = beside(min(leftLeast, w/3), w, ht)
 	case 2:
 		if h.screen.Focused() == h.branchP {
-			return []terminu.Rect{{X: 0, Y: 0, W: w, H: ht}, {X: w, Y: 0, W: 0, H: ht}}
+			rects = []terminu.Rect{{X: 0, Y: 0, W: w, H: ht}, {X: w, Y: 0, W: 0, H: ht}}
+		} else {
+			rects = []terminu.Rect{{X: 0, Y: 0, W: 0, H: ht}, {X: 0, Y: 0, W: w, H: ht}}
 		}
-		return []terminu.Rect{{X: 0, Y: 0, W: 0, H: ht}, {X: 0, Y: 0, W: w, H: ht}}
+	default:
+		rects = oneToTwo(w, ht)
 	}
-	return oneToTwo(w, ht)
+	// [2] wider or narrower: the graph draws as many lines as now fit.
+	if rw := rects[1].W; rw != h.width {
+		h.width = rw
+		if h.g.snap != nil {
+			h.commits.SetRows(h.commitRows(h.g.snap))
+		}
+	}
+	return rects
+}
+
+// mostLines is how many of the graph's lines [2] has room for (the user):
+// what is left of its width once HASH, DESCRIPTION as wide as its widest
+// subject, AUTHOR and DATE have theirs, two cells a line; MaxLines at the
+// least, the rest drawn "…".
+func (h *historyScreen) mostLines(s *git.Snapshot) int {
+	if h.width <= 0 {
+		return git.MaxLines
+	}
+	desc, author := 0, 0
+	for _, c := range s.Commits {
+		desc = max(desc, terminu.Width(c.Subject))
+		author = max(author, terminu.Width(c.Author))
+	}
+	// the frame and the margins (4), each column after the graph two
+	// cells away from the one before, HASH 7 and DATE 10 wide
+	left := h.width - 4 - (2 + 7) - (2 + desc) - (2 + author) - (2 + 10)
+	return max(git.MaxLines, (left+1)/2)
 }
 
 // narrowZoom reports a terminal where [1] is at its least width already: the
@@ -274,7 +306,7 @@ func branchRows(s *git.Snapshot) []terminu.Row {
 
 // commitRows are the graph's rows, one a commit, the main line first.
 func (h *historyScreen) commitRows(s *git.Snapshot) []terminu.Row {
-	graph := git.Graph(s.Commits, h.mainLine(s))
+	graph := git.Graph(s.Commits, h.mainLine(s), h.mostLines(s))
 	refs := refsByCommit(s)
 	rows := make([]terminu.Row, len(s.Commits))
 	for i, c := range s.Commits {

@@ -12,7 +12,8 @@ type Cell struct {
 	Line int
 }
 
-// MaxLines is how many lines a row draws: past them it ends in "…".
+// MaxLines is how many lines a row draws at the least before it ends in "…":
+// Graph's most raises it where there is room for more.
 const MaxLines = 10
 
 // Node is a commit on its line. Not a Nerd Font icon: a terminal that lets an
@@ -46,7 +47,11 @@ func Through(row []Cell, parent bool) []Cell {
 // parents), and gives each its row of cells. main, when not "", is the commit
 // whose line is the main line: it and its first parents, down to the end, are
 // always the first column, which no other line takes (blank above it).
-func Graph(commits []Commit, main string) [][]Cell {
+//
+// A row draws most lines at the most (MaxLines when less), the rest of it
+// "…".
+func Graph(commits []Commit, main string, most int) [][]Cell {
+	most = max(most, MaxLines)
 	chain := mainLine(commits, main)
 	var lanes []string // the commit each column waits for, "" when free
 	var colour []int   // each column's line, for its colour
@@ -209,8 +214,8 @@ func Graph(commits []Commit, main string) [][]Cell {
 				row[2*i+1] = Cell{'─', runColour[i]}
 			}
 		}
-		if width > MaxLines {
-			row = append(row[:2*MaxLines-1], Cell{'…', -1})
+		if width > most {
+			row = append(row[:2*most-1], Cell{'…', -1})
 		}
 		rows[n] = trimRow(row)
 		for len(lanes) > 1 && lanes[len(lanes)-1] == "" || len(lanes) == 1 && lanes[0] == "" && len(chain) == 0 {

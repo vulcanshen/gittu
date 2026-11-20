@@ -47,13 +47,13 @@ tasks:
       讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；說原因的那一行同 task 8）
     test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
   - id: 4
-    spec: 17
+    spec: 20
     implementation: |
       [2] COMMITS 是 tgo List，Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
       讀 git log --topo-order -n 1001 --format=%H %P %an %at %s --branches --tags HEAD，遠端分支畫出來時（task 18）再加 --remotes；多於 1000 個只留 1000 個
       分支線（internal/git Graph）：一個 commit 一列，每條線一欄兩格：commit ◉（U+25C9）、往下 │、合進來 ╯ ╰、分出去 ╮ ╭、併進已經在往下的線 ┤ ├、
-      橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；超過 10 條線時第 10 條的位置畫 …（Overlay0）；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
+      橫線經過的線 ┼、橫線中間的合流與分岔 ┴ ┬、橫線 ─；線最多畫幾條照 [2] 的寬度：[2] 寬 − 框與留白 4 − HASH 9 − DESCRIPTION（最長的標題 + 2）− AUTHOR（最長的作者 + 2）− DATE 12，剩下的一條線兩格，至少 10 條（git.Graph 的 most）；再多的線，那個位置畫 …（Overlay0）；版面算出的 [2] 寬度變了（終端機縮放、z 放大）時重排分支圖；每條線照分出來的順序輪 Blue、Green、Mauve、Peach、Teal、Pink、Sapphire、Flamingo
       DESCRIPTION 只寫標題；有 ref 指著的 commit 佔兩列（tgo Row.Below）：第二列 GRAPH 那一格是往下的線（git.Through：有往下筆畫的 │ ╮ ╭ ┬ ┼ ├ ┤，
       與有 parent 的 commit 點，畫成同一條線顏色的 │，其他空白），DESCRIPTION 那一格是 ref：分支是 nf-dev-git_branch（U+E725）加名字，本地分支 Green、遠端分支 Mauve；
       tag 是 nf-md-tag（U+F04F9）加名字，Peach；ref 之間空一格；HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面；遠端分支隱藏時不寫遠端分支的 ref
@@ -62,7 +62,7 @@ tasks:
       主線 commit 出現時，其他等著它的欄合進第一欄
       位置列（List.Location）：All branches 或 Current branch，遠端分支畫出來時接 · with remote branches；進到 commit 裡時接上那一層（task 6）
       空的 repo：空狀態 No commits yet / Press [W] to see the files to commit；讀失敗同 task 3
-    test: [TestGraphRows, TestFilterFindsARef, TestThrough, TestGraphMainLine, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
+    test: [TestGraphRows, TestGraphWidensWithRoom, TestGraphMostLines, TestFilterFindsARef, TestThrough, TestGraphMainLine, TestGraphWithWideIcons, TestGraphDropsColumnsWhenNarrow, TestHistoryFilter, TestGraphOfAMerge, TestGraphCapsTheLines, TestBranchesEmpty]
   - id: 5
     spec: 19
     implementation: |

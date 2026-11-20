@@ -112,7 +112,7 @@ func TestGraphOfAMerge(t *testing.T) {
 		{SHA: "B", Parents: []string{"A"}},
 		{SHA: "A"},
 	}
-	rows := git.Graph(cs, "")
+	rows := git.Graph(cs, "", 0)
 	text := func(r []git.Cell) string {
 		var b strings.Builder
 		for _, c := range r {
@@ -138,7 +138,7 @@ func TestGraphCapsTheLines(t *testing.T) {
 		cs = append(cs, git.Commit{SHA: string(rune('a' + i)), Parents: []string{"root"}})
 	}
 	cs = append(cs, git.Commit{SHA: "root"})
-	rows := git.Graph(cs, "")
+	rows := git.Graph(cs, "", 0)
 	for i, r := range rows {
 		if len(r) > 2*git.MaxLines {
 			t.Errorf("row %d is %d cells", i, len(r))
@@ -245,11 +245,11 @@ func TestGraphMainLine(t *testing.T) {
 	}
 	text := func(r []git.Cell) string { return string(cellRunes(r)) }
 	n := string(git.Node)
-	unpinned := git.Graph(cs, "")
+	unpinned := git.Graph(cs, "", 0)
 	if got := text(unpinned[0]); got != n {
 		t.Errorf("no main line: feature's row %q, want %q", got, n)
 	}
-	rows := git.Graph(cs, "B")
+	rows := git.Graph(cs, "B", 0)
 	want := []string{"  " + n, n + " │", n + "─╯"}
 	for i, r := range rows {
 		if text(r) != want[i] {
@@ -257,7 +257,7 @@ func TestGraphMainLine(t *testing.T) {
 		}
 	}
 	// With main at F, F's line is the first column.
-	rows = git.Graph(cs, "F")
+	rows = git.Graph(cs, "F", 0)
 	want = []string{n, "│ " + n, n + "─╯"}
 	for i, r := range rows {
 		if text(r) != want[i] {
@@ -279,5 +279,20 @@ func TestThrough(t *testing.T) {
 	}
 	if root := git.Through([]git.Cell{{Rune: git.Node, Line: 0}}, false); root[0].Rune != ' ' {
 		t.Errorf("under a root commit %q", root[0].Rune)
+	}
+}
+
+// TestGraphMostLines: with room for more, a row draws more lines before "…".
+func TestGraphMostLines(t *testing.T) {
+	var cs []git.Commit
+	for i := range 14 {
+		cs = append(cs, git.Commit{SHA: string(rune('a' + i)), Parents: []string{"root"}})
+	}
+	cs = append(cs, git.Commit{SHA: "root"})
+	last := git.Graph(cs, "", 20)[len(cs)-1]
+	for _, c := range last {
+		if c.Rune == '…' {
+			t.Fatalf("room for 20 lines, 14 drawn with …: %q", string(cellRunes(last)))
+		}
 	}
 }
