@@ -2,6 +2,7 @@ package ui
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -113,6 +114,10 @@ func newHistoryScreen(g *gittu) *historyScreen {
 	// right (the user), both following its cursor (tdp panel.13).
 	h.desc = &terminu.Pager{EmptyFact: "No commits yet", EmptyHint: "Press [W] to see the files to commit"}
 	h.descP = &terminu.Panel{Label: "Description", Body: h.desc, Actions: []terminu.Action{
+		// [3] is narrow, there to read: z puts it on the whole screen (the
+		// user; tdp screen.6).
+		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
+			Hidden: func() bool { return h.zoom != 0 }, Do: func() tea.Cmd { return h.zoomTo(2) }},
 		// [2] zoomed can be put back from here too (tdp screen.6), as from [1] and [4].
 		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
 			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }}}}
@@ -149,7 +154,8 @@ func beside(left, w, h int) []terminu.Rect {
 
 // layout is History's panels as zoomed (tdp screen.6): side by side 1:2,
 // [1] at its least width, or the focused one alone on the whole area (the
-// others drawn nowhere). [3] and [4] are under [2], a third of its height.
+// others drawn nowhere). [3] and [4] are under [2], a third of its height,
+// 2:3: [4]'s paths take the room, [3] zooms to be read (the user).
 func (h *historyScreen) layout(w, ht int) []terminu.Rect {
 	var rects []terminu.Rect
 	switch h.zoom {
@@ -165,11 +171,11 @@ func (h *historyScreen) layout(w, ht int) []terminu.Rect {
 	default:
 		rects = oneToTwo(w, ht)
 	}
-	if h.zoom != 2 { // under [2], a third of its height: [3] and [4] side by side
+	if h.zoom != 2 { // under [2], a third of its height: [3] and [4] side by side, 2:3
 		r := rects[1]
 		low := r.H / 3
 		rects[1].H = r.H - low
-		left := r.W / 2
+		left := r.W * 2 / 5
 		rects = append(rects, terminu.Rect{X: r.X, Y: r.Y + r.H - low, W: left, H: low},
 			terminu.Rect{X: r.X + left, Y: r.Y + r.H - low, W: r.W - left, H: low})
 	}
@@ -223,8 +229,9 @@ func (h *historyScreen) zoomTo(z int) tea.Cmd {
 		h.g.a.Log(terminu.Info, "Back to both panels")
 	case 1:
 		h.g.a.Log(terminu.Info, "Zoomed [2]")
-	case 2:
-		h.g.a.Log(terminu.Info, "Zoomed [2] to the whole screen")
+	case 2: // the panel with the focus: [2] or [3]
+		n := slices.Index(h.screen.Panels, h.screen.Focused()) + 1
+		h.g.a.Log(terminu.Info, "Zoomed ["+strconv.Itoa(n)+"] to the whole screen")
 	}
 	return nil
 }

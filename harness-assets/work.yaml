@@ -1,9 +1,9 @@
 tasks:
   - id: 1
-    spec: 46
+    spec: 53
     implementation: |
       兩個畫面（tgo Screen）：History（Key H，打開時的畫面；[1] BRANCHES、[2] 的 CURRENT／ALL 分頁，task 5）與 Working tree（Key W；[1] CHANGES、[2] DIFF）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
-      Working tree 兩個 panel、History 四個；Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40），History 的 [3] DESCRIPTION 與 [4] FILES 在 [2] 下面、高度是右邊的三分之一、左右各一半（task 6）；最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
+      Working tree 兩個 panel、History 四個；Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40），History 的 [3] DESCRIPTION 與 [4] FILES 在 [2] 下面、高度是右邊的三分之一、左右 2:3（[3] 是 [2] 寬度的 2/5，task 6）；最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
       statusbar（tgo App.Status），順序是狀態、Branch、Repo：做到一半的 merge、rebase、cherry-pick、revert 時最前面是
       <狀態 glyph> Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green；glyph 在還有衝突的檔時是 nf-md-alarm_light Peach，沒有時 nf-md-check_circle Green，空一格接字）；背景有 git 指令在跑時同一個位置改寫 Pushing…、Merging… 之類（Green），兩個不同時出現；
       接著 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；最後 Repo: <repo 資料夾名>（Lavender）；標籤 Overlay0，組與組之間兩格
@@ -16,7 +16,7 @@ tasks:
       L4 的畫面測試：tdptest 每一格畫面都量；tdptest.Check 在各種尺寸與 icon 寬度走第一次啟動；gittu 自己會開的 popup（diff viewer、new branch 的 text input、
       reset 的 select、checkout 的 confirm、commit 的 form、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
-    test: [TestOpensAt80x24, TestHistoryLayout, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestStatusbarNarrow, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
+    test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestStatusbarNarrow, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 17
     implementation: |
@@ -80,7 +80,7 @@ tasks:
   - id: 6
     spec: 38
     implementation: |
-      [3] DESCRIPTION（History 的第三個 panel，在 [2] 下面的左半）是 tgo Pager：cursor 那個 commit 的訊息（git log -1 --format=%B <sha>），每一行用 terminu.Wrap 照 [3] 的寬度（框與邊距 4 格以外）折行、terminu.Escape，寬度一變重新折；
+      [3] DESCRIPTION（History 的第三個 panel，在 [2] 下面的左邊，寬度是 [2] 的 2/5）是 tgo Pager：cursor 那個 commit 的訊息（git log -1 --format=%B <sha>），每一行用 terminu.Wrap 照 [3] 的寬度（框與邊距 4 格以外）折行、terminu.Escape，寬度一變重新折；
       跟 [4] 同時讀、同一個 commit 只讀一次；讀不到時 tgo Panel.Fail：Can't read the message of <短 hash>: <說原因的那一行>（Red）/ Press [R] to read it again，下次讀 repo 再試；沒有 commit 時空狀態 No commits yet / Press [W] to see the files to commit；
       panel operation z Unzoom（task 17）
       [4] FILES（History 的第四個 panel，在 [2] 下面的右半）是 tgo List：一欄路徑（Shrink、Path：太長從前面截），Flags 標記欄，Filterable；label Files
@@ -252,18 +252,19 @@ tasks:
       internal/ui/icon.svg 是它的副本（go:embed），terminu.NewSplash(icon, "gittu", version.Display(), "A git client for the terminal")；V 打開由 tgo 做
     test: [TestSplashIsDocsIcon, TestSplashOpens]
   - id: 17
-    spec: 38
+    spec: 53
     implementation: |
       History 的 tgo Screen.Layout 照 zoom 的階段排（historyScreen.zoom）：0 照 1:2；1 是 [1] min(20, 寬度/3) 欄、[2] 拿剩下的；
-      0 與 1 的 [3]、[4] 在 [2] 下面、高度是右邊的三分之一，左右各一半；2 是有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel）
+      0 與 1 的 [3]、[4] 在 [2] 下面、高度是右邊的三分之一，左右 2:3；2 是有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel）
       [2] COMMITS 的 panel operation，同一個鍵 z 依階段用 Hidden 分開：沒放大時 Zoom — wider, [1] at its least（到第一段）；
       第一段時、或沒放大而終端機窄（寬度/3 ≤ 20，也就是不到 63 欄）時 Zoom — to the whole screen（到第二段）；第二段時 Unzoom — back to both panels（回到 1:2）；
       下框 hint 寫 z:zoom 或 z:unzoom
       [1]、[3] 與 [4] 在放大時也有 panel operation z Unzoom — back to both panels（沒放大時 Hidden）
+      [3] 沒放大時有 panel operation z Zoom — to the whole screen（hint z:zoom），直接到第二段，[3] 佔滿
       第二段時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [3]、[4]、[1] 時它佔滿；[1] 上 Enter（task 3）把 focus 送回 [2]，[2] 佔滿
-      App Log 記 Info：Zoomed [2]、Zoomed [2] to the whole screen、Back to both panels
+      App Log 記 Info：Zoomed [2]、Zoomed [2] to the whole screen（[3] 上按的寫 Zoomed [3] to the whole screen：有 focus 的那一個）、Back to both panels
       [1]、[3]、[4] 上的 Unzoom 跟 [2] 一樣在下框寫 z:unzoom
-    test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep]
+    test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep, TestDescriptionZooms]
   - id: 18
     spec: 52
     implementation: |

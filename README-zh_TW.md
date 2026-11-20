@@ -112,7 +112,7 @@ gittu
 CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支或 tag 那條固定在最左邊，`[1]` 移動時跟著換；ALL 把 main（或 master）
 那條固定在最左邊。遠端分支一開始只畫本地分支追蹤的或同名的那些，在 `[2]` 的 `Space` 選單選 Show remote branches 才全部畫出來。在 `[2]` 上按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
-`[3]` DESCRIPTION 是 `[2]` cursor 那個 commit 完整的訊息，旁邊的 `[4]` FILES 列出它對上一個 commit 改了的檔案，cursor 一動兩個都跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
+`[3]` DESCRIPTION 是 `[2]` cursor 那個 commit 完整的訊息（在那裡按 `z` 放大到整個畫面），旁邊的 `[4]` FILES 列出它對上一個 commit 改了的檔案，cursor 一動兩個都跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
 `~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[4]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
 在一個 commit 上按 `D` 進入 Diff 模式，這個 commit 是基準，`[2]`、`[4]` 一起在模式裡：移到另一個 commit，`[4]` 就列出這兩個之間
 有差異的檔案。按 `Enter` 到 `[4]`，在檔案上按 `Enter` 一樣這樣打開；`Esc` 照來的路退回，在 `[2]` 上按就離開模式。

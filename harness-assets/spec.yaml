@@ -1,9 +1,9 @@
-id: 52
+id: 53
 from: v1.2.19
 to: v1.2.20
 tasks:
   - id: 1
-    spec: 46
+    spec: 53
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6]
     remark:
@@ -26,7 +26,7 @@ tasks:
         Space:menu ?:help !:log Tab|1–4:panels q:quit
       - "兩個畫面（tdp terms.2）：History（[1] BRANCHES、[2] COMMITS，打開時的畫面）與 Working tree（[1] CHANGES、[2] DIFF，task 11）。工作區的檔案（stage、commit、解衝突）要一個檔案清單加差異，跟分支列表加分支圖放不進同一個畫面。切換畫面是 global operation（tdp P3），畫面 chip 的熱鍵 [H]istory、[W]orking tree（tdp screen.3）"
       - "名字（使用者 2026-11-19：File status 怪、History 畫面裡又有一個 History panel 也怪）：git 的名詞是 working tree，在終端機用 git 的人認得它，所以第二個畫面叫 Working tree；畫面與 panel 不同名，[2] 放的是一個一個 commit，叫 COMMITS，第二個畫面的 [1] 放的是有改動的檔，叫 CHANGES（名字是 app 的內容：tdp terms.2、terms.3、panel.1、screen.3 只規定畫面 chip 與 [N] label 膠囊怎麼畫、怎麼大寫）"
-      - "History 的 [3] DESCRIPTION 與 [4] FILES 在 [2] 下面，佔右邊高度的三分之一，左右各一半（使用者 2026-11-20：常駐；拆成左右，左邊 description、右邊檔案；高度與寬度 app 自行決定，tdp L1：panel 怎麼拆 app 可以自行決定），32 列時還有 8 列；Working tree 還是兩個 panel"
+      - "History 的 [3] DESCRIPTION 與 [4] FILES 在 [2] 下面，佔右邊高度的三分之一，左右 2:3（使用者 2026-11-20：常駐；拆成左右，左邊 description、右邊檔案；後來「增加 [4] 的寬佔比，減少 [3] 的寬佔比，給[3] zoom 效果，反正 [3] 只是拿來看」：原本各一半，60 欄時 [4] 只剩 16 格，位置列的兩個短 hash 被截掉，2:3 時 [4] 有 20 格；高度與寬度 app 自行決定，tdp L1：panel 怎麼拆 app 可以自行決定），32 列時還有 8 列；Working tree 還是兩個 panel"
       - "[1] 與 [2] 照 1:2 分寬：60 欄時是 20｜40，分支名稱與分支圖都還讀得到（tdp L1 的為什麼）；最低尺寸 60×24（使用者 2026-11-20：80×24 的終端機也要能開；tdp L1：最低尺寸 app 可以調低、不能高於 60×32；24 列時 [2] 約 10 列、[3]、[4] 各 5 列），60 欄以上兩個 panel 一律並排，所以沒有窄寬（tdp screen.5 的門檻 app 自行決定，不能高於 60）"
       - "statusbar 在畫面 chip 列右邊（tdp screen.4：多畫面的 app 用 chip 列的右邊），順序是狀態、Branch、Repo（使用者 2026-11-20：「狀態|Branch|Repo」；原本 2026-11-19 是先 Branch 再 Repo、狀態接最後）：Branch: <HEAD 的分支>（detached 時寫 detached at <短 hash>）、有 upstream 時接 ↑N ↓N（只寫不是 0 的）；Repo: <repo 資料夾的名字>；兩個值都是 Lavender（tdp screen.4：你現在在哪的值）；merge、rebase、cherry-pick、revert 做到一半時最前面是 Merging: <對方> 之類（Green：做到一半的 merge 也是進行中的工作，tdp screen.4、color 的 Green；2026-11-19 review 判 tdp 不清楚，使用者選回報，tdp session 回覆照這兩處用 Green）；正在跑的 git 指令在同一個位置寫 Pushing… 之類（Green，進行中的工作）"
       - "statusbar 的寬度不跟著內容變（tdp L2）：tgo 把 statusbar 靠右畫，內容一變長，整串都會往左跑，所以 gittu 給的 statusbar 一律是 tgo 給的寬度（畫面的一半），前面補空白；Repo 放最後：名字整個執行期間不變，所以一直貼在右邊不動；Branch 那一欄（名字加 ↑N ↓N）固定寬，寬度是本機每個分支（加它的 ↑N ↓N）與 HEAD 所在之中最寬的，上限照終端機寬度（放不下從尾端截、加 …），字靠右、貼著 Repo：切到另一個分支時 Repo 與 Branch 那一欄都不動，原本照終端機給的上限留寬，短名字後面空一大段（使用者覺得怪）；進行中的工作在最前面，接在 Branch 那一欄左邊，空間不夠時從尾端截（tdp L3）：git 指令在跑時寫在做什麼（Pushing…），沒在跑時寫做到一半的操作（Merging: <對方>），兩個不同時出現"
@@ -228,7 +228,7 @@ tasks:
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
-    spec: 38
+    spec: 53
     request: history [2] commits 需要可以 zoom，分兩段：第一段還保留 panel 1 最小寬度，第二段完全展開、panel 1 完全被覆蓋；窄寬時沒有保留 panel 1 最小寬度那一段
     tdp: [tdp screen.6, tdp screen.5, tdp terms.8, tdp P3, tdp M2, tdp M5, tdp K1, tdp K2, tdp note.7, tdp L1, tdp L4, tdp M6]
     remark:
@@ -237,6 +237,7 @@ tasks:
       - "第二段時 Tab、數字鍵照樣換 panel，換到的 [3]、[1] 也佔滿 panel 區（tdp screen.6 的預設）；[1]、[3] 上在放大時也有 z（Unzoom），所以不管 focus 在哪一個都按得回來；第一段時 [3] 跟著 [2] 變寬"
       - "放大不是模式（tdp terms.8：版面的切換沒有鍵換意思，Esc 不必退出它，由它自己的鍵還原）。它是 [2] 的 panel operation（tdp P3：作用在整個 panel 的版面），列在 Space menu：Zoom（[1] 留最小寬度時的說明是 wider, [1] at its least；第二段是 to the whole screen）、Unzoom（back to both panels）；同一個鍵 z 照現在在哪一段用 Hidden 分開（tdp M6），下框 hint 寫 z:zoom 或 z:unzoom"
       - "記 App Log（tdp note.7：從 menu 或熱鍵執行的 panel operation，只看不改的也記）：Zoomed [2] COMMITS、Zoomed [2] COMMITS to the whole screen、Back to both panels"
+      - "[3] DESCRIPTION 也有 z（使用者 2026-11-20：「給[3] zoom 效果，反正 [3] 只是拿來看」）：沒放大時 Zoom — to the whole screen，直接到第二段（[3] 佔滿 panel 區，tdp screen.6 的預設），沒有第一段（第一段是讓 [2] 變寬）；放大時是原本的 Unzoom；App Log 記 Zoomed [3] to the whole screen"
   - id: 18
     spec: 52
     request: 分支圖可以顯示／隱藏遠端分支，預設隱藏：正常開發只會關注自己的分支

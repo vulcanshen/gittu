@@ -126,7 +126,7 @@ branches are hidden at first, but for those a local branch tracks or shares a na
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
-`[3]` DESCRIPTION is the whole message of the commit under `[2]`'s cursor, and `[4]` FILES beside it lists the files it
+`[3]` DESCRIPTION is the whole message of the commit under `[2]`'s cursor (`z` there puts it on the whole screen), and `[4]` FILES beside it lists the files it
 changed against the commit before it; both change as you move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
 on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit starts the Diff mode with
 that commit as the base, `[2]` and `[4]` both in it: move to another commit and `[4]` lists the files that differ

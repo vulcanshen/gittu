@@ -808,7 +808,7 @@ func TestCommitDescription(t *testing.T) {
 	r.Git("commit", "-q", "-am", "Change the readme\n\nThe body says why, in a line far longer than the panel is wide.")
 	g, d := start(t, r, 120, 32)
 	d.Press("Tab", "g", "g")
-	has(t, d, "[3] DESCRIPTION", "Change the readme", "The body says why, in a line far", "longer than the panel is wide.")
+	has(t, d, "[3] DESCRIPTION", "Change the readme", "The body says why, in a line", "far longer than the panel is", "wide.")
 	d.Press("j")
 	hasNot(t, d, "The body says why")
 	has(t, d, g.snap.Commits[1].Subject)
@@ -844,8 +844,8 @@ func TestDiffTwoCommits(t *testing.T) {
 	if h.histP.InMode() == nil || h.filesP.InMode() == nil || g.a.Screen().Focused() != h.histP {
 		t.Fatal("D did not put [2] and [3] in the Diff mode, the focus on [2]")
 	}
-	hasNot(t, d, "Enter:files", "z:zoom") // the bottom hints are the mode's keys (tdp K11)
-	b := g.snap.Commits[0]                // gg: the top commit, [3] following
+	hasNot(t, d, "Enter:files", "tab z:zoom") // [2]'s bottom hint is the mode's keys (tdp K11); [3], not in it, keeps its z:zoom
+	b := g.snap.Commits[0]                    // gg: the top commit, [3] following
 	d.Press("g", "g")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
 	d.Press("Enter")
@@ -2551,6 +2551,35 @@ func TestZoomTwoSteps(t *testing.T) {
 	}
 	d.Press("!")
 	has(t, d, "Zoomed [2]", "Zoomed [2] to the whole screen", "Back to both panels")
+}
+
+// TestDescriptionZooms: [3] DESCRIPTION, narrower than [4] FILES (2:3, the
+// user), zooms to the whole screen with z, and back.
+func TestDescriptionZooms(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 100, 32)
+	h := g.history
+	d.Press("3")
+	has(t, d, "z:zoom")
+	d.Press("z")
+	has(t, d, "[3] DESCRIPTION", "z:unzoom")
+	hasNot(t, d, "[2] CURRENT", "[4] FILES")
+	d.Press("z", "!")
+	has(t, d, "Zoomed [3] to the whole screen", "Back to both panels")
+	d.Press("Esc")
+	if r := h.layout(100, 30); r[2].W != 26 || r[3].W != 41 {
+		t.Errorf("[3] %d wide, [4] %d: not 2:3 of 67", r[2].W, r[3].W)
+	}
+}
+
+// TestFilesLocationFitsAt60: at 60 columns [4] still has room for the two
+// short hashes of its location row (the user).
+func TestFilesLocationFitsAt60(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 60, 24)
+	loc := g.history.files.Location
+	if loc == "" {
+		t.Fatal("no location in [4]")
+	}
+	has(t, d, loc)
 }
 
 func TestZoomNarrowSkipsTheFirstStep(t *testing.T) {
