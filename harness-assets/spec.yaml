@@ -1,4 +1,4 @@
-id: 42
+id: 43
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -273,4 +273,10 @@ tasks:
       - "Ignore（item operation，沒有熱鍵；不在衝突的檔）：寫進 repo 頂層的 .gitignore，一個檔一行 /<路徑>（從頂層算、只對到它；* ? [ \\ 與尾端空白跳脫），已經有那一行就不重寫；還在 index 裡的檔先 git rm --cached（git 不會忽略已經追蹤的檔），檔案留著；有這種檔時先 confirm（IGNORE）說它們不再被追蹤，只有沒追蹤的檔時不問"
       - "App Log（tdp note.7：P3 的動作都記）：Marked <路徑>、Unmarked <路徑>、Marked every file、Cleared the marks；整批的 stage、unstage 每個檔一筆（跟單一的同一句）；Discard、Remove、Ignore 整批時每個檔一筆，再加一個 Success toast 說幾個檔；Use mine／theirs 整批時一個 Success toast（<N> files resolved with mine and staged）"
       - "鍵、git 的做法（git rm、.gitignore 的寫法、已追蹤的檔停止追蹤）是 app 照 git 的意思決定的預設（使用者沒有指定）"
-
+  - id: 22
+    spec: 43
+    request: 使用者自訂的動作：使用者自己寫操作的腳本，${{source}} 是來源分支、${{target}} 是目標分支，執行時換成實際的分支；腳本存起來，算使用者的資料、不是 gittu 的設定；放在第三個畫面 CUSTOM（user 2026-11-20；這一版先不做，先發版）
+    tdp: [tdp E3, tdp P3, tdp screen.3, tdp terminal]
+    remark:
+      - "還沒設計，下一版做；要先跟使用者確認的：${{source}}、${{target}} 各是哪一個分支（例：[1] cursor 那個是 source、HEAD 所在是 target）、還有沒有別的變數（commit、檔案、repo 路徑）、在哪裡執行（Space menu 的哪一區）、輸出怎麼看（terminal popup）、要不要先 confirm"
+      - "資料照 tdp E3 放在 gittu 的資料目錄（不是 config.yaml）；CUSTOM 是第三個畫面（tdp screen.3 的畫面 chip），在那裡新增、改、刪自訂的動作"
