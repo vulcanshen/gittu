@@ -1656,8 +1656,9 @@ func TestRemoveAndIgnore(t *testing.T) {
 	}
 }
 
-// TestXDiscardsMany: X discards the marked files when some are marked, and
-// is Discard all otherwise; both ask first (tdp K13).
+// TestXDiscardsMany: X discards the marked files when some are marked,
+// asking first (tdp K13); with none marked it does nothing: Discard all has
+// no key (the user).
 func TestXDiscardsMany(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -1674,8 +1675,7 @@ func TestXDiscardsMany(t *testing.T) {
 		t.Error("X with a mark discarded a file not marked")
 	}
 	d.Press("X")
-	has(t, d, "Discard every change to the tracked files?")
-	d.Press("Esc")
+	hasNot(t, d, "Discard every change to the tracked files?")
 }
 
 func TestDiscardFile(t *testing.T) {

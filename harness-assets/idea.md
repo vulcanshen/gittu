@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## Discard all 不要熱鍵（2026-11-20）
+
+照 tdp K13 把 Discard all 放到 X 之後，user 照原話：「Discard all 不要熱鍵」
+
 ## 標記用 m，Diff 模式用 D（2026-11-20）
 
 user 照原話：「mark 熱鍵用 [m] 吧, 然後 diff mode 熱鍵用 [D]」

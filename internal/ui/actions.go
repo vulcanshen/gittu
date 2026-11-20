@@ -601,7 +601,7 @@ func (g *gittu) globalActions() []terminu.Action {
 		{Key: "S", Label: "Stash", Desc: "the uncommitted changes", Disabled: func() bool {
 			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // git stashes nothing before the first commit (tdp M6)
 		}, Do: g.stash},
-		{Key: "X", Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool { // X: many at once (tdp K13)
+		{Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool { // no key: not by a stray X (the user)
 			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // no commit to go back to (tdp M6)
 		},
 			Ask: &terminu.Ask{Title: "Discard all", Question: "Discard every change to the tracked files?", Verb: "discard",
