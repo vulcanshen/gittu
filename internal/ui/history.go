@@ -22,8 +22,8 @@ const (
 var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 
 // historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
-// [2] the history graph beside them, [3] the files of the commit under [2]'s
-// cursor below it.
+// [2] the history graph beside them, and below it [3] the message and [4]
+// the files of the commit under [2]'s cursor.
 type historyScreen struct {
 	// width is [2]'s, as laid out last: how many of the graph's lines fit.
 	width int
@@ -40,10 +40,17 @@ type historyScreen struct {
 	histP   *terminu.Panel
 	commits *terminu.List
 
+	// descP is [3], the message of the commit under [2]'s cursor, folded to
+	// descW cells; message is the message as read.
+	descP   *terminu.Panel
+	desc    *terminu.Pager
+	message string
+	descW   int
+
 	filesP *terminu.Panel
 	files  *terminu.List
-	// items are the files [3] lists, by row ID; filesOf the commit they are
-	// of, "" when [3] has none to show or could not read them.
+	// items are the files [4] lists, by row ID; filesOf the commit they and
+	// [3] are of, "" when there is none to show or one could not be read.
 	items   map[string]terminu.DiffItem
 	filesOf string
 	// zoom is how far [2] is zoomed (tdp screen.6): 0 not, 1 with [1] at its
@@ -93,7 +100,13 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		EmptyHint:  "Press [W] to see the files to commit",
 		OnMove:     func(terminu.Row) tea.Cmd { h.showFiles(); return nil },
 	}
-	// [3] follows [2]'s cursor (tdp panel.13), always there (the user).
+	// Under [2], [3] its message on the left and [4] its files on the
+	// right (the user), both following its cursor (tdp panel.13).
+	h.desc = &terminu.Pager{EmptyFact: "No commits yet", EmptyHint: "Press [W] to see the files to commit"}
+	h.descP = &terminu.Panel{Label: "Description", Body: h.desc, Actions: []terminu.Action{
+		// [2] zoomed can be put back from here too (tdp screen.6), as from [1] and [4].
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }}}}
 	h.files = &terminu.List{
 		Columns:    []terminu.Column{{Title: "", Shrink: true, Path: true}},
 		Flags:      true,
@@ -110,7 +123,7 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		OnTab: func(tab int) tea.Cmd { return h.setAll(tab == 1) }}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
 	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
-		Panels: []*terminu.Panel{h.branchP, h.histP, h.filesP}, Layout: h.layout}
+		Panels: []*terminu.Panel{h.branchP, h.histP, h.descP, h.filesP}, Layout: h.layout}
 	return h
 }
 
@@ -125,7 +138,7 @@ func beside(left, w, h int) []terminu.Rect {
 
 // layout is History's panels as zoomed (tdp screen.6): side by side 1:2,
 // [1] at its least width, or the focused one alone on the whole area (the
-// others drawn nowhere). [3] is under [2], a third of its height.
+// others drawn nowhere). [3] and [4] are under [2], a third of its height.
 func (h *historyScreen) layout(w, ht int) []terminu.Rect {
 	var rects []terminu.Rect
 	switch h.zoom {
@@ -141,11 +154,19 @@ func (h *historyScreen) layout(w, ht int) []terminu.Rect {
 	default:
 		rects = oneToTwo(w, ht)
 	}
-	if h.zoom != 2 {
+	if h.zoom != 2 { // under [2], a third of its height: [3] and [4] side by side
 		r := rects[1]
 		low := r.H / 3
 		rects[1].H = r.H - low
-		rects = append(rects, terminu.Rect{X: r.X, Y: r.Y + r.H - low, W: r.W, H: low})
+		left := r.W / 2
+		rects = append(rects, terminu.Rect{X: r.X, Y: r.Y + r.H - low, W: left, H: low},
+			terminu.Rect{X: r.X + left, Y: r.Y + r.H - low, W: r.W - left, H: low})
+	}
+	// [3] wider or narrower: its message folded again (the frame and the
+	// margins, 4).
+	if dw := rects[2].W - 4; dw > 0 && dw != h.descW {
+		h.descW = dw
+		h.showMessage()
 	}
 	// [2] wider or narrower: the graph draws as many lines as now fit.
 	if rw := rects[1].W; rw != h.width {
@@ -247,13 +268,14 @@ func (h *historyScreen) emptyHints(s *git.Snapshot) {
 // failed says the repository could not be read (tdp panel.15).
 func (h *historyScreen) failed() {
 	f := &terminu.Failure{Fact: "Can't read " + h.g.repo.Name() + ": " + h.g.readErr, Hint: "Press [R] to read it again"}
-	h.branchP.Fail, h.histP.Fail, h.filesP.Fail = f, f, f
+	h.branchP.Fail, h.histP.Fail, h.descP.Fail, h.filesP.Fail = f, f, f, f
 	for _, l := range h.tabs {
 		l.SetRows(nil)
 	}
 	h.commits.SetRows(nil)
 	h.files.SetRows(nil)
-	h.items, h.filesOf = nil, ""
+	h.desc.SetLines(nil)
+	h.items, h.filesOf, h.message = nil, "", ""
 }
 
 // scope is the location row of the graph: its main line, and the remote
@@ -627,8 +649,9 @@ func (h *historyScreen) commitItems(from, to, fromName, toName string) ([]termin
 	return items, nil
 }
 
-// showFiles puts in [3] the files the commit under [2]'s cursor changed
-// against its first parent, the first commit against the empty tree: each
+// showFiles puts in [3] the message of the commit under [2]'s cursor, and in
+// [4] the files it changed against its first parent, the first commit
+// against the empty tree: each
 // its mark in its colour, then its path (tdp panel.13, note.8, panel.9). Its
 // location row is <parent> ↔ <commit>. Read once a commit; a read that
 // failed is tried again on the next read of the repository.
@@ -638,10 +661,20 @@ func (h *historyScreen) showFiles() {
 		h.files.EmptyFact, h.files.EmptyHint = "No commits yet", "Press [W] to see the files to commit"
 		h.files.SetRows(nil)
 		h.files.Location, h.items, h.filesOf, h.filesP.Fail = "", nil, "", nil
+		h.message, h.descP.Fail = "", nil
+		h.desc.SetLines(nil)
 		return
 	}
 	if c.SHA == h.filesOf {
 		return
+	}
+	if msg, err := h.g.repo.Message(c.SHA); err != nil {
+		h.descP.Fail = &terminu.Failure{Fact: "Can't read the message of " + git.Short(c.SHA) + ": " + reason(gitLines(err)), Hint: "Press [R] to read it again"}
+		h.message = ""
+		h.desc.SetLines(nil)
+	} else {
+		h.descP.Fail, h.message = nil, msg
+		h.showMessage()
 	}
 	from, fromName := "", "empty"
 	if len(c.Parents) > 0 {
@@ -658,12 +691,36 @@ func (h *historyScreen) showFiles() {
 	h.filesP.Fail = nil
 	h.files.EmptyFact, h.files.EmptyHint = "No files changed", "Press [2] to go to the commits"
 	h.items, h.filesOf = map[string]terminu.DiffItem{}, c.SHA
+	if h.descP.Fail != nil { // the message read again with the files
+		h.filesOf = ""
+	}
 	rows := make([]terminu.Row, len(items))
 	for i, it := range items {
 		rows[i] = terminu.Row{ID: it.Name, Cells: []string{it.Name}, Flag: markSpan(it.Mark)}
 		h.items[it.Name] = it
 	}
 	h.files.SetRows(rows)
+}
+
+// showMessage puts the commit's message in [3], each line folded to its
+// width (tdp components.3), as written: the user's text, escaped (tdp
+// components).
+func (h *historyScreen) showMessage() {
+	if h.message == "" {
+		h.desc.SetLines(nil)
+		return
+	}
+	var lines []string
+	for _, l := range strings.Split(h.message, "\n") {
+		if l == "" || h.descW <= 0 {
+			lines = append(lines, terminu.Escape(l))
+			continue
+		}
+		for _, part := range terminu.Wrap(l, h.descW) {
+			lines = append(lines, terminu.Escape(part))
+		}
+	}
+	h.desc.SetLines(lines)
 }
 
 // markSpan is a file's mark in its colour, as the lib draws it in the list
@@ -678,7 +735,7 @@ func markSpan(m terminu.DiffMark) terminu.Span {
 	return terminu.Span{Text: "~", Style: terminu.Fg(terminu.Peach)}
 }
 
-// file is the file under [3]'s cursor.
+// file is the file under [4]'s cursor.
 func (h *historyScreen) file() (terminu.DiffItem, bool) {
 	r, ok := h.files.Current()
 	if !ok {
@@ -688,7 +745,7 @@ func (h *historyScreen) file() (terminu.DiffItem, bool) {
 	return it, ok
 }
 
-// openFile opens the two versions of the file under [3]'s cursor (tdp
+// openFile opens the two versions of the file under [4]'s cursor (tdp
 // note.8): <path> @ <parent> ↔ <path> @ <commit>.
 func (h *historyScreen) openFile() tea.Cmd {
 	it, ok := h.file()
@@ -700,8 +757,8 @@ func (h *historyScreen) openFile() tea.Cmd {
 }
 
 // diffMode is [2]'s Diff mode (tdp panel.9): two commits hold many, so
-// diffing them lists the files that differ, the anchor the base, in [3]
-// ("With a details panel", the user's pick): [3] follows [2]'s cursor in the
+// diffing them lists the files that differ, the anchor the base, in [4]
+// ("With a details panel", the user's pick): [4] follows [2]'s cursor in the
 // mode, D or Enter sends the focus there, Esc goes back the way it came.
 func (h *historyScreen) diffMode() terminu.Action {
 	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "D", InDetails: true, Noun: "commit", // the user's

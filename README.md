@@ -7,8 +7,8 @@
 
 **A git client for the terminal: the branches beside the history graph, everything you can do in the `Space` menu.**
 
-`gittu` in a repository opens three panels: the branches, remote branches, tags and stashes on the left, the commits
-and their graph on the right, and under them the files of the commit under the cursor. What you can do with the branch or the commit under the cursor is in the `Space` menu,
+`gittu` in a repository opens four panels: the branches, remote branches, tags and stashes on the left, the commits
+and their graph on the right, and under them the message and the files of the commit under the cursor. What you can do with the branch or the commit under the cursor is in the `Space` menu,
 and what works on the whole repository is in its global operations. Look into a commit's files and their diffs,
 compare two commits, stage and commit, merge, and resolve conflicts in your own editor — with no keys to learn
 first.
@@ -114,9 +114,9 @@ the App Log, what gittu did and what went wrong.
 | `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[x]` Delete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[x]` Drop |
-| `[2]` a commit | To its files in `[3]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
+| `[2]` a commit | To its files in `[4]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
 | `[2]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
-| `[3]` FILES: a file | Its two versions | `[/]` filter |
+| `[4]` FILES: a file | Its two versions | `[/]` filter |
 
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
 and tag. `[2]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
@@ -125,11 +125,11 @@ branches are hidden at first: Show remote branches in `[2]`'s `Space` menu draws
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
-`[3]` FILES lists the files the commit under `[2]`'s cursor changed against the commit before it, and changes as you
-move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
+`[3]` DESCRIPTION is the whole message of the commit under `[2]`'s cursor, and `[4]` FILES beside it lists the files it
+changed against the commit before it; both change as you move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
 on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit starts the Diff mode with
-that commit as the base, `[2]` and `[3]` both in it: move to another commit and `[3]` lists the files that differ
-between the two. `Enter` takes you to `[3]`, where `Enter` opens a file the same way; `Esc` goes back the way you came,
+that commit as the base, `[2]` and `[4]` both in it: move to another commit and `[4]` lists the files that differ
+between the two. `Enter` takes you to `[4]`, where `Enter` opens a file the same way; `Esc` goes back the way you came,
 and on `[2]` leaves the mode.
 
 ### Working tree

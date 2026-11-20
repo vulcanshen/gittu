@@ -7,8 +7,8 @@
 
 **終端機的 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gittu`，打開三個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖，下面是 cursor 那個
-commit 改了的檔案。對 cursor 那個分支或
+在 repo 裡打 `gittu`，打開四個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖，下面是 cursor 那個
+commit 的訊息與它改了的檔案。對 cursor 那個分支或
 commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，用你自己的 editor 解衝突 —— 不用先背任何熱鍵。
 
@@ -104,18 +104,18 @@ gittu
 | `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[x]` Delete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[x]` Delete、Push |
 | `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[x]` Drop |
-| `[2]` commit | 到 `[3]` 它改了的檔案 | 跟另一個 commit `[D]`iff、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
+| `[2]` commit | 到 `[4]` 它改了的檔案 | 跟另一個 commit `[D]`iff、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
 | `[2]` 整個 panel | | `[n]`ext／`[N]` Previous commit（只在 CURRENT 分頁：最左邊那個分支走得到的 commit）、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
-| `[3]` FILES：檔案 | 它的兩個版本 | `[/]` 篩選 |
+| `[4]` FILES：檔案 | 它的兩個版本 | `[/]` 篩選 |
 
 `[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag。`[2]` 有兩個分頁，用 `h`、`l` 切換：
 CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支或 tag 那條固定在最左邊，`[1]` 移動時跟著換；ALL 把 main（或 master）
 那條固定在最左邊。遠端分支一開始不畫，在 `[2]` 的 `Space` 選單選 Show remote branches 才畫。在 `[2]` 上按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
-`[3]` FILES 列出 `[2]` cursor 那個 commit 對上一個 commit 改了的檔案，cursor 一動就跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
-`~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[3]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
-在一個 commit 上按 `D` 進入 Diff 模式，這個 commit 是基準，`[2]`、`[3]` 一起在模式裡：移到另一個 commit，`[3]` 就列出這兩個之間
-有差異的檔案。按 `Enter` 到 `[3]`，在檔案上按 `Enter` 一樣這樣打開；`Esc` 照來的路退回，在 `[2]` 上按就離開模式。
+`[3]` DESCRIPTION 是 `[2]` cursor 那個 commit 完整的訊息，旁邊的 `[4]` FILES 列出它對上一個 commit 改了的檔案，cursor 一動兩個都跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
+`~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[4]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
+在一個 commit 上按 `D` 進入 Diff 模式，這個 commit 是基準，`[2]`、`[4]` 一起在模式裡：移到另一個 commit，`[4]` 就列出這兩個之間
+有差異的檔案。按 `Enter` 到 `[4]`，在檔案上按 `Enter` 一樣這樣打開；`Esc` 照來的路退回，在 `[2]` 上按就離開模式。
 
 ### Working tree
 

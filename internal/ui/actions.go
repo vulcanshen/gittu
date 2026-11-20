@@ -361,8 +361,8 @@ func (g *gittu) rebase(onto string) tea.Cmd {
 		conflicts: g.conflictsSaid("Rebase")}, "Rebasing…", func() error { return g.repo.Rebase(onto) })
 }
 
-// fileActions are [3]'s operations: on a file of the commit under [2]'s
-// cursor; and the panel's, so that [3] zoomed can be put back from here too
+// fileActions are [4]'s operations: on a file of the commit under [2]'s
+// cursor; and the panel's, so that [4] zoomed can be put back from here too
 // (tdp screen.6).
 func (h *historyScreen) fileActions() []terminu.Action {
 	return []terminu.Action{
@@ -383,7 +383,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	off := h.busyOr(nil)
 	short := func() string { c, _ := h.current(); return git.Short(c.SHA) }
 	return []terminu.Action{
-		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [3]", Scope: item, Hint: "files",
+		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [4]", Scope: item, Hint: "files",
 			Hidden: onGraph, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		h.diffMode(),
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,

@@ -403,6 +403,12 @@ func (r *Repo) LastMessage() string {
 	return strings.TrimRight(out, "\n")
 }
 
+// Message is a commit's whole message.
+func (r *Repo) Message(sha string) (string, error) {
+	out, err := r.Run("log", "-1", "--format=%B", sha)
+	return strings.TrimRight(out, "\n"), err
+}
+
 // MergeMessage is the message git prepared for the merge under way, its
 // comment lines left out.
 func (r *Repo) MergeMessage() string {

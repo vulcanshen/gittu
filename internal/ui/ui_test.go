@@ -88,7 +88,7 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–3:panels q:quit")
+	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–4:panels q:quit")
 	// [1] a third of the width, [2] the rest (tdp L1).
 	top := d.Screen()[2]
 	at := strings.Index(top, "┌")
@@ -717,7 +717,7 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	c := selectCommit(t, d, g, "Move, add and change")
 	parent := c.Parents[0]
 	d.Press("Tab")
-	has(t, d, "[3] FILES", git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:files")
+	has(t, d, "[3] DESCRIPTION", "Move, add and change", "[4] FILES", git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:files")
 	d.Press("j") // [3] follows [2]'s cursor, the focus staying (tdp panel.13)
 	hasNot(t, d, "+ added.txt")
 	if g.a.Screen().Focused() != g.history.histP {
@@ -744,6 +744,22 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	has(t, d, "Compared README.md @ "+git.Short(parent)+" with README.md @ "+git.Short(c.SHA))
 }
 
+// TestCommitDescription: [3] is the whole message of the commit under [2]'s
+// cursor, a line too long for it folded at a blank (the user; tdp
+// components.3), and follows the cursor.
+func TestCommitDescription(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("README.md", "changed\n")
+	r.Git("commit", "-q", "-am", "Change the readme\n\nThe body says why, in a line far longer than the panel is wide.")
+	g, d := start(t, r, 120, 32)
+	d.Press("Tab", "g", "g")
+	has(t, d, "[3] DESCRIPTION", "Change the readme", "The body says why, in a line far", "longer than the panel is wide.")
+	d.Press("j")
+	hasNot(t, d, "The body says why")
+	has(t, d, g.snap.Commits[1].Subject)
+}
+
 func TestFirstCommitFiles(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 120, 32)
 	selectCommit(t, d, g, "Start the demo")
@@ -763,7 +779,7 @@ func TestFirstCommitFiles(t *testing.T) {
 // [3], [2] with the mode kept, out of the mode; Tab moves between the two,
 // [1] waits.
 func TestDiffTwoCommits(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 120, 32)
+	g, d := start(t, gittest.Sample(t), 160, 32) // [4] wide enough for its empty state on a row
 	h := g.history
 	d.Press("Tab")
 	a := selectCommit(t, d, g, "Start the demo")
@@ -795,11 +811,16 @@ func TestDiffTwoCommits(t *testing.T) {
 	}
 	d.Press("Tab")
 	if g.a.Screen().Focused() != h.filesP {
-		t.Error("Tab in the mode did not go to [3]")
+		t.Error("Tab in the mode did not go to [4]")
 	}
-	d.Press("1")
+	d.Press("3") // [3], the message, waits as [1] does
 	has(t, d, "Press [Esc] to leave Diff first")
-	d.Press("Esc", "Esc", "Esc") // the toast, [3] back to [2], out of the mode
+	if g.a.Screen().Focused() != h.filesP {
+		t.Error("3 in the mode left [4]")
+	}
+	d.Press("Esc", "1")
+	has(t, d, "Press [Esc] to leave Diff first")
+	d.Press("Esc", "Esc", "Esc") // the toast, [4] back to [2], out of the mode
 	if h.histP.InMode() != nil || h.filesP.InMode() != nil {
 		t.Error("Esc did not leave the Diff mode")
 	}
@@ -812,7 +833,7 @@ func TestDiffTwoCommits(t *testing.T) {
 func TestDiffSameCommits(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Nothing")
-	g, d := start(t, r, 120, 32)
+	g, d := start(t, r, 160, 32) // [4] wide enough for its empty state on a row
 	top, parent := g.snap.Commits[0], g.snap.Commits[1]
 	d.Press("Tab", "g", "g", "D", "j")
 	has(t, d, "No differences between "+git.Short(top.SHA)+" and "+git.Short(parent.SHA))
@@ -2219,11 +2240,18 @@ func TestZoomTwoSteps(t *testing.T) {
 	}
 	has(t, d, "z:unzoom")
 	d.Press("Tab")
-	if !d.Has("[3] FILES") || d.Has("[2] CURRENT") || d.Has("[1] BRANCHES") {
+	if !d.Has("[3] DESCRIPTION") || d.Has("[2] CURRENT") || d.Has("[4] FILES") {
 		t.Fatalf("Tab on the whole screen does not show [3] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
+	if !slices.ContainsFunc(g.history.descP.Actions, func(a terminu.Action) bool { return a.Key == "z" && !a.Hidden() }) {
+		t.Error("[3] zoomed has no z to put the panels back")
+	}
 	d.Press("Tab")
-	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") || d.Has("[3] FILES") {
+	if !d.Has("[4] FILES") || d.Has("[2] CURRENT") || d.Has("[3] DESCRIPTION") {
+		t.Fatalf("Tab on the whole screen does not show [4] alone:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+	d.Press("Tab")
+	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") || d.Has("[4] FILES") {
 		t.Fatalf("Tab on the whole screen does not show [1] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("z")
