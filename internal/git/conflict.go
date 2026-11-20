@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Hunk is one conflicted block of a file, between git's markers:
@@ -76,6 +77,26 @@ func (r *Repo) Markers(path string) ([][2]int, error) {
 		at = append(at, [2]int{open, open})
 	}
 	return at, nil
+}
+
+// ChangedAfterConflict reports a conflicted working tree file saved after git
+// wrote it with the conflict. git writes the conflicted files first, then the
+// file it keeps while the operation stops (MERGE_HEAD, CHERRY_PICK_HEAD,
+// REVERT_HEAD, REBASE_HEAD): a file newer than that one was changed since.
+// known is false when there is none to go by (a conflict from applying a
+// stash) or the file can't be read.
+func (r *Repo) ChangedAfterConflict(path string) (changed, known bool) {
+	var since time.Time
+	for _, name := range []string{"MERGE_HEAD", "CHERRY_PICK_HEAD", "REVERT_HEAD", "REBASE_HEAD"} {
+		if st, err := os.Stat(filepath.Join(r.GitDir, name)); err == nil && st.ModTime().After(since) {
+			since = st.ModTime()
+		}
+	}
+	st, err := os.Stat(filepath.Join(r.Dir, path))
+	if since.IsZero() || err != nil {
+		return false, false
+	}
+	return st.ModTime().After(since), true
 }
 
 // Editor is the editor git would open, as a shell command: GIT_EDITOR,

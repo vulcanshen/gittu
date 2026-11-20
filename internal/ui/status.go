@@ -444,9 +444,13 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		{Label: "Resolve one by one", Desc: "pick mine, theirs or both for each conflict", Scope: item,
 			Hidden: s.in(inConflict), Do: func() tea.Cmd { return s.goIn(path()) }},
 		{Label: "Use mine", Desc: "for the whole file, and stage it", Scope: item, // no key (the user)
-			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), false) }},
+			Hidden: s.in(inConflict), Disabled: off,
+			AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askUseSide([]git.File{f}, false) },
+			Do:     func() tea.Cmd { return s.useSide(path(), false) }},
 		{Label: "Use theirs", Desc: "for the whole file, and stage it", Scope: item, // no key (the user)
-			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), true) }},
+			Hidden: s.in(inConflict), Disabled: off,
+			AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askUseSide([]git.File{f}, true) },
+			Do:     func() tea.Cmd { return s.useSide(path(), true) }},
 		{Label: "Remove", Desc: "this file from the repository", Scope: item,
 			Hidden: func() bool { f, gr, ok := s.file(); return !ok || gr == inConflict || !inIndex(f) }, Disabled: off,
 			AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askRemove([]git.File{f}) },
@@ -508,12 +512,16 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}
 			return nil
 		}),
-		s.batch("Use mine for the marked", "Resolving…", "Resolve", []string{inConflict}, nil, func(fs []git.File) error {
+		s.batch("Use mine for the marked", "Resolving…", "Resolve", []string{inConflict}, func(fs []git.File) *terminu.Ask {
+			return s.askUseSide(fs, false)
+		}, func(fs []git.File) error {
 			return g.repo.UseSide(false, paths(fs)...)
 		}, func(fs []git.File) tea.Cmd {
 			return g.a.Toast(terminu.Success, plural(len(fs), "file", "files")+" resolved with mine and staged")
 		}),
-		s.batch("Use theirs for the marked", "Resolving…", "Resolve", []string{inConflict}, nil, func(fs []git.File) error {
+		s.batch("Use theirs for the marked", "Resolving…", "Resolve", []string{inConflict}, func(fs []git.File) *terminu.Ask {
+			return s.askUseSide(fs, true)
+		}, func(fs []git.File) error {
 			return g.repo.UseSide(true, paths(fs)...)
 		}, func(fs []git.File) tea.Cmd {
 			return g.a.Toast(terminu.Success, plural(len(fs), "file", "files")+" resolved with theirs and staged")
@@ -991,6 +999,39 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 			s.files.Select(inStaged + path)
 			return g.a.Toast(terminu.Success, path+" resolved with "+word+" and staged")
 		})
+}
+
+// askUseSide asks before conflicted files are made one side whole when one
+// was changed after the conflict, or gittu can't tell (the user): the changes
+// made to it are lost. Untouched since, it does not ask.
+func (s *statusScreen) askUseSide(fs []git.File, theirs bool) *terminu.Ask {
+	word := "mine"
+	if theirs {
+		word = "theirs"
+	}
+	var d []string
+	for _, f := range fs {
+		switch changed, known := s.g.repo.ChangedAfterConflict(f.Path); {
+		case !known:
+			d = append(d, f.Path+": gittu can't tell whether it was changed after the conflict")
+		case changed:
+			d = append(d, f.Path+": changed after the conflict")
+		}
+	}
+	if len(d) == 0 {
+		return nil
+	}
+	if len(fs) == 1 {
+		d = append(d, "The whole file becomes "+word+": any change made to it after the conflict is lost.")
+	} else {
+		d = append(d, "Each file becomes "+word+" whole: any change made after the conflict is lost.")
+	}
+	warn := make([]int, len(d))
+	for i := range warn {
+		warn[i] = i
+	}
+	return &terminu.Ask{Title: "Use " + word, Subject: named(fs), Question: "Use " + word + " for " + named(fs) + "?",
+		Verb: "use " + word, Details: d, Warn: warn}
 }
 
 // edit opens a conflicted file in the editor git would open, in a terminal

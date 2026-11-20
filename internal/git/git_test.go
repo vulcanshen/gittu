@@ -2,9 +2,12 @@ package git_test
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/vulcanshen/gittu/internal/git"
 	"github.com/vulcanshen/gittu/internal/gittest"
@@ -339,6 +342,41 @@ func TestMarkers(t *testing.T) {
 	r.Write("notes.txt", "a\n=======\nb\n")
 	if at, _ = repo.Markers("notes.txt"); len(at) != 0 {
 		t.Errorf("no conflict: %v", at)
+	}
+}
+
+// TestChangedAfterConflict: a conflicted file saved after git stopped on the
+// conflict was changed; one git wrote is not; with nothing to go by (a stash
+// applied) gittu can't tell.
+func TestChangedAfterConflict(t *testing.T) {
+	r := gittest.Conflicted(t)
+	repo, _ := git.Open(r.Dir)
+	if changed, known := repo.ChangedAfterConflict("notes.txt"); changed || !known {
+		t.Errorf("as git wrote it: changed %v, known %v", changed, known)
+	}
+	r.Write("notes.txt", "a\nB from main\n")
+	ago := time.Now().Add(-time.Minute)
+	if err := os.Chtimes(filepath.Join(r.Dir, ".git", "MERGE_HEAD"), ago, ago); err != nil {
+		t.Fatal(err)
+	}
+	if changed, known := repo.ChangedAfterConflict("notes.txt"); !changed || !known {
+		t.Errorf("saved since: changed %v, known %v", changed, known)
+	}
+	if _, known := repo.ChangedAfterConflict("gone.txt"); known {
+		t.Error("a file not there is known")
+	}
+
+	s := gittest.New(t)
+	s.Commit("a.txt", "a\n", "Add a")
+	s.Write("a.txt", "a stashed\n")
+	s.Git("stash", "-q")
+	s.Commit("a.txt", "a committed\n", "Change a")
+	if _, err := s.Try("stash", "pop"); err == nil {
+		t.Fatal("no conflict")
+	}
+	repo, _ = git.Open(s.Dir)
+	if _, known := repo.ChangedAfterConflict("a.txt"); known {
+		t.Error("a stash's conflict is known")
 	}
 }
 

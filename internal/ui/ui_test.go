@@ -2216,6 +2216,53 @@ func TestUseSideWholeFile(t *testing.T) {
 	}
 }
 
+// TestUseSideAsksWhenChanged: Use theirs on a file saved after the conflict
+// asks first: what was done in it is lost (the user). One git wrote is not
+// asked about (TestUseSideWholeFile).
+func TestUseSideAsksWhenChanged(t *testing.T) {
+	r := gittest.Conflicted(t)
+	r.Write("notes.txt", strings.Replace(r.Read("notes.txt"), "<<<<<<< HEAD\nB from main", "B by hand\n<<<<<<< HEAD\nB from main", 1))
+	ago := time.Now().Add(-time.Minute)
+	if err := os.Chtimes(filepath.Join(r.Dir, ".git", "MERGE_HEAD"), ago, ago); err != nil {
+		t.Fatal(err)
+	}
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use theirs") })
+	has(t, d, "Use theirs for notes.txt?", "notes.txt: changed after the conflict",
+		"The whole file becomes theirs: any change made to it after the conflict is lost.")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "notes.txt resolved with theirs and staged")
+	if strings.Contains(r.Read("notes.txt"), "B by hand") {
+		t.Error("not theirs")
+	}
+}
+
+// TestUseSideAsksAfterAStash: a conflict from applying a stash leaves
+// nothing to tell a change by, so Use mine for the marked asks.
+func TestUseSideAsksAfterAStash(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("a.txt", "a\n", "Add a")
+	r.Write("a.txt", "a stashed\n")
+	r.Git("stash", "-q")
+	r.Commit("a.txt", "a committed\n", "Change a")
+	if _, err := r.Try("stash", "pop"); err == nil {
+		t.Fatal("no conflict")
+	}
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	markFile(d, g, inConflict+"a.txt")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine for the marked") })
+	has(t, d, "Use mine for a.txt?", "a.txt: gittu can't tell whether it was changed after the conflict")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "1 file resolved with mine and staged")
+	if r.Read("a.txt") != "a committed\n" {
+		t.Errorf("not mine: %q", r.Read("a.txt"))
+	}
+}
+
 // TestUseSideForTheMarked: the marked conflicted files resolved with one
 // side at once.
 func TestUseSideForTheMarked(t *testing.T) {
