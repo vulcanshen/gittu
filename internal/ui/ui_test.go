@@ -521,6 +521,44 @@ func TestActionsClearTheFilter(t *testing.T) {
 	on("main")
 }
 
+// TestTrace is task 20: with the current branch on the left, n and N go
+// down and up from commit to commit HEAD reaches (the user).
+func TestTrace(t *testing.T) {
+	r := gittest.Sample(t)
+	g, d := start(t, r, 160, 32)
+	d.Press("Tab")
+	on := func(subject string) {
+		t.Helper()
+		cur, _ := g.history.commits.Current()
+		if !strings.Contains(cur.Cells[2], subject) {
+			t.Errorf("[2] is on %q, want %q", cur.Cells[2], subject)
+		}
+	}
+	selectCommit(t, d, g, "Say even more")
+	d.Press("n") // All branches: no trace
+	on("Say even more")
+	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Current branch") })
+	d.Press("Space")
+	has(t, d, "[n]ext commit", "[N] Previous commit")
+	d.Press("Esc")
+	d.Press("n") // past Try a topic, which main does not reach
+	on("Merge branch 'feature'")
+	d.Press("n") // a merged commit counts
+	on("Grow the feature")
+	d.Press("N", "N")
+	on("Say even more")
+	selectCommit(t, d, g, "Try a topic") // not on main: the nearest that way
+	d.Press("N")
+	on("Say even more")
+	selectCommit(t, d, g, "Try a topic")
+	d.Press("n")
+	on("Merge branch 'feature'")
+	selectCommit(t, d, g, "Start the demo")
+	d.Press("n")
+	has(t, d, "No older commit on main")
+	on("Start the demo")
+}
+
 // --- task 5: all branches or the current one ---
 
 // TestAllOrCurrentBranch: both draw every branch, the main line on the left

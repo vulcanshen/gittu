@@ -366,6 +366,58 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	return nil
 }
 
+// trace puts [2]'s cursor on the next commit, older (down) or newer (up),
+// that HEAD reaches, merged ones too; from a commit it does not reach, the
+// nearest one that way (the user). None left that way: an Info toast, the
+// cursor where it was. The filter is cleared first (tdp panel.14).
+func (h *historyScreen) trace(older bool) tea.Cmd {
+	s := h.g.snap
+	reach := reached(s.Commits, s.HeadSHA)
+	at := -1
+	if cur, ok := h.commits.Current(); ok {
+		at = slices.IndexFunc(s.Commits, func(c git.Commit) bool { return c.SHA == cur.ID })
+	}
+	step := 1
+	if !older {
+		step = -1
+	}
+	for i := at + step; i >= 0 && i < len(s.Commits); i += step {
+		if reach[s.Commits[i].SHA] {
+			h.commits.ClearFilter()
+			h.commits.Select(s.Commits[i].SHA)
+			return nil
+		}
+	}
+	word := "older"
+	if !older {
+		word = "newer"
+	}
+	return h.g.a.Toast(terminu.Info, "No "+word+" commit on "+h.g.currentName())
+}
+
+// reached are the commits head reaches among commits, through every parent.
+func reached(commits []git.Commit, head string) map[string]bool {
+	parents := make(map[string][]string, len(commits))
+	for _, c := range commits {
+		parents[c.SHA] = c.Parents
+	}
+	reach := map[string]bool{}
+	todo := []string{head}
+	for len(todo) > 0 {
+		sha := todo[len(todo)-1]
+		todo = todo[:len(todo)-1]
+		if sha == "" || reach[sha] {
+			continue
+		}
+		if _, ok := parents[sha]; !ok {
+			continue // past the commits read
+		}
+		reach[sha] = true
+		todo = append(todo, parents[sha]...)
+	}
+	return reach
+}
+
 // inGraph reports the commit sha among the graph's rows, a filter or not.
 func (h *historyScreen) inGraph(sha string) bool {
 	return sha != "" && h.g.snap != nil && slices.ContainsFunc(h.g.snap.Commits, func(c git.Commit) bool { return c.SHA == sha })

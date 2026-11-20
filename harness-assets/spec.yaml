@@ -1,4 +1,4 @@
-id: 17
+id: 18
 from: v1.2.16
 to: v1.2.17
 tasks:
@@ -229,3 +229,13 @@ tasks:
       - "gittu 自己的操作做完馬上重讀，下一次刷新跟它比就沒有差別，所以自己的操作不會被記成外面的變動；按 R 的照 task 10 記 Info toast"
       - "刷新不移動 focus、cursor 留在同一列（tdp K3），[2] 的內容照 tdp note.9 重新放進去"
       - "重新讀失敗照 task 3、10：舊的內容留著、Error toast；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳"
+  - id: 20
+    spec: 18
+    request: commits panel 是 current branch 的時候，按熱鍵直接跳去當前分支的上一個或下一個 commit（trace）；熱鍵 n 與 N
+    tdp: [tdp P3, tdp M2, tdp M5, tdp M6, tdp K12, tdp K3, tdp panel.14, tdp toast.2, tdp P5]
+    remark:
+      - "[2] COMMITS 的 panel operation（tdp P3：作用在整個 panel 的 cursor，不是對 cursor 那一列做事）：[n]ext commit（往下、較舊）、[N] Previous commit（往上、較新）；熱鍵 n、N 是使用者定的（tdp K12 只保留 j k u d g G h l，n、N 在清單上沒有用到；tdp M5：label 裡有 n 的原地包，沒有的放前面）"
+      - "只在 Current branch 時有：All branches 時兩個都 Hidden（tdp M6：那時它們的對象不存在）；還沒有 commit 時停用"
+      - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
+      - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp main panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
+

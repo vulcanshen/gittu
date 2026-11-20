@@ -129,6 +129,14 @@ user 照原話：「我發現如果在 description 裡面放 branch head 和 tag
 commit 兩列，第二列就顯示這些 tag，cursor 移動的時候，focus 也只會移動在 commit 點的那一列，但是第二列（如果有了話），
 會連帶亮一點背景色」
 
+## trace（2026-11-20）
+
+user 照原話：「我想要在 commit panel 有一個操作是『trace』，分別是大寫 T 和小寫 t，或者大寫 N 和小寫 n（那就變 next）的概念，
+功能是當 commits panel 是 current branches 的時候，才有這個功能，可以按熱鍵，直接跳去當前分支的上一個或下一個 commit 點」
+
+追問後：熱鍵用 n 與 N（n 往下、較舊；N 往上、較新）；當前分支的 commit 是 HEAD 走得到的所有 commit（merge 進來的也算）；
+cursor 不在那些 commit 上時，往按的方向跳到最近的一個。
+
 ## 不寫別的工具（2026-11-19）
 
 user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」

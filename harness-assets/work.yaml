@@ -249,3 +249,12 @@ tasks:
       gittu 自己的操作做完時（doneMsg）與切換遠端分支時（task 18）讀的那一次換上新的 Snapshot、丟掉 [2] 的變動，所以下一次刷新不會把自己的操作記成外面的變動
       讀失敗照 task 3：舊的內容留著；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳
     test: [TestRefreshAndReadingAgain, TestRefreshLogsOnlyChanges, TestChanges, TestDiffFollowsCursor, TestRefreshFailureKeepsContent, TestFirstReadFails]
+  - id: 20
+    spec: 18
+    implementation: |
+      [2] COMMITS 的 panel operation，Current branch 時才有（g.all 時 Hidden），沒有 commit 時停用：
+      [n]ext commit（Key n，older, that the current branch reaches）、[N] Previous commit（Key N，newer, that the current branch reaches）
+      從 HEAD 順著每一個 parent 走（只在讀進來的 commit 裡），走得到的就是當前分支的 commit；從 cursor 那一列往下（n）或往上（N）找第一個走得到的，
+      [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <分支，detached 時 HEAD>
+    test: [TestTrace]
+

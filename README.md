@@ -113,7 +113,7 @@ the App Log, what gittu did and what went wrong.
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
 | `[2]` a commit | Its files | `[C]`ompare with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
-| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, Show / Hide remote branches, `[z]`oom, `[/]` filter |
+| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[n]`ext / `[N]` Previous commit (Current branch only: the commits the current branch reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
 
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
 and tag; All keeps main's line (or master's) on the left, Current the branch you are on. The remote branches are hidden

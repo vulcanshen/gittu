@@ -406,6 +406,14 @@ func (h *historyScreen) commitActions() []terminu.Action {
 				terminu.Clipboard(c.SHA)
 				return g.a.Toast(terminu.Success, "Copied "+git.Short(c.SHA))
 			}},
+		// trace (the user): with the current branch's line on the left, n and N
+		// go down and up from commit to commit HEAD reaches, merged ones too.
+		{Key: "n", Label: "Next commit", Desc: "older, that the current branch reaches", Scope: panel,
+			Hidden: func() bool { return g.all }, Disabled: func() bool { return g.snap == nil || g.snap.HeadSHA == "" },
+			Do: func() tea.Cmd { return h.trace(true) }},
+		{Key: "N", Label: "Previous commit", Desc: "newer, that the current branch reaches", Scope: panel,
+			Hidden: func() bool { return g.all }, Disabled: func() bool { return g.snap == nil || g.snap.HeadSHA == "" },
+			Do: func() tea.Cmd { return h.trace(false) }},
 		{Key: "a", Label: "Current branch", Desc: "HEAD's line on the left", Scope: panel,
 			Hidden: func() bool { return !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
 		{Key: "a", Label: "All branches", Desc: "main's line on the left", Scope: panel,
