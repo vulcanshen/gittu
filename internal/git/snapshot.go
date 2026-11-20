@@ -247,10 +247,23 @@ func (r *Repo) readStashes(s *Snapshot) error {
 	return nil
 }
 
+// Tracked reports a remote branch a local branch goes with: one tracks it,
+// or has its name. The graph draws it with the remote branches hidden, as a
+// rule on the local branch's line, maybe a few commits ahead (the user).
+func (s *Snapshot) Tracked(rb RemoteBranch) bool {
+	return slices.ContainsFunc(s.Branches, func(b Branch) bool { return b.Upstream == rb.Name || b.Name == rb.Branch })
+}
+
 func (r *Repo) readLog(s *Snapshot) error {
 	revs := []string{"--branches", "--tags"}
 	if s.Remote {
 		revs = append(revs, "--remotes")
+	} else {
+		for _, rb := range s.Remotes {
+			if s.Tracked(rb) {
+				revs = append(revs, "refs/remotes/"+rb.Name)
+			}
+		}
 	}
 	if s.HeadSHA != "" {
 		revs = append(revs, "HEAD")

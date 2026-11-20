@@ -376,26 +376,51 @@ func TestEnterShowsTheCommit(t *testing.T) {
 	d.Press("Esc")
 }
 
-func TestEnterOnARemoteBranchHidden(t *testing.T) {
+// TestEnterChecksOutARemoteBranch: Enter on a remote branch no local branch
+// goes with checks it out as one, asked first, then puts [2]'s cursor on it
+// (the user).
+func TestEnterChecksOutARemoteBranch(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("push", "-q", "origin", "topic")
 	r.Git("branch", "-q", "-D", "topic")
 	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 120, 32)
 	selectBranch(d, g, kindRemote+"origin/topic")
+	has(t, d, "Enter:check out")
 	d.Press("Enter")
-	has(t, d, "origin/topic is not in the graph", "Press [Space] on [2] to show remote branches")
-	if g.a.Screen().Focused() != g.history.branchP {
-		t.Error("the focus left [1]")
+	has(t, d, "Check out origin/topic as topic?", "A local branch topic is made, tracking origin/topic.")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Checked out topic")
+	if cur := strings.TrimSpace(r.Git("branch", "--show-current")); cur != "topic" {
+		t.Fatalf("on %s, want topic", cur)
 	}
-	d.Press("Tab")
-	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Show remote branches") })
+	if g.a.Screen().Focused() != g.history.histP {
+		t.Error("Enter did not go to [2]")
+	}
+	cur, _ := g.history.commits.Current()
+	if want := strings.TrimSpace(r.Git("rev-parse", "topic")); cur.ID != want {
+		t.Errorf("[2] is on %s, want %s", cur.ID, want)
+	}
+	// Now topic goes with it: Enter shows it, as on a branch.
 	d.Press("1")
 	selectBranch(d, g, kindRemote+"origin/topic")
-	d.Press("Enter")
-	if g.a.Screen().Focused() != g.history.histP {
-		t.Error("with the remote branches drawn, Enter did not go to [2]")
-	}
+	has(t, d, "Enter:show")
+}
+
+// TestGraphDrawsTrackedRemote: with the remote branches hidden, the graph
+// still draws the ones a local branch goes with, and their commits ahead
+// of it; not the others (the user).
+func TestGraphDrawsTrackedRemote(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Commit("ahead.txt", "a\n", "Get ahead on origin")
+	r.Git("push", "-q", "origin", "main")
+	r.Git("reset", "-q", "--hard", "HEAD~1")
+	r.Git("push", "-q", "origin", "topic")
+	r.Git("branch", "-q", "-D", "topic")
+	_, d := start(t, r, 160, 32)
+	has(t, d, glyphBranch+" origin/main", "Get ahead on origin")
+	hasNot(t, d, "origin/topic", "Try a topic")
 }
 
 func TestRemoteBranchesToggle(t *testing.T) {
@@ -405,7 +430,8 @@ func TestRemoteBranchesToggle(t *testing.T) {
 	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 160, 32)
 	d.Press("Tab")
-	hasNot(t, d, "origin/main", "Try a topic", "with remote branches")
+	has(t, d, "origin/main") // main tracks it: drawn all the same (the user)
+	hasNot(t, d, "origin/topic", "Try a topic", "with remote branches")
 	d.Press("Space")
 	has(t, d, "Show remote branches")
 	hasNot(t, d, "[r]emote") // no hotkey: not by a stray key
@@ -430,7 +456,7 @@ func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 160, 32)
 	has(t, d, "GRAPH", "HASH", "DESCRIPTION", "Merge branch 'feature'", "─╮", string(git.Node)+"─┴─╮")
-	hasNot(t, d, "origin/main") // the remote branches are hidden at first
+	hasNot(t, d, "with remote branches") // hidden at first
 	// A commit's branches and tags on the row under it (tdp main panel.5),
 	// the graph's lines running on through it.
 	g := d.Screen()
@@ -449,7 +475,7 @@ func TestGraphRows(t *testing.T) {
 		}
 		t.Errorf("no %q", subject)
 	}
-	under("Say even more", glyphBranch+" main")
+	under("Say even more", glyphBranch+" main "+glyphBranch+" origin/main") // main tracks it (the user)
 	under("Merge branch 'feature'", glyphRefTag+" v0.1.0")
 }
 

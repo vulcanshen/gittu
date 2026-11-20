@@ -85,9 +85,17 @@ func (h *historyScreen) branchActions() []terminu.Action {
 	name := func() string { _, n := h.rowKind(); return n }
 	off := h.busyOr(nil)
 	return []terminu.Action{
-		// A branch, a remote branch, a tag: Enter shows its commit in [2].
+		// A branch, a remote branch a local one goes with, a tag: Enter shows
+		// its commit in [2]. A remote branch no local one goes with: Enter
+		// checks it out as one, then shows it (the user).
 		{Key: "Enter", Label: "Show", Desc: "its commit in [2]", Scope: item, Hint: "show",
-			Hidden: func() bool { k, _ := h.rowKind(); return k == "" || k == kindStash }, Do: h.showRef},
+			Hidden: func() bool {
+				k, _ := h.rowKind()
+				return k == "" || k == kindStash || k == kindRemote && !h.tracked()
+			}, Do: h.showRef},
+		{Key: "Enter", Label: "Check out", Desc: "as a local branch, and show it in [2]", Scope: item, Hint: "check out",
+			Hidden: func() bool { k, _ := h.rowKind(); return k != kindRemote || h.tracked() }, Disabled: off,
+			AskFor: h.askCheckoutRemote, Do: func() tea.Cmd { return h.checkoutRemote(true) }},
 		// A branch.
 		{Key: "c", Label: "Check out", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent,
@@ -129,21 +137,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		// A remote branch.
 		{Key: "c", Label: "Check out", Desc: "as a local branch tracking it", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off,
-			AskFor: func() *terminu.Ask {
-				rb, _ := h.remote()
-				if h.hasLocal(rb.Branch) {
-					return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Branch + "?", Verb: "check out",
-						Details: []string{"There is a local branch " + rb.Branch + " already: that one is checked out."}}, rb.Branch)
-				}
-				return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Name + " as " + rb.Branch + "?", Verb: "check out",
-					Details: []string{"A local branch " + rb.Branch + " is made, tracking " + rb.Name + "."}}, rb.Branch)
-			},
-			Do: func() tea.Cmd {
-				rb, _ := h.remote()
-				local := h.hasLocal(rb.Branch)
-				return g.run("Checking out…", "Checkout", func() error { return g.repo.CheckoutRemote(rb, local) },
-					func() tea.Cmd { return g.a.Toast(terminu.Success, "Checked out "+rb.Branch) })
-			}},
+			AskFor: h.askCheckoutRemote, Do: func() tea.Cmd { return h.checkoutRemote(false) }},
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: g.halfway(off), AskFor: func() *terminu.Ask { return g.askMerge(name()) },
 			Do: func() tea.Cmd { return g.merge(name()) }},
@@ -238,14 +232,49 @@ func (h *historyScreen) showRef() tea.Cmd {
 	name := r.ID[2:]
 	sha := h.shaOf(r.ID)
 	if !h.inGraph(sha) {
-		if r.ID[:2] == kindRemote && !h.g.remote {
-			return h.g.a.Toast(terminu.Info, name+" is not in the graph", "Press [Space] on [2] to show remote branches")
-		}
 		return h.g.a.Toast(terminu.Info, name+" is not in the graph's "+strconv.Itoa(git.Limit)+" newest commits")
 	}
 	h.commits.ClearFilter() // an action of gittu's own puts the cursor on it (tdp panel.14)
 	h.commits.Select(sha)
 	return h.g.a.Focus(h.histP)
+}
+
+// tracked reports the remote branch under [1]'s cursor one a local branch
+// goes with (git.Snapshot.Tracked): the graph draws it.
+func (h *historyScreen) tracked() bool {
+	rb, ok := h.remote()
+	return ok && h.g.snap != nil && h.g.snap.Tracked(rb)
+}
+
+// askCheckoutRemote asks before the remote branch under [1]'s cursor is
+// checked out: as the local branch of its name, made to track it when none.
+func (h *historyScreen) askCheckoutRemote() *terminu.Ask {
+	g := h.g
+	rb, _ := h.remote()
+	if h.hasLocal(rb.Branch) {
+		return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Branch + "?", Verb: "check out",
+			Details: []string{"There is a local branch " + rb.Branch + " already: that one is checked out."}}, rb.Branch)
+	}
+	return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Name + " as " + rb.Branch + "?", Verb: "check out",
+		Details: []string{"A local branch " + rb.Branch + " is made, tracking " + rb.Name + "."}}, rb.Branch)
+}
+
+// checkoutRemote checks out the remote branch under [1]'s cursor; show puts
+// [2]'s cursor on it after, the focus there (Enter, the user).
+func (h *historyScreen) checkoutRemote(show bool) tea.Cmd {
+	g := h.g
+	rb, _ := h.remote()
+	local := h.hasLocal(rb.Branch)
+	return g.run("Checking out…", "Checkout", func() error { return g.repo.CheckoutRemote(rb, local) },
+		func() tea.Cmd {
+			done := g.a.Toast(terminu.Success, "Checked out "+rb.Branch)
+			if !show || !h.inGraph(rb.SHA) {
+				return done
+			}
+			h.commits.ClearFilter() // an action of gittu's own puts the cursor on it (tdp panel.14)
+			h.commits.Select(rb.SHA)
+			return tea.Batch(done, g.a.Focus(h.histP))
+		})
 }
 
 func (h *historyScreen) hasLocal(name string) bool {

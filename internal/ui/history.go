@@ -433,8 +433,8 @@ func refsByCommit(s *git.Snapshot) map[string][]ref {
 	if s.Head == "" && s.HeadSHA != "" {
 		m[s.HeadSHA] = append([]ref{{"HEAD", kindBranch, true}}, m[s.HeadSHA]...)
 	}
-	if s.Remote {
-		for _, rb := range s.Remotes {
+	for _, rb := range s.Remotes {
+		if s.Remote || s.Tracked(rb) {
 			m[rb.SHA] = append(m[rb.SHA], ref{rb.Name, kindRemote, false})
 		}
 	}

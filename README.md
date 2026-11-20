@@ -111,7 +111,7 @@ the App Log, what gittu did and what went wrong.
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
 | `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[x]` Delete, Push |
-| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
+| `[1]` REMOTES: a remote branch | Its commit in `[2]`; with no local branch for it, checks it out as one first | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[x]` Delete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[x]` Drop |
 | `[2]` a commit | To its files in `[4]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
@@ -121,7 +121,8 @@ the App Log, what gittu did and what went wrong.
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
 and tag. `[2]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
 branch or tag under `[1]`'s cursor, and follows it as you move; ALL keeps main's line (or master's) there. The remote
-branches are hidden at first: Show remote branches in `[2]`'s `Space` menu draws them. `z` on `[2]` zooms it wider, with `[1]` at its least width, then to the
+branches are hidden at first, but for those a local branch tracks or shares a name with: Show remote branches in
+`[2]`'s `Space` menu draws them all. `z` on `[2]` zooms it wider, with `[1]` at its least width, then to the
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
