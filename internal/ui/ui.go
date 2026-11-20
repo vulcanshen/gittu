@@ -85,6 +85,9 @@ func New(repo *git.Repo) *terminu.App { return newGittu(repo).a }
 
 func newGittu(repo *git.Repo) *gittu {
 	g := &gittu{a: terminu.New("gittu"), repo: repo}
+	// 24 rows at the least, not 32: an 80×24 terminal opens it (the user;
+	// tdp L1: the app may lower its least size).
+	g.a.MinHeight = 24
 	g.a.Splash = splash()
 	g.a.QuitFlow = g.quit
 	g.a.Status = g.statusbar

@@ -84,6 +84,16 @@ func selectCommit(t *testing.T, d *tdptest.Driver, g *gittu, subject string) git
 
 // --- task 1: the screens ---
 
+// TestOpensAt80x24: the least size is 60×24, so an 80×24 terminal shows the
+// screen, and 23 rows the size it needs (the user; tdp L1).
+func TestOpensAt80x24(t *testing.T) {
+	_, d := start(t, gittest.Sample(t), 80, 24)
+	has(t, d, "[1] BRANCHES", "[2] CURRENT", "[3] DESCRIPTION", "[4] FILES")
+	hasNot(t, d, "needs a terminal")
+	d.Resize(80, 23)
+	has(t, d, "needs a terminal of at least 60×24")
+}
+
 func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
