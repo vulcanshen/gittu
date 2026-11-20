@@ -94,10 +94,10 @@ tasks:
       [3] 的 panel operation z Unzoom（task 17）
     test: [TestCommitFilesAndDiff, TestFirstCommitFiles]
   - id: 7
-    spec: 23
+    spec: 26
     implementation: |
-      [2] 的 item operation [C] Diff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: C, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction）：
-      進入 Diff 模式（tgo：模式名 Diff、hint C|Enter:diff，anchor 那一列 Yellow，j|k u|d gg|G 移動，C 或 Enter 比較，Esc 離開、拿掉 anchor，Tab 與數字鍵暫停）；
+      [2] 的 item operation [D]iff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: D, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction）：
+      進入 Diff 模式（tgo：模式名 Diff、hint D|Enter:diff，anchor 那一列 Yellow，j|k u|d gg|G 移動，D 或 Enter 比較，Esc 離開、拿掉 anchor，Tab 與數字鍵暫停）；
       Items 跟 task 6 一樣（git diff --name-status -M <anchor> <另一個>），以 anchor 為基準：每一項 Anchor <路徑> @ <anchor>、Other <路徑> @ <另一個>；
       tgo 畫差異清單（位置列 <anchor> ↔ <另一個>）、Enter 打開比較、Esc 一層一層退回，最後回到模式、anchor 留著；沒有差異時 Info toast
       從比較模式進到差異清單前，[2] 的篩選由 tgo 先清掉（v1.2.19-beta.2，tdp v1.2.18 的 panel.14、panel-180：進到一項裡面）
@@ -122,7 +122,7 @@ tasks:
       其他失敗開 error popup <動作> FAILED，內容是git 說原因的那一行（第一個 fatal: 或 error: 開頭的，沒有就第一個不是 hint: 的），git 印的全文一列一筆記進 App Log（Error）（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp v1.2.18 panel.14 的「app 自己的動作先清掉篩選」、panel-180）
     test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
   - id: 9
-    spec: 21
+    spec: 26
     implementation: |
       [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
@@ -194,7 +194,7 @@ tasks:
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 16
+    spec: 26
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Resolve）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
       [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 All changes › <路徑>，Panel.OnEsc 設好；
@@ -203,7 +203,7 @@ tasks:
       區塊的 item operation：[Enter] Read（ToDetails：focus 到 [2]）、Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs）；hint Enter:read m:mine t:theirs b:both：
       選了就改寫那個檔（同一個權限，其他行照舊、保留結尾的換行），那個區塊換成選的行，App Log 記 Info Used <mine／theirs／both> in conflict N of <路徑>；
       還有區塊時重新讀、cursor 停在下一個；最後一個解完在背景 git add，Success「<路徑> resolved and staged」，[1] 回到檔案清單、cursor 在 STAGED 的那個檔
-      檔案那一層的衝突檔：Use [m]ine、Use [t]heirs（for the whole file, and stage it）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」
+      檔案那一層的衝突檔：Use mine（沒有熱鍵，m 是標記，task 21）、Use [t]heirs（for the whole file, and stage it）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」
       做到一半的操作（.git 裡有 rebase-merge／rebase-apply、MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD）：global operation [A]bort <merge／rebase／cherry-pick／revert>
       （只有那一種時看得到；confirm「Abort the <op>?」，內容寫做到一半的會還原（Peach）；git <op> --abort；Success Aborted the <op>）、
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
@@ -267,9 +267,9 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 25
+    spec: 26
     implementation: |
-      [1] CHANGES 的 tgo List.Marks；item operation x：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint x:mark／x:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
+      [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
       Stage the marked（UNSTAGED 的列；git add -A -- <路徑>…；每個檔記 Staged <路徑>）、Unstage the marked（STAGED；git restore --staged -- <路徑>…，還沒有 commit 時 git rm --cached -r；每個檔記 Unstaged <路徑>）、
       Use mine／Use theirs for the marked（CONFLICTS；git checkout --ours|--theirs -- <路徑>… 再 git add -A；Success <N> files resolved with mine|theirs and staged）、

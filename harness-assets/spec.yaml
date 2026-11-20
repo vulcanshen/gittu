@@ -1,4 +1,4 @@
-id: 25
+id: 26
 from: v1.2.18
 to: v1.2.19
 tasks:
@@ -91,13 +91,13 @@ tasks:
       - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
       - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
-    spec: 23
+    spec: 26
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel.14, tdp toast.2, tdp F7]
     remark:
-      - "比較模式改名叫 Diff 模式（tdp v1.2.19 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [C] Diff、hint C|Enter:diff，都由 tgo 畫；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
+      - "比較模式改名叫 Diff 模式（tdp v1.2.19 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [D]iff、hint D|Enter:diff，都由 tgo 畫；Diff 模式的鍵是 D（使用者 2026-11-20；原本是 C，panel.9：鍵 app 可以自行決定）；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
       - "tdp #20 定案（使用者選 A；panel.9「裝著許多項目的列」與 note.8）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
-      - "[2] 的 commit 上按 [C]ompare（比較鍵 app 可以自行決定，tdp panel.9；跟 kbu 一樣是 C）進入比較模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 C 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
+      - "[2] 的 commit 上按 [D]iff（比較鍵 app 可以自行決定，tdp panel.9；使用者 2026-11-20 選 D，原本跟 kbu 一樣是 C）進入 Diff 模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 D 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
       - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
   - id: 8
     spec: 21
@@ -116,11 +116,11 @@ tasks:
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp components.5、F5）；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、到 Working tree [W] 解（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9
-    spec: 21
+    spec: 26
     request: 對 commit 能做的事，都在分支圖的 Space 選單
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14, tdp K3, tdp M4, tdp F5]
     remark:
-      - "[2] COMMITS 的 commit 上（item operation，tdp M2）：Enter：Files（task 6）、[C]ompare（task 7）、[c]heck out（HEAD 會 detached，先 confirm；跟 [1] 同一個鍵，task 8）、[b]ranch here（text input，建好就 checkout）、[t]ag here（text input）、[M]erge into the current branch、Rebase the current branch onto it（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號））、Cherry-pick、Revert、Reset（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號）） the current branch to here、Cop[y] hash"
+      - "[2] COMMITS 的 commit 上（item operation，tdp M2）：Enter：Files（task 6）、[D]iff（task 7）、[c]heck out（HEAD 會 detached，先 confirm；跟 [1] 同一個鍵，task 8）、[b]ranch here（text input，建好就 checkout）、[t]ag here（text input）、[M]erge into the current branch、Rebase the current branch onto it（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號））、Cherry-pick、Revert、Reset（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號）） the current branch to here、Cop[y] hash"
       - "Reset 先開 select（tdp select）選 [s]oft／[m]ixed／[H]ard，每個選項一句說明；Hard 再 confirm，警告那一句寫沒 commit 的改動會不見（tdp F6、confirm.2）。Hard 的熱鍵是 H 不是 h：h 是移動鍵（tdp K12），大寫也比較不會誤按"
       - "Cherry-pick、Revert 沒有熱鍵（tdp M5：沒有熱鍵不加括號；不常用，留在 menu 裡）"
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
@@ -177,7 +177,7 @@ tasks:
       - "textarea 打開時是空的、什麼都沒打就送出，照 tdp K3 是不合格：錯誤列寫 Message can't be empty、popup 不關。2026-11-19 回報的 tgo #7（空的 textarea 直接關掉、沒有 Unchanged），terminu-go v1.2.19-beta.3 修好"
       - "textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
-    spec: 16
+    spec: 26
     request: merge 和解衝突：每個衝突的區塊都要選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
     tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5]
     remark:
@@ -185,7 +185,7 @@ tasks:
       - "Working tree 的 [1] CHANGES 在衝突的檔上按 Enter，照 tdp panel.10 一層一層進去：[1] 換成這個檔的衝突區塊，一個區塊一列（Conflict 1 · lines 12–18），位置列 All changes › <路徑>；Esc 回到檔案清單，cursor 停在那個檔（tdp K4）"
       - "[2] 是 cursor 那個區塊的明細（tdp panel.13）：label CONFLICT: <路徑>，上面 MINE · <HEAD 的分支> 一段、下面 THEIRS · <合進來的> 一段，兩段的標題用 Teal 與 Mauve（tdp P5 內容的顏色），內容是那一段原本的行；合進來的那一段有 diff3 的 base 時不畫（先求兩邊）"
       - "區塊的 item operation：Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs），下框 hint 寫 Enter:read m:mine t:theirs b:both；Enter 把 focus 送到 [2] 讀長的區塊（tdp K3：清單上的 Enter 可以送 focus 到明細）。選了就改寫那個檔、那個區塊換成選的內容，cursor 到下一個區塊；最後一個區塊解完就 git add，Success toast <路徑> resolved and staged，[1] 回到檔案清單（那一層已經沒有東西了，tdp T1 的「那一項不在了」同理）"
-      - "檔案那一層也有 Use [m]ine for the whole file、Use [t]heirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞、一樣的鍵"
+      - "檔案那一層也有 Use mine for the whole file、Use [t]heirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞；檔案那一層的 m 是標記（task 21，使用者 2026-11-20），所以 Use mine 沒有熱鍵、從 Space menu 執行，區塊那一層（不能標記）還是 m"
       - "merge、rebase、cherry-pick、revert 做到一半時（task 1 的 statusbar 寫著）：global operation [A]bort <merge／rebase／cherry-pick／revert>（confirm，警告這次做到一半的會不見）、Continue（rebase、cherry-pick、revert；還有衝突時停用）；merge 解完用 [c]ommit 結束（task 13）"
       - "記 App Log：Used mine in conflict 2 of README.md 之類，每一次選擇一筆"
   - id: 15
@@ -245,11 +245,11 @@ tasks:
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
       - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
   - id: 21
-    spec: 25
+    spec: 26
     request: Working tree 的 [1] CHANGES 可以複選（勾選），再從 Space menu 對勾選的檔一起操作：stage、unstage、用我的、用對方的、discard、remove、加進 .gitignore（user 2026-11-20：「不就是 checkbox 勾選 -> space menu 操作嗎?」）
     tdp: [tdp panel.7, tdp P3, tdp M2, tdp M5, tdp M6, tdp note.7, tdp confirm, tdp toast.2, tdp F5, tdp F6, tdp K3, tdp panel.5]
     remark:
-      - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；x 標記或取消 cursor 那一列（item operation [x] Mark／[x] Unmark，hint x:mark／x:unmark；鍵 app 自行決定，m 已經是 Use mine）"
+      - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；m 標記或取消 cursor 那一列（item operation [m]ark／Un[m]ark，hint m:mark／m:unmark；使用者 2026-11-20 定 m，檔案那一層的 Use mine 因此沒有熱鍵，task 14）"
       - "對標記的檔做事是 panel operation（tdp P3），只在有標記時出現，沒有熱鍵（使用者：勾選 → Space menu 操作）：Stage the marked、Unstage the marked、Use mine for the marked、Use theirs for the marked、Discard the marked、Remove the marked、Ignore the marked；說明欄寫會作用在幾個檔。每一個只作用在適用的檔：Stage 對 UNSTAGED 的列、Unstage 對 STAGED、Use mine／theirs 對 CONFLICTS、Discard 與 Ignore 對 STAGED 與 UNSTAGED、Remove 對還在 index 裡的；同一個檔兩列都標了算一次；一個都不適用時停用（tdp M6）；開始做就清掉標記"
       - "Mark all（標記清單裡每一列，全都標了時不出現）、Clear marks（有標記時）：panel operation，沒有熱鍵"
       - "Remove（item operation，沒有熱鍵；還在 index 裡、不在衝突的檔）是 git 的 remove：git rm -f，刪掉檔案並 stage 刪除，下一個 commit 把它從 repo 拿掉；先 confirm（REMOVE），有沒 commit 的改動時多一句會不見（Peach，tdp confirm）。已經 stage 成刪除的檔不在 index 裡，沒有 Remove"

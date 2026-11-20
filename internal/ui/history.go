@@ -702,7 +702,7 @@ func (h *historyScreen) openFile() tea.Cmd {
 // diffMode is [2]'s Diff mode (tdp panel.9): two commits hold many, so
 // diffing them goes into the files that differ, the anchor the base.
 func (h *historyScreen) diffMode() terminu.Action {
-	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "C",
+	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "D", // the user's
 		Many: func(terminu.Row) bool { return true },
 		Name: func(r terminu.Row) string { return git.Short(r.ID) },
 		Items: func(anchor, other terminu.Row) ([]terminu.DiffItem, error) {

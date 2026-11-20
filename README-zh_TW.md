@@ -103,7 +103,7 @@ gittu
 | `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[D]`elete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[D]`rop |
-| `[2]` commit | 到 `[3]` 它改了的檔案 | 跟另一個 commit `[C]` Diff、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
+| `[2]` commit | 到 `[3]` 它改了的檔案 | 跟另一個 commit `[D]`iff、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
 | `[2]` 整個 panel | | `[n]`ext／`[N]` Previous commit（只在 CURRENT 分頁：最左邊那個分支走得到的 commit）、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
 | `[3]` FILES：檔案 | 它的兩個版本 | `[/]` 篩選 |
 
@@ -113,19 +113,19 @@ CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支�
 
 `[3]` FILES 列出 `[2]` cursor 那個 commit 對上一個 commit 改了的檔案，cursor 一動就跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
 `~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[3]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
-在一個 commit 上按 `C`、再到另一個按 `Enter`，進到這兩個之間有差異的檔案，第一個是基準，每個檔一樣這樣打開；`Esc` 一層一層退回。
+在一個 commit 上按 `D`、再到另一個按 `Enter`，進到這兩個之間有差異的檔案，第一個是基準，每個檔一樣這樣打開；`Esc` 一層一層退回。
 
 ### Working tree
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| 還沒 stage 的檔 | Stage | `[x]` Mark、`[D]`iscard、Remove、Ignore |
-| 已經 stage 的檔 | Unstage | `[x]` Mark、`[D]`iscard、Remove、Ignore |
-| 有衝突的檔 | 進去一塊一塊解 | `[x]` Mark、整個檔用 `[m]`ine、用 `[t]`heirs |
+| 還沒 stage 的檔 | Stage | `[m]`ark、`[D]`iscard、Remove、Ignore |
+| 已經 stage 的檔 | Unstage | `[m]`ark、`[D]`iscard、Remove、Ignore |
+| 有衝突的檔 | 進去一塊一塊解 | `[m]`ark、整個檔 Use mine、Use `[t]`heirs |
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、discard、remove、ignore；Mark all、Clear marks、Stage `[a]`ll、Unstage all |
 
-用 `x` 標記幾個檔，就能一起處理：`Space` 選單會列出能對標記的檔做的事，每一個只作用在適用的檔上。Remove 刪掉檔案並把刪除
+用 `m` 標記幾個檔，就能一起處理：`Space` 選單會列出能對標記的檔做的事，每一個只作用在適用的檔上。Remove 刪掉檔案並把刪除
 stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就停止追蹤。
 
 `[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔改了什麼，畫法跟比較一樣（只畫有差異的段落、兩欄行號）：已經 stage 的是 HEAD 對 index，

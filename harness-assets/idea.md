@@ -161,6 +161,11 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 標記用 m，Diff 模式用 D（2026-11-20）
+
+user 照原話：「mark 熱鍵用 [m] 吧, 然後 diff mode 熱鍵用 [D]」
+（另外問 CHANGES 拆兩欄會多一列 FILE 欄名時，選回一欄：「1，回報給 terminu-go 修截斷」；查了之後 terminu-go 沒有截錯，長路徑只是連前面的狀態字母一起從前面截）
+
 ## 欄寬：DESCRIPTION 吃掉剩下的寬度（2026-11-20）
 
 user 照原話（附了一張放大後欄位擠在左半邊、右半邊空著的截圖）：「是可以了，但是可以平均點嗎?」

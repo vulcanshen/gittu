@@ -745,9 +745,9 @@ func TestDiffTwoCommits(t *testing.T) {
 	d.Press("Tab")
 	a := selectCommit(t, d, g, "Start the demo")
 	d.Press("Space")
-	has(t, d, "[C] Diff")
-	d.Press("Esc", "C")
-	has(t, d, "Diff", "C|Enter:diff")
+	has(t, d, "[D]iff")
+	d.Press("Esc", "D")
+	has(t, d, "Diff", "D|Enter:diff")
 	b := selectCommit(t, d, g, "Say even more")
 	d.Press("Enter")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
@@ -1529,13 +1529,13 @@ func TestStageUnstage(t *testing.T) {
 	has(t, d, "Staged README.md", "Unstaged README.md", "Staged every change", "Unstaged every change")
 }
 
-// markFile puts [1]'s cursor on the row id and marks it with x.
+// markFile puts [1]'s cursor on the row id and marks it with m.
 func markFile(d *tdptest.Driver, g *gittu, id string) {
 	d.Do(func() tea.Cmd { g.status.files.Select(id); return nil })
-	d.Press("x")
+	d.Press("m")
 }
 
-// TestMarkFiles: x marks the file under the cursor, its tick in the mark
+// TestMarkFiles: m marks the file under the cursor, its tick in the mark
 // column, the file's state in its row; again unmarks it; Mark all and Clear
 // marks are in the Space menu (the user; tdp panel.7).
 func TestMarkFiles(t *testing.T) {
@@ -1544,15 +1544,15 @@ func TestMarkFiles(t *testing.T) {
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "M README.md", "? new.txt", "x:mark")
+	has(t, d, "M README.md", "? new.txt", "m:mark")
 	markFile(d, g, inUnstaged+"README.md")
 	if got := g.status.files.Marked(); !slices.Equal(got, []string{inUnstaged + "README.md"}) {
 		t.Fatalf("marked %v", got)
 	}
-	has(t, d, "\U000F0132 M README.md", "x:unmark")
-	d.Press("x")
+	has(t, d, "\U000F0132 M README.md", "m:unmark")
+	d.Press("m")
 	if len(g.status.files.Marked()) != 0 {
-		t.Fatal("x again did not unmark")
+		t.Fatal("m again did not unmark")
 	}
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Mark all") })
 	if len(g.status.files.Marked()) != 2 {
@@ -1801,7 +1801,8 @@ func TestResolveHunks(t *testing.T) {
 func TestUseSideWholeFile(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "m")
+	d.Press("W")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine") }) // no key: m marks
 	done(t, g, d)
 	has(t, d, "notes.txt resolved with mine and staged")
 	if !strings.Contains(r.Read("notes.txt"), "B from main") {
@@ -1860,7 +1861,8 @@ func TestContinueRebase(t *testing.T) {
 	}
 	g, d := start(t, r, 160, 32)
 	has(t, d, "Rebasing onto: other")
-	d.Press("W", "m")
+	d.Press("W")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine") })
 	done(t, g, d)
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Continue rebase") })
 	done(t, g, d)

@@ -112,7 +112,7 @@ the App Log, what gittu did and what went wrong.
 | `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[D]`elete it on the remote |
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
-| `[2]` a commit | To its files in `[3]` | `[C]` Diff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
+| `[2]` a commit | To its files in `[3]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
 | `[2]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
 | `[3]` FILES: a file | Its two versions | `[/]` filter |
 
@@ -125,7 +125,7 @@ upstream was deleted on the remote says `upstream gone`.
 
 `[3]` FILES lists the files the commit under `[2]`'s cursor changed against the commit before it, and changes as you
 move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
-on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `C` on a commit, then `Enter` on another,
+on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit, then `Enter` on another,
 goes in to the files that differ between the two, the first one the base, each opening the same way; `Esc` goes back a
 level at a time.
 
@@ -133,13 +133,13 @@ level at a time.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| An unstaged file | Stage | `[x]` Mark, `[D]`iscard, Remove, Ignore |
-| A staged file | Unstage | `[x]` Mark, `[D]`iscard, Remove, Ignore |
-| A conflicted file | Resolve its conflicts one by one | `[x]` Mark, Use `[m]`ine, use `[t]`heirs, for the whole file |
+| An unstaged file | Stage | `[m]`ark, `[D]`iscard, Remove, Ignore |
+| A staged file | Unstage | `[m]`ark, `[D]`iscard, Remove, Ignore |
+| A conflicted file | Resolve its conflicts one by one | `[m]`ark, Use mine, use `[t]`heirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, discard, remove or ignore the marked; Mark all, Clear marks, Stage `[a]`ll, Unstage all |
 
-Mark files with `x` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
+Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if
 git did.
 
