@@ -229,8 +229,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 
 // showRef puts the focus on [2] with its cursor on the commit the row under
 // [1]'s cursor points at, scrolled into sight (tdp K3: the user pressing
-// Enter on a branch expects the graph). [2] gone into the files of a commit
-// comes back to the graph first (LeaveDiff, tdp note.8).
+// Enter on a branch expects the graph).
 func (h *historyScreen) showRef() tea.Cmd {
 	r, ok := h.cur().Current()
 	if !ok {
@@ -246,7 +245,6 @@ func (h *historyScreen) showRef() tea.Cmd {
 	}
 	h.commits.ClearFilter() // an action of gittu's own puts the cursor on it (tdp panel.14)
 	h.commits.Select(sha)
-	h.histP.LeaveDiff()
 	return h.g.a.Focus(h.histP)
 }
 
@@ -363,6 +361,20 @@ func (g *gittu) rebase(onto string) tea.Cmd {
 		conflicts: g.conflictsSaid("Rebase")}, "Rebasing…", func() error { return g.repo.Rebase(onto) })
 }
 
+// fileActions are [3]'s operations: on a file of the commit under [2]'s
+// cursor; and the panel's, so that [3] zoomed can be put back from here too
+// (tdp screen.6).
+func (h *historyScreen) fileActions() []terminu.Action {
+	return []terminu.Action{
+		{Key: "Enter", Label: "Compare", Desc: "its two versions, UNIFIED or SPLIT", Scope: item, Hint: "compare",
+			Hidden:   func() bool { _, ok := h.file(); return !ok },
+			Disabled: func() bool { it, _ := h.file(); return it.Text == nil }, // binary: no text to compare (tdp panel.9)
+			Do:       h.openFile},
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
+	}
+}
+
 // commitActions are [2]'s operations: on a commit of the graph, or on a file
 // of the level gone into; and the panel's (tdp P3, M2).
 func (h *historyScreen) commitActions() []terminu.Action {
@@ -371,8 +383,8 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	off := h.busyOr(nil)
 	short := func() string { c, _ := h.current(); return git.Short(c.SHA) }
 	return []terminu.Action{
-		{Key: "Enter", Label: "Files", Desc: "this commit changed, each before and after", Scope: item, Hint: "files",
-			Hidden: onGraph, Do: h.showCommit},
+		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [3]", Scope: item, Hint: "files",
+			Hidden: onGraph, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		h.compareMode(),
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
 			Hidden: onGraph, Disabled: off,

@@ -7,7 +7,8 @@
 
 **終端機的 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gittu`，打開兩個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖。對 cursor 那個分支或
+在 repo 裡打 `gittu`，打開三個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖，下面是 cursor 那個
+commit 改了的檔案。對 cursor 那個分支或
 commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，衝突一塊一塊解、兩邊都看得到 —— 不用先背任何熱鍵。
 
@@ -19,7 +20,7 @@ commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global
   commit，按 `Enter` 就過去。
 - **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，`[2]` 放得下幾條線就畫幾條，分支與 tag 標在它們的 commit 上；CURRENT 分頁把 `[1]` cursor 所在的分支那條
   固定在最左邊，ALL 分頁是 main 那條；遠端分支要看時才畫。
-- **先看再動手**：一個 commit 的檔案標上 `+` `-` `~`，再左右對照看每個檔的兩個版本；兩個 commit 也一樣這樣比；`Esc` 一層一層退回。
+- **先看再動手**：一個 commit 的檔案標上 `+` `-` `~`，就在分支圖下面、跟著 cursor 換，再左右對照看每個檔的兩個版本；兩個 commit 也一樣這樣比。
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
 - **Working tree**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
@@ -86,7 +87,7 @@ cd your-repository
 gittu
 ```
 
-用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼，在 commit 上按 `Enter` 看它改了哪些檔。`Tab` 換到另一個
+用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼；cursor 那個 commit 改了哪些檔，就列在分支圖下面。`Tab` 換到下一個
 面板，`W` 到 working tree，`H` 回到分支圖。`?` 列出所有按鍵，`q` 離開。
 
 ## 使用方式與按鍵
@@ -102,16 +103,17 @@ gittu
 | `[1]` REMOTES：遠端分支 | 到 `[2]` 它的 commit | `[c]`heck out 成追蹤它的本地分支、`[M]erge`、Re`[b]`ase、`[D]`elete 遠端的分支 |
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[D]`rop |
-| `[2]` commit | 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
+| `[2]` commit | 到 `[3]` 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
 | `[2]` 整個 panel | | `[n]`ext／`[N]` Previous commit（只在 CURRENT 分頁：最左邊那個分支走得到的 commit）、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
+| `[3]` FILES：檔案 | 它的兩個版本 | `[/]` 篩選 |
 
 `[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag。`[2]` 有兩個分頁，用 `h`、`l` 切換：
 CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支或 tag 那條固定在最左邊，`[1]` 移動時跟著換；ALL 把 main（或 master）
 那條固定在最左邊。遠端分支一開始不畫，在 `[2]` 的 `Space` 選單選 Show remote branches 才畫。在 `[2]` 上按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
-在 commit 上按 `Enter`，進到它對上一個 commit 改了的檔案：`+` 新增、`-` 刪除、`~` 修改（改名是 `~ 舊 → 新`）。在檔案上按
-`Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。在一個 commit 上按 `C`、再到另一個按 `Enter`，用同樣的方式
-比較這兩個，第一個是基準。`Esc` 一層一層退回。
+`[3]` FILES 列出 `[2]` cursor 那個 commit 對上一個 commit 改了的檔案，cursor 一動就跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
+`~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[3]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
+在一個 commit 上按 `C`、再到另一個按 `Enter`，進到這兩個之間有差異的檔案，第一個是基準，每個檔一樣這樣打開；`Esc` 一層一層退回。
 
 ### Working tree
 

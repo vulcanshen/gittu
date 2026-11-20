@@ -88,7 +88,7 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–2:panels q:quit")
+	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–3:panels q:quit")
 	// [1] a third of the width, [2] the rest (tdp L1).
 	top := d.Screen()[2]
 	at := strings.Index(top, "┌")
@@ -328,23 +328,6 @@ func TestEnterShowsTheCommit(t *testing.T) {
 	d.Press("!")
 	hasNot(t, d, "Checked out")
 	d.Press("Esc")
-
-	// [2] gone into the files of a commit: Enter on a branch comes back to
-	// the graph, on that branch's commit (LeaveDiff, tdp note.8).
-	d.Press("Enter")
-	has(t, d, " ↔ ")
-	d.Press("1")
-	selectBranch(d, g, kindBranch+"topic")
-	d.Press("Enter")
-	hasNot(t, d, " ↔ ")
-	if cur, _ := g.history.commits.Current(); cur.ID != strings.TrimSpace(r.Git("rev-parse", "topic")) {
-		t.Errorf("[2] is on %s, want topic", cur.ID)
-	}
-	// moving on [1] comes back to the graph too (tdp panel.13)
-	d.Press("Enter")
-	has(t, d, " ↔ ")
-	d.Press("1", "k")
-	hasNot(t, d, " ↔ ")
 }
 
 func TestEnterOnARemoteBranchHidden(t *testing.T) {
@@ -678,10 +661,11 @@ func TestAllOrCurrentBranch(t *testing.T) {
 
 // --- task 6: a commit's files and their diffs ---
 
-// TestCommitFilesAndDiff is task 6 on tdp note.8 and panel.9: Enter on a
-// commit goes into the files that differ from its first parent, each with its
-// mark; Enter on one compares its two versions, UNIFIED and SPLIT; Esc goes
-// back up a level at a time.
+// TestCommitFilesAndDiff is task 6 on tdp panel.13, note.8 and panel.9: [3]
+// lists the files the commit under [2]'s cursor changed against its first
+// parent, each with its mark, and follows the cursor, the focus staying;
+// Enter on the commit sends the focus to [3]; Enter on a file compares its
+// two versions, UNIFIED and SPLIT.
 func TestCommitFilesAndDiff(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -693,8 +677,17 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	g, d := start(t, r, 120, 32)
 	c := selectCommit(t, d, g, "Move, add and change")
 	parent := c.Parents[0]
-	d.Press("Tab", "Enter")
-	has(t, d, git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:compare")
+	d.Press("Tab")
+	has(t, d, "[3] FILES", git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:files")
+	d.Press("j") // [3] follows [2]'s cursor, the focus staying (tdp panel.13)
+	hasNot(t, d, "+ added.txt")
+	if g.a.Screen().Focused() != g.history.histP {
+		t.Error("moving on [2] took the focus away")
+	}
+	d.Press("k", "Enter")
+	if g.a.Screen().Focused() != g.history.filesP {
+		t.Fatal("Enter on a commit did not send the focus to [3]")
+	}
 	d.Press("Enter")
 	has(t, d, "README.md @ "+git.Short(parent)+" ↔ README.md @ "+git.Short(c.SHA), "UNIFIED", "SPLIT")
 	d.Press("Esc")
@@ -702,21 +695,22 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	// A rename with nothing else changed: its two versions are the same.
 	d.Press("j", "j", "Enter")
 	has(t, d, "No differences between feature.txt @ "+git.Short(parent)+" and renamed.txt @ "+git.Short(c.SHA))
-	d.Press("Esc", "Esc")
-	has(t, d, "GRAPH")
 	if cur, _ := g.history.commits.Current(); cur.ID != c.SHA {
-		t.Error("back on the graph, the cursor is not on the commit gone into")
+		t.Error("[2]'s cursor left the commit")
 	}
+	d.Press("1", "k") // [1] on feature: [2] on its commit, [3] its files
+	tip, before := strings.TrimSpace(r.Git("rev-parse", "feature")), strings.TrimSpace(r.Git("rev-parse", "feature^"))
+	has(t, d, git.Short(before)+" ↔ "+git.Short(tip))
 	d.Press("!")
-	has(t, d, "Opened the changes of "+git.Short(c.SHA))
+	has(t, d, "Compared README.md @ "+git.Short(parent)+" with README.md @ "+git.Short(c.SHA))
 }
 
 func TestFirstCommitFiles(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 120, 32)
 	selectCommit(t, d, g, "Start the demo")
-	d.Press("Tab", "Enter")
+	d.Press("Tab") // a key: [3] follows after it, as after any (selectCommit sets the cursor outside one)
 	has(t, d, "empty ↔ ", "+ README.md")
-	d.Press("Enter")
+	d.Press("Enter", "Enter")
 	has(t, d, "README.md @ empty ↔ README.md @ ", "+# demo")
 }
 
@@ -1845,7 +1839,11 @@ func TestZoomTwoSteps(t *testing.T) {
 	}
 	has(t, d, "z:unzoom")
 	d.Press("Tab")
-	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") {
+	if !d.Has("[3] FILES") || d.Has("[2] CURRENT") || d.Has("[1] BRANCHES") {
+		t.Fatalf("Tab on the whole screen does not show [3] alone:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+	d.Press("Tab")
+	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") || d.Has("[3] FILES") {
 		t.Fatalf("Tab on the whole screen does not show [1] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("z")

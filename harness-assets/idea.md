@@ -156,6 +156,12 @@ user 先要「SETTING 分頁，現在有一個使用者設定，就是 commits p
 user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖）：「panel 2 在 zoom 的時候，是不是 GRAPH 區域可以動態放大」
 追問後選了：照 [2] 的寬度隨時調（終端機越寬、放大越多，線就畫越多；窄的時候至少還是 10 條；DESCRIPTION、AUTHOR、DATE 不會被擠窄）
 
+## 一個 commit 的檔案放在常駐的 [3]（2026-11-20）
+
+user 照原話：「我認為 commit 點按下 enter drill into 看到檔案清單這個體驗有點怪怪 1. 上方 tab 還是顯示 current/all, 但是這時候切換 h|l 不會有任何差異，因為已經進入某一個 commit 的 detail 2. 改成按下跳出 commit detail popup 對順序的體驗是對的，但是對操作的體驗又怪怪的」
+給了三個做法（A：[2] 下面加一個明細 panel [3]，跟著 cursor 列那個 commit 的檔案；B：進到清單時把分頁藏起來；C：popup）後：「我認為 A 不錯，但是 panel 3 這樣會變成常駐，我又不想要那塊空間是常駐的」
+再給「按 Enter 才開、Esc 收起」與「一個鍵切換開關」兩種後：「我們先讓 panel 3 常駐吧」
+
 ## checkout 前警告工作區的改動（2026-11-20）
 
 user 照原話：「我發現當 working tree 有東西的時候，切換（checkout）branch 應該要跳 confirm 警告」

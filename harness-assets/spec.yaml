@@ -1,9 +1,9 @@
-id: 21
+id: 22
 from: v1.2.16
 to: v1.2.17
 tasks:
   - id: 1
-    spec: 19
+    spec: 22
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6]
     remark:
@@ -11,16 +11,20 @@ tasks:
         版面（打開時是 History 畫面；tdp screen.1、screen.3、screen.4）：
          [H]ISTORY[W]ORKING TREE                 Branch: main ↑1        Repo: gittu
         ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-        ┏[1] BRANCHESR/T/S━━━━━┓┌[2] COMMITS─────────────────────────────────────────┐  ← [1] 的分頁：BRANCHES、REMOTES、TAGS、STASHES（task 3）
-        ┃ ● main ↑1            ┃│ All branches                                        │  ← 位置列（task 4、6）
+        ┏[1] BRANCHESR/T/S━━━━━┓┌[2] CURRENTALL───────────────────────────────────────┐  ← [1] 的分頁：BRANCHES、REMOTES、TAGS、STASHES（task 3）；[2] 的分頁（task 5）
+        ┃ ● main ↑1            ┃│ main                                                │  ← 位置列（task 4、5）
         ┃   feature            ┃│    GRAPH  HASH     DESCRIPTION           AUTHOR DATE│
-        ┃   topic              ┃│    ◉      a1b2c3d  main Fix the graph    vulcan …   │
+        ┃   topic              ┃│    ◉      a1b2c3d  Fix the graph         vulcan …   │
         ┃                      ┃│    │ ◉    …                                         │
-        ┃                      ┃│    ◉─╯    …                                         │
-        ┗━ Enter:show h|l:tab ━┛└─ Enter:files ────────────────────────── 1 of 300 ─┘
-        Space:menu ?:help !:log Tab|1–2:panels q:quit
+        ┃                      ┃└─ Enter:files h|l:tab z:zoom ─────────── 1 of 300 ─┘
+        ┃                      ┃┌[3] FILES───────────────────────────────────────────┐  ← [2] cursor 那個 commit 的檔案（task 6）
+        ┃                      ┃│ 9f8e7d6 ↔ a1b2c3d                                   │
+        ┃                      ┃│ ~ internal/git/graph.go                             │
+        ┗━ Enter:show h|l:tab ━┛└─ Enter:compare ───────────────────────────────────┘
+        Space:menu ?:help !:log Tab|1–3:panels q:quit
       - "兩個畫面（tdp terms.2）：History（[1] BRANCHES、[2] COMMITS，打開時的畫面）與 Working tree（[1] CHANGES、[2] DIFF，task 11）。工作區的檔案（stage、commit、解衝突）要一個檔案清單加差異，跟分支列表加分支圖放不進同一個畫面。切換畫面是 global operation（tdp P3），畫面 chip 的熱鍵 [H]istory、[W]orking tree（tdp screen.3）"
       - "名字（使用者 2026-11-19：File status 怪、History 畫面裡又有一個 History panel 也怪）：git 的名詞是 working tree，在終端機用 git 的人認得它，所以第二個畫面叫 Working tree；畫面與 panel 不同名，[2] 放的是一個一個 commit，叫 COMMITS，第二個畫面的 [1] 放的是有改動的檔，叫 CHANGES（名字是 app 的內容：tdp terms.2、terms.3、panel.1、screen.3 只規定畫面 chip 與 [N] label 膠囊怎麼畫、怎麼大寫）"
+      - "History 的 [3] FILES 在 [2] 下面，佔右邊高度的三分之一（使用者 2026-11-20：常駐；高度 app 自行決定，tdp L1：panel 怎麼拆 app 可以自行決定），32 列時還有 8 列放檔案；Working tree 還是兩個 panel"
       - "[1] 與 [2] 照 1:2 分寬：60 欄時是 20｜40，分支名稱與分支圖都還讀得到（tdp L1 的為什麼）；最低尺寸用預設 60×32（tdp L1），60 欄以上兩個 panel 一律並排，所以沒有窄寬（tdp screen.5 的門檻 app 自行決定，不能高於 60）"
       - "statusbar 在畫面 chip 列右邊（tdp screen.4：多畫面的 app 用 chip 列的右邊），先 Branch 再 Repo（使用者 2026-11-19）：Branch: <HEAD 的分支>（detached 時寫 detached at <短 hash>）、有 upstream 時接 ↑N ↓N（只寫不是 0 的）；Repo: <repo 資料夾的名字>；兩個值都是 Lavender（tdp screen.4：你現在在哪的值）；merge、rebase、cherry-pick、revert 做到一半時接 Merging: <對方> 之類（Green：做到一半的 merge 也是進行中的工作，tdp screen.4、color 的 Green；2026-11-19 review 判 tdp 不清楚，使用者選回報，tdp session 回覆照這兩處用 Green）；正在跑的 git 指令接 Pushing… 之類（Green，進行中的工作）"
       - "statusbar 的寬度不跟著內容變（tdp L2）：tgo 把 statusbar 靠右畫，內容一變長，整串都會往左跑，所以 gittu 給的 statusbar 一律是 tgo 給的寬度（畫面的一半），左邊對齊、後面補空白；Branch 那一欄（名字加 ↑N ↓N）的寬度只看終端機寬度（放不下從尾端截、加 …），Repo 的名字整個執行期間不變；進行中的工作是最後一欄、不補空白（tdp L2：只有最後一個動態欄位可以不補）：git 指令在跑時寫在做什麼（Pushing…），沒在跑時寫做到一半的操作（Merging: <對方>），兩個不同時出現"
@@ -35,7 +39,7 @@ tasks:
       - "不是 git repo、路徑不在、找不到 git 指令時不開畫面：stderr 印 gittu: <原因>，結束碼 1，像 git 自己一樣（tdp P5 功能邏輯）"
       - "不認得的旗標（- 開頭）、兩個以上的路徑是用錯：stderr 寫 gittu: <哪裡錯>、空一行、用法，結束碼 2；資料夾剛好叫 version、help 時寫 ./version（help 裡寫明）。輸出照 tdp main 的 E1（E1-4 到 E1-8）：結果到 stdout、錯誤到 stderr 開頭 gittu: 、結束碼 0 做完 1 沒做完 2 用錯、句子開頭大寫。gittu 沒有不開畫面又讀設定檔的指令，E3-40 管不到"
   - id: 3
-    spec: 19
+    spec: 22
     request: 左邊是分支列表，看得到本地分支、遠端分支、tag、stash；upstream gone 也加個 glyph；點了分支，右邊的分支圖跳到那裡；在 panel 1 按 Enter 切換 focus 到 history panel，捲到那個分支的 commit 點；REMOTE 和 TAG 用分頁作，不要都擠在一個 panel
     tdp: [tdp panel.1, tdp panel.4, tdp panel.5, tdp panel.7, tdp panel.13, tdp panel.14, tdp terms.4, tdp K12, tdp screen.8, tdp components.5, tdp P5, tdp K3, tdp toast.2, tdp panel.15, tdp M5, tdp note.8, tdp note.7, tdp F5, tdp panel.10, tdp panel.9]
     remark:
@@ -45,9 +49,9 @@ tasks:
       - "本地分支有 upstream 時，名稱後面接 ↑N ↓N（Overlay0，只寫不是 0 的）（tdp P5 領域的符號與顏色）。upstream 在遠端被刪掉了（git 寫 [gone]）時寫 nf-md-cloud_off_outline（U+F0165）加 upstream gone，用 Peach（glyph 是使用者 2026-11-19 要的，跟分支圖的 ref 一樣有 glyph）（值得注意：多半是合併完、遠端刪掉的分支，可以刪了）；原本只寫 gone，使用者看不懂（2026-11-19）"
       - "stash 一列寫 stash@{N}: <訊息>，訊息太長從尾端截（tdp panel.5）"
       - "/ 篩選（tdp panel.14）：分支多的 repo 找分支"
-      - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 進到 commit 的差異清單裡時（task 6、7）先退回分支圖（tgo Panel.LeaveDiff；比較模式留著），[2] 看得到的跟著換（tdp panel.13：cursor 一移動，明細的內容立刻換成新的那一筆）"
-      - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到（[2] 進到某個 commit 裡時先退回分支圖）。這個 Enter 與 cursor 移動都是 app 自己把 [2] 的 cursor 放到一個 commit 上：先清掉 [2] 的篩選，不管它有沒有擋住那個 commit；只是 focus 離開 [2] 不清（tdp main 7e62a11 的 panel.14、panel-180，使用者 2026-11-19 在 tdp session 選 A；還沒發版，發版後改引 panel-180）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [Space] on [2] to show remote branches（Show remote branches 沒有熱鍵）"
-      - "[2] 在 commit 的差異清單裡（task 6、7，tgo 的 App.OpenDiff）時，Enter 與移動 cursor 先用 tgo Panel.LeaveDiff 退回分支圖：2026-11-19 回報給 tdp session 的缺口（app 看不出也退不回那一層），terminu-go v1.2.18 加了 LeaveDiff"
+      - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 看得到的跟著換（tdp panel.13：cursor 一移動，明細的內容立刻換成新的那一筆）"
+      - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到。這個 Enter 與 cursor 移動都是 app 自己把 [2] 的 cursor 放到一個 commit 上：先清掉 [2] 的篩選，不管它有沒有擋住那個 commit；只是 focus 離開 [2] 不清（tdp main 7e62a11 的 panel.14、panel-180，使用者 2026-11-19 在 tdp session 選 A；還沒發版，發版後改引 panel-180）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [Space] on [2] to show remote branches（Show remote branches 沒有熱鍵）"
+      - "2026-11-20 起 [2] 不再進到 commit 的檔案（task 6 改放在 [3]）；比較模式（task 7）進到的清單裡 Tab、數字鍵不作用，[1] 動不了，所以不用再退回分支圖（原本用 tgo Panel.LeaveDiff，2026-11-19 回報給 tdp session 的缺口，terminu-go v1.2.18 加的）"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
   - id: 4
     spec: 20
@@ -77,16 +81,16 @@ tasks:
       - "切到哪個分頁只記到 gittu 關掉（user：關掉再打開不記得），不存檔（tdp E3）；切分頁是換看的方式，不記 App Log（tdp note.7：切 tab 不是動作）"
       - "位置列寫目前是哪一條線：Current 寫那個分支、遠端分支或 tag 的名字，All 寫 All branches（tdp panel.10）"
   - id: 6
-    spec: 16
-    request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回；跟比較兩個 commit 一樣（使用者 2026-11-19）
-    tdp: [tdp note.8, tdp panel.9, tdp panel.10, tdp K3, tdp K4, tdp T1, tdp note.7, tdp P5, tdp M5, tdp panel-177, tdp panel-178, tdp note-101, tdp note-102, tdp panel.14, tdp F7, tdp toast.2, tdp note.6, tdp E8]
+    spec: 22
+    request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異（使用者 2026-11-19）；檔案放在 [2] 下面常駐的 [3]，跟著 [2] 的 cursor 換，不再進到 [2] 裡（使用者 2026-11-20：進去後上面的 CURRENT／ALL 還在、切了沒差，很怪；popup 順序對、操作怪）
+    tdp: [tdp panel.13, tdp note.8, tdp panel.9, tdp K3, tdp note.7, tdp P5, tdp M5, tdp M6, tdp panel-177, tdp panel-178, tdp note-101, tdp note-102, tdp F7, tdp toast.2, tdp note.6, tdp E8, tdp screen.8, tdp panel.15]
     remark:
       - "tdp note.8 的「同一項的兩個版本」與 panel.9 的「裝著許多項目的列」（tdp main，還沒發版；tdp #20 定案，使用者在 tdp session 與這裡都選 A）：看同一項的兩個版本一律打開 note.8 的比較（UNIFIED 與 SPLIT），舊的當 anchor，標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp main 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；兩邊是 <舊的> ↔ <新的>；一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列出有差異的項目"
-      - "[2] 的 commit 上按 Enter（[Enter] Files）：照 panel.10 一層一層進去，[2] 換成這個 commit 對它第一個 parent 有差異的檔案（第一個 commit 對空的），位置列是 <parent 的短 hash> ↔ <commit 的短 hash>（第一個 commit 的 parent 寫 empty）；每一項前面是 +（Green，新增）、-（Red，刪除）、~（Peach，修改），git 的 M／A／D／R 字母拿掉；一份平的路徑清單（panel.9：項目照 app 的叫法命名，檔案不裝東西，沒有再進一層）；改名是一列 ~ <舊> → <新>，比的是舊的對新的（panel.9）"
+      - "[3] FILES 是 [2] cursor 那個 commit 的明細（tdp panel.13）：cursor 一移動（按鍵移的、[1] 換分支帶動的、trace 的）就換成那個 commit 對它第一個 parent 有差異的檔案（第一個 commit 對空的），不用按 Enter，focus 不動；位置列是 <parent 的短 hash> ↔ <commit 的短 hash>（第一個 commit 的 parent 寫 empty）；[2] 的 commit 上按 Enter（[Enter] Files — this commit changed, in [3]）把 focus 送到 [3]（tdp panel.13、K3：清單上的 Enter 可以把 focus 送到明細，app 自行決定）；[3] 有篩選（/）；每個 commit 讀一次，讀失敗時 [3] 寫 Can't read the files of <短 hash>: <說原因的那一行> / Press [R] to read it again（tdp panel.15），下一次讀 repo 時再試；沒有 commit 時 [3] 的空狀態跟 [2] 一樣（No commits yet / Press [W] to see the files to commit），commit 沒改檔案時 No files changed / Press [2] to go to the commits（tdp screen.8）。每一項前面是 +（Green，新增）、-（Red，刪除）、~（Peach，修改），git 的 M／A／D／R 字母拿掉；一份平的路徑清單（panel.9：項目照 app 的叫法命名，檔案不裝東西，沒有再進一層）；改名是一列 ~ <舊> → <新>，比的是舊的對新的（panel.9）"
       - "檔案上按 Enter 打開 note.8 的比較：兩邊是 <路徑> @ <parent> ↔ <路徑> @ <commit>，完整路徑（標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp main 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；原本標題太長、tab 被截掉時改成只寫檔名，tdp 改了之後改回完整路徑），新增的檔左邊是空的、刪除的右邊是空的；兩邊一樣（只改名）時不打開，Info toast（panel.9）。二進位檔沒有比較（panel.9：不是文字的項目沒有比較）。Esc 一層一層退回，最後回到分支圖、cursor 在剛剛那個 commit（tdp K4）"
-      - "從 Space menu 執行進去（drill-down）時 menu 收起（tdp T1 的表）"
-      - "記 App Log：Opened the changes of <短 hash> <標題>（tdp note.7：只看不改的動作也記）；進出那一層不記（換看的範圍）"
-      - "清單、標記、比較 popup 都由 tgo 畫（App.OpenDiff；terminu-go v1.2.18-beta.1 起），gittu 只給每一項的名字、兩邊的名字與兩邊的內容（tdp E8：用 lib 的 app 不另外做 lib 做到的）"
+      - "記 App Log：在檔案上打開比較時 Compared <Anchor> with <Other>（跟 Working tree 的比較同一句；tdp note.7：只看不改的動作也記）；[3] 跟著換內容、Enter 換 focus 不記（tdp note.7）"
+      - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
+      - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
     spec: 16
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
@@ -203,13 +207,13 @@ tasks:
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
-    spec: 19
+    spec: 22
     request: history [2] commits 需要可以 zoom，分兩段：第一段還保留 panel 1 最小寬度，第二段完全展開、panel 1 完全被覆蓋；窄寬時沒有保留 panel 1 最小寬度那一段
     tdp: [tdp screen.6, tdp screen.5, tdp terms.8, tdp P3, tdp M2, tdp M5, tdp K1, tdp K2, tdp note.7, tdp L1, tdp L4, tdp M6]
     remark:
       - "tdp screen.6：放大是 app 的功能，要不要有、用哪個鍵、怎麼放大，app 可以自行決定；沒有另外定的照預設（只畫有 focus 的 panel，Tab、數字鍵照樣換 panel，換到的也是放大的，再按一次還原）。gittu 定兩段（使用者 2026-11-19）：[2] COMMITS 上按 z，第一段 [1] 縮到最小寬度 20 欄（60 欄時 1:2 的 [1] 就是 20 欄，分支名稱還讀得到）、[2] 拿剩下的；第二段照 screen.6 的預設，只畫有 focus 的 panel、佔滿 panel 區；再按 z 還原成 1:2"
       - "窄寬時沒有第一段：[1] 照 1:2 已經只有 20 欄以下（終端機不到 63 欄）時，第一段跟沒放大一樣，z 直接到第二段"
-      - "第二段時 Tab、數字鍵照樣換 panel，換到的 [1] 也佔滿 panel 區（tdp screen.6 的預設）；[1] 上在放大時也有 z（Unzoom），所以不管 focus 在哪一個都按得回來"
+      - "第二段時 Tab、數字鍵照樣換 panel，換到的 [3]、[1] 也佔滿 panel 區（tdp screen.6 的預設）；[1]、[3] 上在放大時也有 z（Unzoom），所以不管 focus 在哪一個都按得回來；第一段時 [3] 跟著 [2] 變寬"
       - "放大不是模式（tdp terms.8：版面的切換沒有鍵換意思，Esc 不必退出它，由它自己的鍵還原）。它是 [2] 的 panel operation（tdp P3：作用在整個 panel 的版面），列在 Space menu：Zoom（[1] 留最小寬度時的說明是 wider, [1] at its least；第二段是 to the whole screen）、Unzoom（back to both panels）；同一個鍵 z 照現在在哪一段用 Hidden 分開（tdp M6），下框 hint 寫 z:zoom 或 z:unzoom"
       - "記 App Log（tdp note.7：從 menu 或熱鍵執行的 panel operation，只看不改的也記）：Zoomed [2] COMMITS、Zoomed [2] COMMITS to the whole screen、Back to both panels"
   - id: 18

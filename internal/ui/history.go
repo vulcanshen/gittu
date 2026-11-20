@@ -22,11 +22,12 @@ const (
 var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 
 // historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
-// [2] the history graph beside them.
+// [2] the history graph beside them, [3] the files of the commit under [2]'s
+// cursor below it.
 type historyScreen struct {
-	// line is the [1] row the Current tab follows (its ID), "" for HEAD.
 	// width is [2]'s, as laid out last: how many of the graph's lines fit.
-	width  int
+	width int
+	// line is the [1] row the Current tab follows (its ID), "" for HEAD.
 	line   string
 	g      *gittu
 	screen *terminu.Screen
@@ -38,6 +39,13 @@ type historyScreen struct {
 
 	histP   *terminu.Panel
 	commits *terminu.List
+
+	filesP *terminu.Panel
+	files  *terminu.List
+	// items are the files [3] lists, by row ID; filesOf the commit they are
+	// of, "" when [3] has none to show or could not read them.
+	items   map[string]terminu.DiffItem
+	filesOf string
 	// zoom is how far [2] is zoomed (tdp screen.6): 0 not, 1 with [1] at its
 	// least width, 2 the focused panel on the whole panel area.
 	zoom int
@@ -80,15 +88,26 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		Filterable: true,
 		EmptyFact:  "No commits yet",
 		EmptyHint:  "Press [W] to see the files to commit",
+		OnMove:     func(terminu.Row) tea.Cmd { h.showFiles(); return nil },
 	}
+	// [3] follows [2]'s cursor (tdp panel.13), always there (the user).
+	h.files = &terminu.List{
+		Columns:    []terminu.Column{{Title: "", Shrink: true, Path: true}},
+		Flags:      true,
+		Filterable: true,
+		EmptyFact:  "No commits yet",
+		EmptyHint:  "Press [W] to see the files to commit",
+	}
+	h.filesP = &terminu.Panel{Label: "Files", Body: h.files}
+	h.filesP.Actions = append(h.fileActions(), h.files.Actions()...)
 	// Two tabs (the user): Current, the branch under [1]'s cursor on the left,
 	// and All, main on the left; Current first, the one chosen kept while
 	// gittu runs.
-	h.histP = &terminu.Panel{Label: "Current", Tabs: []string{"All"}, Body: h.commits,
+	h.histP = &terminu.Panel{Label: "Current", Tabs: []string{"All"}, Body: h.commits, Details: h.filesP,
 		OnTab: func(tab int) tea.Cmd { return h.setAll(tab == 1) }}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
 	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
-		Panels: []*terminu.Panel{h.branchP, h.histP}, Layout: h.layout}
+		Panels: []*terminu.Panel{h.branchP, h.histP, h.filesP}, Layout: h.layout}
 	return h
 }
 
@@ -103,20 +122,27 @@ func beside(left, w, h int) []terminu.Rect {
 
 // layout is History's panels as zoomed (tdp screen.6): side by side 1:2,
 // [1] at its least width, or the focused one alone on the whole area (the
-// other drawn nowhere).
+// others drawn nowhere). [3] is under [2], a third of its height.
 func (h *historyScreen) layout(w, ht int) []terminu.Rect {
 	var rects []terminu.Rect
 	switch h.zoom {
 	case 1:
 		rects = beside(min(leftLeast, w/3), w, ht)
 	case 2:
-		if h.screen.Focused() == h.branchP {
-			rects = []terminu.Rect{{X: 0, Y: 0, W: w, H: ht}, {X: w, Y: 0, W: 0, H: ht}}
-		} else {
-			rects = []terminu.Rect{{X: 0, Y: 0, W: 0, H: ht}, {X: 0, Y: 0, W: w, H: ht}}
+		rects = make([]terminu.Rect, len(h.screen.Panels))
+		for i, p := range h.screen.Panels {
+			if p == h.screen.Focused() {
+				rects[i] = terminu.Rect{X: 0, Y: 0, W: w, H: ht}
+			}
 		}
 	default:
 		rects = oneToTwo(w, ht)
+	}
+	if h.zoom != 2 {
+		r := rects[1]
+		low := r.H / 3
+		rects[1].H = r.H - low
+		rects = append(rects, terminu.Rect{X: r.X, Y: r.Y + r.H - low, W: r.W, H: low})
 	}
 	// [2] wider or narrower: the graph draws as many lines as now fit.
 	if rw := rects[1].W; rw != h.width {
@@ -192,6 +218,7 @@ func (h *historyScreen) show(s *git.Snapshot) {
 	}
 	h.commits.SetRows(h.commitRows(s))
 	h.commits.Location = h.scope()
+	h.showFiles()
 }
 
 // emptyHints name in the empty tabs a key that works now (tdp screen.8):
@@ -217,11 +244,13 @@ func (h *historyScreen) emptyHints(s *git.Snapshot) {
 // failed says the repository could not be read (tdp panel.15).
 func (h *historyScreen) failed() {
 	f := &terminu.Failure{Fact: "Can't read " + h.g.repo.Name() + ": " + h.g.readErr, Hint: "Press [R] to read it again"}
-	h.branchP.Fail, h.histP.Fail = f, f
+	h.branchP.Fail, h.histP.Fail, h.filesP.Fail = f, f, f
 	for _, l := range h.tabs {
 		l.SetRows(nil)
 	}
 	h.commits.SetRows(nil)
+	h.files.SetRows(nil)
+	h.items, h.filesOf = nil, ""
 }
 
 // scope is the location row of the graph: its main line, and the remote
@@ -410,8 +439,7 @@ func refsText(refs []ref) (string, []terminu.Span) {
 
 // branchMoved puts [2]'s cursor on the commit the branch, remote branch or
 // tag under [1]'s cursor points at; the focus
-// stays (tdp K3, panel.13). [2] gone into the files of a commit comes back
-// to the graph (LeaveDiff, tdp note.8).
+// stays (tdp K3, panel.13).
 func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	if h.g.snap == nil {
 		return nil
@@ -426,7 +454,6 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	if sha := h.shaOf(r.ID); h.inGraph(sha) {
 		h.commits.ClearFilter() // it puts [2]'s cursor on that commit (tdp panel.14)
 		h.commits.Select(sha)
-		h.histP.LeaveDiff()
 	}
 	return nil
 }
@@ -597,22 +624,76 @@ func (h *historyScreen) commitItems(from, to, fromName, toName string) ([]termin
 	return items, nil
 }
 
-// showCommit goes into what the commit under the cursor changed against its
-// first parent (tdp note.8, panel.9): the files that differ, each opening
-// its two versions.
-func (h *historyScreen) showCommit() tea.Cmd {
+// showFiles puts in [3] the files the commit under [2]'s cursor changed
+// against its first parent, the first commit against the empty tree: each
+// its mark in its colour, then its path (tdp panel.13, note.8, panel.9). Its
+// location row is <parent> ↔ <commit>. Read once a commit; a read that
+// failed is tried again on the next read of the repository.
+func (h *historyScreen) showFiles() {
 	c, ok := h.current()
 	if !ok {
-		return nil
+		h.files.EmptyFact, h.files.EmptyHint = "No commits yet", "Press [W] to see the files to commit"
+		h.files.SetRows(nil)
+		h.files.Location, h.items, h.filesOf, h.filesP.Fail = "", nil, "", nil
+		return
+	}
+	if c.SHA == h.filesOf {
+		return
 	}
 	from, fromName := "", "empty"
 	if len(c.Parents) > 0 {
 		from, fromName = c.Parents[0], git.Short(c.Parents[0])
 	}
-	h.g.a.Log(terminu.Info, "Opened the changes of "+git.Short(c.SHA)+" "+c.Subject)
-	h.commits.ClearFilter() // going in to it (tdp panel.14, panel.10)
-	return h.g.a.OpenDiff(h.histP, terminu.DiffItem{Anchor: fromName, Other: git.Short(c.SHA),
-		Items: func() ([]terminu.DiffItem, error) { return h.commitItems(from, c.SHA, fromName, git.Short(c.SHA)) }})
+	h.files.Location = fromName + " ↔ " + git.Short(c.SHA)
+	items, err := h.commitItems(from, c.SHA, fromName, git.Short(c.SHA))
+	if err != nil {
+		h.filesP.Fail = &terminu.Failure{Fact: "Can't read the files of " + git.Short(c.SHA) + ": " + reason(gitLines(err)), Hint: "Press [R] to read it again"}
+		h.files.SetRows(nil)
+		h.items, h.filesOf = nil, ""
+		return
+	}
+	h.filesP.Fail = nil
+	h.files.EmptyFact, h.files.EmptyHint = "No files changed", "Press [2] to go to the commits"
+	h.items, h.filesOf = map[string]terminu.DiffItem{}, c.SHA
+	rows := make([]terminu.Row, len(items))
+	for i, it := range items {
+		rows[i] = terminu.Row{ID: it.Name, Cells: []string{it.Name}, Flag: markSpan(it.Mark)}
+		h.items[it.Name] = it
+	}
+	h.files.SetRows(rows)
+}
+
+// markSpan is a file's mark in its colour, as the lib draws it in the list
+// of the items that differ (tdp panel.9): + Green, - Red, ~ Peach.
+func markSpan(m terminu.DiffMark) terminu.Span {
+	switch m {
+	case terminu.DiffAdded:
+		return terminu.Span{Text: "+", Style: terminu.Fg(terminu.Green)}
+	case terminu.DiffRemoved:
+		return terminu.Span{Text: "-", Style: terminu.Fg(terminu.Red)}
+	}
+	return terminu.Span{Text: "~", Style: terminu.Fg(terminu.Peach)}
+}
+
+// file is the file under [3]'s cursor.
+func (h *historyScreen) file() (terminu.DiffItem, bool) {
+	r, ok := h.files.Current()
+	if !ok {
+		return terminu.DiffItem{}, false
+	}
+	it, ok := h.items[r.ID]
+	return it, ok
+}
+
+// openFile opens the two versions of the file under [3]'s cursor (tdp
+// note.8): <path> @ <parent> ↔ <path> @ <commit>.
+func (h *historyScreen) openFile() tea.Cmd {
+	it, ok := h.file()
+	if !ok || it.Text == nil {
+		return nil
+	}
+	h.g.a.Log(terminu.Info, "Compared "+it.Anchor+" with "+it.Other)
+	return h.g.a.OpenDiff(h.filesP, it)
 }
 
 // compareMode is [2]'s compare mode (tdp panel.9): two commits hold many, so
