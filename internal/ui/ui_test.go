@@ -1910,12 +1910,16 @@ func TestEditConflict(t *testing.T) {
 	has(t, d, "Editing notes.txt")
 }
 
-// TestMarkResolvedAsks: r on a file with conflict markers left asks first,
-// naming their lines: they would be staged as they are.
+// TestMarkResolvedAsks: [r]esolved (so the Space menu writes it, the user)
+// on a file with conflict markers left asks first, naming their lines: they
+// would be staged as they are.
 func TestMarkResolvedAsks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "r")
+	d.Press("W", "Space")
+	has(t, d, "[r]esolved")
+	hasNot(t, d, "Ma[r]k")
+	d.Press("Esc", "r")
 	has(t, d, "Mark notes.txt resolved?", "notes.txt: conflict markers on lines 2, 6, 14, 18")
 	d.Press("Enter")
 	done(t, g, d)

@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 標成已解決的那一項寫成 [r]esolved（2026-11-20）
+
+Space menu 裡的 Mark resolved 照 tdp M5 畫成 Ma[r]k resolved，user 照原話：「ma[r]k resolved 那個 [] 位置很怪吧，應該是 [r]esolved  mark as resolved...」
+
 ## 標記的檔標成已解決沒有熱鍵（2026-11-20）
 
 說了 R 也是全域的 Refresh 之後，user 照原話：「什麼時候有全域 Refresh, 使用者沒有被揭露，如果這樣那 [R]esolve 全部這個熱鍵就取消, 一樣用 mark 多筆或單筆 resovle」
