@@ -282,6 +282,32 @@ func TestThrough(t *testing.T) {
 	}
 }
 
+// TestIgnoreLine: a path's .gitignore line matches it and only it.
+func TestIgnoreLine(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("keep.txt", "k\n", "Start")
+	names := []string{"a*b.txt", "#notes", "!bang", "q?.txt", "[x].txt", "back\\slash", "trail ", "dir/sub file.txt"}
+	for _, n := range names {
+		r.Write(n, "x\n")
+	}
+	r.Write("ab.txt", "near a*b.txt\n")
+	repo, err := git.Open(r.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := repo.Ignore(names, nil); err != nil {
+		t.Fatal(err)
+	}
+	left := r.Git("ls-files", "--others", "--exclude-standard")
+	if left != ".gitignore\nab.txt\n" {
+		t.Errorf("not ignored as listed, left: %q\n.gitignore:\n%s", left, r.Read(".gitignore"))
+	}
+	before := r.Read(".gitignore")
+	if err := repo.Ignore(names[:2], nil); err != nil || r.Read(".gitignore") != before {
+		t.Errorf("the same paths again changed .gitignore: %v", err)
+	}
+}
+
 // TestGraphMostLines: with room for more, a row draws more lines before "…".
 func TestGraphMostLines(t *testing.T) {
 	var cs []git.Commit

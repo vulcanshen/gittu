@@ -1,4 +1,4 @@
-id: 24
+id: 25
 from: v1.2.18
 to: v1.2.19
 tasks:
@@ -136,7 +136,7 @@ tasks:
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 23
+    spec: 25
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
     tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6]
     remark:
@@ -151,7 +151,7 @@ tasks:
         ┃ UNSTAGED             ┃│                                                     │
         ┃ ? notes.txt          ┃│                                                     │
         ┗━ Enter:stage ━━━━━━━━┛└─ Enter:compare ─────────────────────── 1-20 of 48 ─┘
-      - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。標記欄是改了什麼（tdp panel.7 的旗標）：M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）；一欄 PATH，太長從前面截（tdp panel.5）。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
+      - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。改了什麼寫在第一欄，一個字母：M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）；第二欄 FILE，太長從前面截（tdp panel.5）；兩欄所以有表頭（只寫 FILE）。標記欄留給標記的勾（task 21；tdp panel.7：可以標記的清單，標記欄只放勾，旗標寫在內容裡），2026-11-20 前字母畫在標記欄。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
       - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；畫的是那個檔的兩個版本（跟 Enter 打開的比較同兩邊），照 UNIFIED 的樣子（tdp v1.2.18 的 note.8「在 panel 裡」、note-103，使用者 2026-11-19 選 A；tgo Pager.SetDiff）：只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，不放 git diff 的 diff --git 與 @@；位置列寫 <舊的> ↔ <新的>；兩邊一樣時空狀態 No differences between the two / Press [1] to go to the files；二進位檔（前 8000 位元組有 NUL，跟 git 判的一樣）空狀態 Not a text file: no lines to compare / Press [1] to go to the files（tdp screen.8：一句事實、一句點名按鍵的提示）；沒追蹤的資料夾照 panel.9 列出裡面的檔、每個標 +（Green），Enter 進到那份清單，跟進到一個 commit 一樣（tdp v1.2.18 的 note.8、note-106，使用者 2026-11-19 在 tdp session 選 A；tgo Pager.SetDiffItems，v1.2.19-beta.2）；[1] 換到另一列時先退出 [2] 進去的清單（Panel.LeaveDiff）；讀不到時照 tdp panel.15：沒有舊內容寫兩句（Can't show the change: <說原因的那一行> / Press [R] to read it again），同一列重新讀時讀不到則舊的內容留著、Error toast；那一句與 git 的全文記進 App Log（tdp F5、components.5）；沒有 cursor 的 panel（tgo Pager），j|k 捲動"
       - "[2] DIFF 上的 Enter（[Enter] Compare，hint Enter:compare；tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事）打開 tdp note.8 的比較（同一項的兩個版本，舊的當 anchor）：STAGED 的是 <路徑> @ HEAD ↔ <路徑> @ index，UNSTAGED 的是 <路徑> @ index ↔ <路徑>（工作區；沒追蹤的檔左邊是空的），衝突的檔是 <路徑> @ HEAD ↔ <路徑>（工作區、有衝突標記；比較的畫法同 task 6），進到衝突區塊時是 MINE · <標記> ↔ THEIRS · <標記>；二進位檔沒有比較（Enter 隱藏）。由 tgo 的 App.OpenDiff 畫，記 App Log：Compared <左> with <右>"
       - "沒有改動時是空狀態（tdp screen.8）：Nothing to commit / Press [H] to see the history"
@@ -244,4 +244,16 @@ tasks:
       - "只在 Current branch 時有：All branches 時兩個都 Hidden（tdp M6：那時它們的對象不存在）；還沒有 commit 時停用"
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
       - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
+  - id: 21
+    spec: 25
+    request: Working tree 的 [1] CHANGES 可以複選（勾選），再從 Space menu 對勾選的檔一起操作：stage、unstage、用我的、用對方的、discard、remove、加進 .gitignore（user 2026-11-20：「不就是 checkbox 勾選 -> space menu 操作嗎?」）
+    tdp: [tdp panel.7, tdp P3, tdp M2, tdp M5, tdp M6, tdp note.7, tdp confirm, tdp toast.2, tdp F5, tdp F6, tdp K3, tdp panel.5]
+    remark:
+      - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；x 標記或取消 cursor 那一列（item operation [x] Mark／[x] Unmark，hint x:mark／x:unmark；鍵 app 自行決定，m 已經是 Use mine）"
+      - "對標記的檔做事是 panel operation（tdp P3），只在有標記時出現，沒有熱鍵（使用者：勾選 → Space menu 操作）：Stage the marked、Unstage the marked、Use mine for the marked、Use theirs for the marked、Discard the marked、Remove the marked、Ignore the marked；說明欄寫會作用在幾個檔。每一個只作用在適用的檔：Stage 對 UNSTAGED 的列、Unstage 對 STAGED、Use mine／theirs 對 CONFLICTS、Discard 與 Ignore 對 STAGED 與 UNSTAGED、Remove 對還在 index 裡的；同一個檔兩列都標了算一次；一個都不適用時停用（tdp M6）；開始做就清掉標記"
+      - "Mark all（標記清單裡每一列，全都標了時不出現）、Clear marks（有標記時）：panel operation，沒有熱鍵"
+      - "Remove（item operation，沒有熱鍵；還在 index 裡、不在衝突的檔）是 git 的 remove：git rm -f，刪掉檔案並 stage 刪除，下一個 commit 把它從 repo 拿掉；先 confirm（REMOVE），有沒 commit 的改動時多一句會不見（Peach，tdp confirm）。已經 stage 成刪除的檔不在 index 裡，沒有 Remove"
+      - "Ignore（item operation，沒有熱鍵；不在衝突的檔）：寫進 repo 頂層的 .gitignore，一個檔一行 /<路徑>（從頂層算、只對到它；* ? [ \\ 與尾端空白跳脫），已經有那一行就不重寫；還在 index 裡的檔先 git rm --cached（git 不會忽略已經追蹤的檔），檔案留著；有這種檔時先 confirm（IGNORE）說它們不再被追蹤，只有沒追蹤的檔時不問"
+      - "App Log（tdp note.7：P3 的動作都記）：Marked <路徑>、Unmarked <路徑>、Marked every file、Cleared the marks；整批的 stage、unstage 每個檔一筆（跟單一的同一句）；Discard、Remove、Ignore 整批時每個檔一筆，再加一個 Success toast 說幾個檔；Use mine／theirs 整批時一個 Success toast（<N> files resolved with mine and staged）"
+      - "鍵、git 的做法（git rm、.gitignore 的寫法、已追蹤的檔停止追蹤）是 app 照 git 的意思決定的預設（使用者沒有指定）"
 

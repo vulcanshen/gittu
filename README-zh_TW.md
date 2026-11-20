@@ -119,11 +119,14 @@ CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支�
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| 還沒 stage 的檔 | Stage | `[D]`iscard |
-| 已經 stage 的檔 | Unstage | `[D]`iscard |
-| 有衝突的檔 | 進去一塊一塊解 | 整個檔用 `[m]`ine、用 `[t]`heirs |
+| 還沒 stage 的檔 | Stage | `[x]` Mark、`[D]`iscard、Remove、Ignore |
+| 已經 stage 的檔 | Unstage | `[x]` Mark、`[D]`iscard、Remove、Ignore |
+| 有衝突的檔 | 進去一塊一塊解 | `[x]` Mark、整個檔用 `[m]`ine、用 `[t]`heirs |
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
-| 整個 panel | | Stage `[a]`ll、Unstage all |
+| 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、discard、remove、ignore；Mark all、Clear marks、Stage `[a]`ll、Unstage all |
+
+用 `x` 標記幾個檔，就能一起處理：`Space` 選單會列出能對標記的檔做的事，每一個只作用在適用的檔上。Remove 刪掉檔案並把刪除
+stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就停止追蹤。
 
 `[1]` 是 CHANGES，`[2]` 是 DIFF：cursor 那個檔改了什麼，畫法跟比較一樣（只畫有差異的段落、兩欄行號）：已經 stage 的是 HEAD 對 index，
 還沒 stage 的是 index 對工作區。在那裡按 `Enter` 打開比較本身，UNIFIED 或 SPLIT。

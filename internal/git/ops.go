@@ -245,21 +245,91 @@ func (r *Repo) DiscardAll() error {
 	return err
 }
 
-// Stage adds a file's change to the index.
-func (r *Repo) Stage(path string) error {
-	_, err := r.Run("add", "-A", "--", path)
+// Stage adds these files' changes to the index.
+func (r *Repo) Stage(paths ...string) error {
+	_, err := r.Run(append([]string{"add", "-A", "--"}, paths...)...)
 	return err
 }
 
-// Unstage takes a file's change out of the index, keeping it in the working
-// tree.
-func (r *Repo) Unstage(path string, unborn bool) error {
+// Unstage takes these files' changes out of the index, keeping them in the
+// working tree.
+func (r *Repo) Unstage(unborn bool, paths ...string) error {
 	if unborn {
-		_, err := r.Run("rm", "-q", "--cached", "-r", "--", path)
+		_, err := r.Run(append([]string{"rm", "-q", "--cached", "-r", "--"}, paths...)...)
 		return err
 	}
-	_, err := r.Run("restore", "--staged", "--", path)
+	_, err := r.Run(append([]string{"restore", "--staged", "--"}, paths...)...)
 	return err
+}
+
+// Remove deletes these tracked files and stages their deletion: the next
+// commit takes them out of the repository. A change not committed is lost.
+func (r *Repo) Remove(paths ...string) error {
+	_, err := r.Run(append([]string{"rm", "-q", "-f", "--"}, paths...)...)
+	return err
+}
+
+// Ignore stops tracking the tracked ones, keeping the files (git ignores
+// only files it does not track), then adds these files to the .gitignore at
+// the top of the working tree, each once.
+func (r *Repo) Ignore(paths, tracked []string) error {
+	if len(tracked) > 0 {
+		if _, err := r.Run(append([]string{"rm", "-q", "--cached", "--"}, tracked...)...); err != nil {
+			return err
+		}
+	}
+	name := filepath.Join(r.Dir, ".gitignore")
+	old, err := os.ReadFile(name)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
+	}
+	have := map[string]bool{}
+	for _, l := range strings.Split(string(old), "\n") {
+		have[strings.TrimRight(l, "\r")] = true
+	}
+	var add strings.Builder
+	for _, p := range paths {
+		if l := ignoreLine(p); !have[l] {
+			have[l] = true
+			add.WriteString(l + "\n")
+		}
+	}
+	if add.Len() > 0 {
+		lines := add.String()
+		if len(old) > 0 && old[len(old)-1] != '\n' {
+			lines = "\n" + lines
+		}
+		f, err := os.OpenFile(name, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err != nil {
+			return err
+		}
+		if _, err := f.WriteString(lines); err != nil {
+			f.Close()
+			return err
+		}
+		if err := f.Close(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// ignoreLine is the .gitignore line that matches path and only it: anchored
+// at the top with "/" (so a leading # or ! is part of the name), the
+// characters a pattern reads (* ? [ \) and trailing spaces escaped.
+func ignoreLine(path string) string {
+	var b strings.Builder
+	for _, c := range path {
+		if strings.ContainsRune(`*?[\`, c) {
+			b.WriteByte('\\')
+		}
+		b.WriteRune(c)
+	}
+	l := "/" + b.String()
+	if t := strings.TrimRight(l, " "); t != l {
+		l = t + strings.Repeat("\\ ", len(l)-len(t))
+	}
+	return l
 }
 
 // StageAll adds every change, untracked files too.
@@ -301,17 +371,17 @@ func (r *Repo) Discard(f File, staged bool) error {
 	}
 }
 
-// UseSide resolves a whole conflicted file with one side, ours or theirs, and
-// stages it.
-func (r *Repo) UseSide(path string, theirs bool) error {
+// UseSide resolves whole conflicted files with one side, ours or theirs, and
+// stages them.
+func (r *Repo) UseSide(theirs bool, paths ...string) error {
 	side := "--ours"
 	if theirs {
 		side = "--theirs"
 	}
-	if _, err := r.Run("checkout", side, "--", path); err != nil {
+	if _, err := r.Run(append([]string{"checkout", side, "--"}, paths...)...); err != nil {
 		return err
 	}
-	return r.Stage(path)
+	return r.Stage(paths...)
 }
 
 // Commit commits the index with message; amend replaces the last commit.

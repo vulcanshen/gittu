@@ -133,11 +133,15 @@ level at a time.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| An unstaged file | Stage | `[D]`iscard |
-| A staged file | Unstage | `[D]`iscard |
-| A conflicted file | Resolve its conflicts one by one | Use `[m]`ine, use `[t]`heirs, for the whole file |
+| An unstaged file | Stage | `[x]` Mark, `[D]`iscard, Remove, Ignore |
+| A staged file | Unstage | `[x]` Mark, `[D]`iscard, Remove, Ignore |
+| A conflicted file | Resolve its conflicts one by one | `[x]` Mark, Use `[m]`ine, use `[t]`heirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
-| The panel | | Stage `[a]`ll, Unstage all |
+| The panel | | With files marked: stage, unstage, use mine, use theirs, discard, remove or ignore the marked; Mark all, Clear marks, Stage `[a]`ll, Unstage all |
+
+Mark files with `x` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
+files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if
+git did.
 
 `[1]` is CHANGES, `[2]` DIFF: what changed in the file under the cursor, drawn as a comparison is (only the parts that
 differ, both line numbers): HEAD against the index when staged, the index against the working tree when not. `Enter`

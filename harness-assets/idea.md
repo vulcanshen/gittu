@@ -156,6 +156,11 @@ user 先要「SETTING 分頁，現在有一個使用者設定，就是 commits p
 user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖）：「panel 2 在 zoom 的時候，是不是 GRAPH 區域可以動態放大」
 追問後選了：照 [2] 的寬度隨時調（終端機越寬、放大越多，線就畫越多；窄的時候至少還是 10 條；DESCRIPTION、AUTHOR、DATE 不會被擠窄）
 
+## Working tree 的檔案可以複選、一起操作（2026-11-20）
+
+user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
+問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
+
 ## 欄寬：DESCRIPTION 吃掉剩下的寬度（2026-11-20）
 
 user 照原話（附了一張放大後欄位擠在左半邊、右半邊空著的截圖）：「是可以了，但是可以平均點嗎?」

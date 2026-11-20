@@ -1393,7 +1393,7 @@ func TestFileGroups(t *testing.T) {
 	r.Write("new.txt", "new\n")
 	_, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "All changes", "STAGED", "UNSTAGED", "? new.txt")
+	has(t, d, "All changes", "FILE", "STAGED", "UNSTAGED", "?  new.txt")
 	screen := strings.Join(d.Screen(), "\n")
 	if strings.Count(screen, "README.md") < 2 {
 		t.Errorf("README.md is not in both groups:\n%s", screen)
@@ -1529,6 +1529,133 @@ func TestStageUnstage(t *testing.T) {
 	has(t, d, "Staged README.md", "Unstaged README.md", "Staged every change", "Unstaged every change")
 }
 
+// markFile puts [1]'s cursor on the row id and marks it with x.
+func markFile(d *tdptest.Driver, g *gittu, id string) {
+	d.Do(func() tea.Cmd { g.status.files.Select(id); return nil })
+	d.Press("x")
+}
+
+// TestMarkFiles: x marks the file under the cursor, its tick in the mark
+// column, the file's state in its row; again unmarks it; Mark all and Clear
+// marks are in the Space menu (the user; tdp panel.7).
+func TestMarkFiles(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("README.md", "changed\n")
+	r.Write("new.txt", "new\n")
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	has(t, d, "M  README.md", "?  new.txt", "x:mark")
+	markFile(d, g, inUnstaged+"README.md")
+	if got := g.status.files.Marked(); !slices.Equal(got, []string{inUnstaged + "README.md"}) {
+		t.Fatalf("marked %v", got)
+	}
+	has(t, d, "\U000F0132 M  README.md", "x:unmark")
+	d.Press("x")
+	if len(g.status.files.Marked()) != 0 {
+		t.Fatal("x again did not unmark")
+	}
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Mark all") })
+	if len(g.status.files.Marked()) != 2 {
+		t.Fatalf("Mark all marked %v", g.status.files.Marked())
+	}
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Clear marks") })
+	if len(g.status.files.Marked()) != 0 {
+		t.Fatal("Clear marks left some")
+	}
+	d.Press("!")
+	has(t, d, "Marked README.md", "Unmarked README.md", "Marked every file", "Cleared the marks")
+}
+
+// TestWorkOnTheMarked: the Space menu's operations on the marked files act
+// on the ones they fit, a file in two groups once, then clear the marks.
+func TestWorkOnTheMarked(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("README.md", "changed\n")
+	r.Write("a.txt", "a\n")
+	r.Write("b.txt", "b\n")
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	markFile(d, g, inUnstaged+"README.md")
+	markFile(d, g, inUnstaged+"a.txt")
+	d.Press("Space")
+	has(t, d, "Stage the marked", "2 files", "Discard the marked")
+	d.Press("Esc")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Stage the marked") })
+	done(t, g, d)
+	if got := r.Git("diff", "--cached", "--name-only"); got != "README.md\na.txt\n" {
+		t.Errorf("staged %q", got)
+	}
+	if len(g.status.files.Marked()) != 0 {
+		t.Error("the marks stayed")
+	}
+	markFile(d, g, inStaged+"README.md")
+	markFile(d, g, inStaged+"a.txt")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Unstage the marked") })
+	done(t, g, d)
+	if got := r.Git("diff", "--cached", "--name-only"); got != "" {
+		t.Errorf("still staged %q", got)
+	}
+	markFile(d, g, inUnstaged+"a.txt")
+	markFile(d, g, inUnstaged+"b.txt")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Discard the marked") })
+	has(t, d, "Discard the changes to 2 files?", "a.txt", "b.txt", "can't be undone")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Discarded the changes to 2 files")
+	if _, err := os.Stat(filepath.Join(r.Dir, "a.txt")); err == nil {
+		t.Error("a.txt is still there")
+	}
+	if r.Read("README.md") != "changed\n" {
+		t.Error("README.md, not marked, lost its change")
+	}
+	d.Press("!")
+	has(t, d, "Staged README.md", "Staged a.txt", "Unstaged a.txt", "Discarded the change to b.txt")
+}
+
+// TestRemoveAndIgnore: Remove deletes a tracked file and stages its
+// deletion, asking first; Ignore adds a file to .gitignore, asking only when
+// a tracked one is among them, which stops being tracked, the file kept.
+func TestRemoveAndIgnore(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("README.md", "changed\n")
+	r.Write("feature.txt", "changed\n")
+	r.Write("new*.txt", "new\n")
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "README.md"); return nil })
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Remove") })
+	has(t, d, "Remove README.md from the repository?", "changes not committed are lost")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Removed README.md from the repository")
+	if got := r.Git("status", "--porcelain", "--", "README.md"); got != "D  README.md\n" {
+		t.Errorf("README.md is %q", got)
+	}
+	// An untracked file: no question.
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "new*.txt"); return nil })
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Ignore") })
+	done(t, g, d)
+	has(t, d, "Added new*.txt to .gitignore")
+	if got := r.Read(".gitignore"); got != "/new\\*.txt\n" {
+		t.Errorf(".gitignore is %q", got)
+	}
+	// A tracked one, marked: asked, untracked, kept.
+	markFile(d, g, inUnstaged+"feature.txt")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Ignore the marked") })
+	has(t, d, "Add feature.txt to .gitignore?", "stop being tracked")
+	d.Press("Enter")
+	done(t, g, d)
+	if got := r.Read(".gitignore"); got != "/new\\*.txt\n/feature.txt\n" {
+		t.Errorf(".gitignore is %q", got)
+	}
+	if strings.Contains(r.Git("ls-files"), "feature.txt") {
+		t.Error("feature.txt is still tracked")
+	}
+	if r.Read("feature.txt") != "changed\n" {
+		t.Error("feature.txt was not kept")
+	}
+}
+
 func TestDiscardFile(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
@@ -1644,7 +1771,7 @@ func TestResolveHunks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "CONFLICTS", "U notes.txt", "Enter:resolve")
+	has(t, d, "CONFLICTS", "U  notes.txt", "Enter:resolve")
 	d.Press("Enter")
 	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
 		"Enter:read m:mine")
@@ -1679,6 +1806,34 @@ func TestUseSideWholeFile(t *testing.T) {
 	has(t, d, "notes.txt resolved with mine and staged")
 	if !strings.Contains(r.Read("notes.txt"), "B from main") {
 		t.Error("not mine")
+	}
+}
+
+// TestUseSideForTheMarked: the marked conflicted files resolved with one
+// side at once.
+func TestUseSideForTheMarked(t *testing.T) {
+	r := gittest.New(t)
+	r.Git("commit", "-q", "--allow-empty", "-m", "Start")
+	r.Commit("a.txt", "a\n", "Add a")
+	r.Commit("b.txt", "b\n", "Add b")
+	r.Git("checkout", "-q", "-b", "feature")
+	r.Write("a.txt", "a from feature\n")
+	r.Commit("b.txt", "b from feature\n", "Change both on feature")
+	r.Git("checkout", "-q", "main")
+	r.Write("a.txt", "a from main\n")
+	r.Commit("b.txt", "b from main\n", "Change both on main")
+	if _, err := r.Try("merge", "--no-edit", "feature"); err == nil {
+		t.Fatal("no conflict")
+	}
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	markFile(d, g, inConflict+"a.txt")
+	markFile(d, g, inConflict+"b.txt")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use theirs for the marked") })
+	done(t, g, d)
+	has(t, d, "2 files resolved with theirs and staged")
+	if r.Read("a.txt") != "a from feature\n" || r.Read("b.txt") != "b from feature\n" {
+		t.Errorf("not theirs: %q %q", r.Read("a.txt"), r.Read("b.txt"))
 	}
 }
 

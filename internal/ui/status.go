@@ -55,9 +55,12 @@ type statusScreen struct {
 
 func newStatusScreen(g *gittu) *statusScreen {
 	s := &statusScreen{g: g}
+	// Marks: files to work on together, from the Space menu (the user; tdp
+	// panel.7, P3). The mark column holds only the tick, so each file's
+	// state is in its row, before its path.
 	s.files = &terminu.List{
-		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
-		Flags:     true,
+		Columns:   []terminu.Column{{Title: ""}, {Title: "File", Shrink: true, Path: true}},
+		Marks:     true,
 		Location:  "All changes",
 		EmptyFact: "Nothing to commit",
 		EmptyHint: "Press [H] to see the history",
@@ -103,17 +106,17 @@ func fileRows(files []git.File) []terminu.Row {
 		}
 		switch {
 		case f.Conflicted():
-			conflicts = append(conflicts, terminu.Row{ID: inConflict + f.Path, Group: "Conflicts", Cells: []string{path}, Flag: changeFlag('U')})
+			conflicts = append(conflicts, fileRow(inConflict, "Conflicts", f.Path, path, 'U'))
 			continue
 		case f.Untracked():
-			unstaged = append(unstaged, terminu.Row{ID: inUnstaged + f.Path, Group: "Unstaged", Cells: []string{f.Path}, Flag: changeFlag('?')})
+			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, '?'))
 			continue
 		}
 		if f.Staged() {
-			staged = append(staged, terminu.Row{ID: inStaged + f.Path, Group: "Staged", Cells: []string{path}, Flag: changeFlag(f.X)})
+			staged = append(staged, fileRow(inStaged, "Staged", f.Path, path, f.X))
 		}
 		if f.Unstaged() {
-			unstaged = append(unstaged, terminu.Row{ID: inUnstaged + f.Path, Group: "Unstaged", Cells: []string{f.Path}, Flag: changeFlag(f.Y)})
+			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, f.Y))
 		}
 	}
 	return slices.Concat(conflicts, staged, unstaged)
@@ -134,6 +137,185 @@ func (s *statusScreen) file() (git.File, string, bool) {
 		return git.File{}, "", false
 	}
 	return s.g.snap.Files[i], group, true
+}
+
+// marked are the files of the marked rows in these groups, each once, in
+// the list's order; a file in two groups (staged in part) counts once.
+func (s *statusScreen) marked(groups []string, ok func(git.File) bool) []git.File {
+	if s.g.snap == nil {
+		return nil
+	}
+	var out []git.File
+	seen := map[string]bool{}
+	for _, id := range s.files.Marked() {
+		group, path := id[:2], id[2:]
+		if !slices.Contains(groups, group) || seen[path] {
+			continue
+		}
+		i := slices.IndexFunc(s.g.snap.Files, func(f git.File) bool { return f.Path == path })
+		if i < 0 || ok != nil && !ok(s.g.snap.Files[i]) {
+			continue
+		}
+		seen[path] = true
+		out = append(out, s.g.snap.Files[i])
+	}
+	return out
+}
+
+// batch is a panel operation on the marked files of these groups (tdp P3),
+// there while some are marked, off when none it works on is: it asks with
+// ask when that is set, runs do in the background, then says done and
+// clears the marks.
+func (s *statusScreen) batch(label, busy, title string, groups []string, ask func([]git.File) *terminu.Ask,
+	do func([]git.File) error, done func([]git.File) tea.Cmd) terminu.Action {
+	g := s.g
+	return s.batchWith(label, groups, nil, ask, func(fs []git.File) tea.Cmd {
+		return g.run(busy, title, func() error { return do(fs) }, func() tea.Cmd { return done(fs) })
+	})
+}
+
+// batchWith is batch with its own run, on the marked files ok takes.
+func (s *statusScreen) batchWith(label string, groups []string, ok func(git.File) bool, ask func([]git.File) *terminu.Ask,
+	run func([]git.File) tea.Cmd) terminu.Action {
+	n := func() int { return len(s.marked(groups, ok)) }
+	a := terminu.Action{Label: label, Scope: panel,
+		Live:     func() (string, string) { return label, plural(n(), "file", "files") },
+		Hidden:   func() bool { return s.conflict != "" || len(s.files.Marked()) == 0 },
+		Disabled: func() bool { return !s.g.idle() || n() == 0 },
+		Do: func() tea.Cmd {
+			fs := s.marked(groups, ok)
+			s.files.ClearMarks()
+			return run(fs)
+		}}
+	if ask != nil {
+		a.AskFor = func() *terminu.Ask { return ask(s.marked(groups, ok)) }
+	}
+	return a
+}
+
+// isMarked reports the row under [1]'s cursor marked.
+func (s *statusScreen) isMarked() bool {
+	r, ok := s.files.Current()
+	return ok && slices.Contains(s.files.Marked(), r.ID)
+}
+
+// toggleMark marks or unmarks the file under the cursor (tdp panel.7).
+func (s *statusScreen) toggleMark() tea.Cmd {
+	f, _, ok := s.file()
+	if !ok {
+		return nil
+	}
+	word := "Marked "
+	if s.isMarked() {
+		word = "Unmarked "
+	}
+	s.files.ToggleMark()
+	s.g.a.Log(terminu.Info, word+f.Path)
+	return nil
+}
+
+// inIndex reports a file git tracks that is still in the index: not new and
+// untracked, not a deletion staged already.
+func inIndex(f git.File) bool { return !f.Untracked() && f.X != 'D' }
+
+func paths(fs []git.File) []string {
+	out := make([]string, len(fs))
+	for i, f := range fs {
+		out[i] = f.Path
+	}
+	return out
+}
+
+// named is what a question about these files names: the path of one, how
+// many of several.
+func named(fs []git.File) string {
+	if len(fs) == 1 {
+		return fs[0].Path
+	}
+	return plural(len(fs), "file", "files")
+}
+
+// listed are the paths a confirm lists, eight at the most.
+func listed(fs []git.File) []string {
+	var out []string
+	for i, f := range fs {
+		if i == 8 {
+			out = append(out, "and "+plural(len(fs)-8, "more", "more"))
+			break
+		}
+		out = append(out, f.Path)
+	}
+	return out
+}
+
+func (s *statusScreen) askDiscard(fs []git.File) *terminu.Ask {
+	d := listed(fs)
+	d = append(d, "Their changes are lost; files git does not track are deleted: it can't be undone.")
+	return &terminu.Ask{Title: "Discard", Subject: named(fs), Question: "Discard the changes to " + named(fs) + "?", Verb: "discard",
+		Details: d, Warn: []int{len(d) - 1}}
+}
+
+func (s *statusScreen) askRemove(fs []git.File) *terminu.Ask {
+	var d []string
+	if len(fs) > 1 {
+		d = listed(fs)
+	}
+	d = append(d, "Deleted, and the next commit takes them out of the repository.")
+	warn := []int{}
+	if slices.ContainsFunc(fs, func(f git.File) bool { return f.Staged() || f.Unstaged() }) {
+		d = append(d, "Their changes not committed are lost: it can't be undone.")
+		warn = append(warn, len(d)-1)
+	}
+	return &terminu.Ask{Title: "Remove", Subject: named(fs), Question: "Remove " + named(fs) + " from the repository?", Verb: "remove",
+		Details: d, Warn: warn}
+}
+
+// remove deletes tracked files and stages their deletion.
+func (s *statusScreen) remove(fs []git.File) tea.Cmd {
+	g := s.g
+	return g.run("Removing…", "Remove", func() error { return g.repo.Remove(paths(fs)...) }, func() tea.Cmd {
+		if len(fs) > 1 {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Removed "+f.Path)
+			}
+		}
+		return g.a.Toast(terminu.Success, "Removed "+named(fs)+" from the repository")
+	})
+}
+
+// askIgnore asks only when a tracked file is among them: it stops being
+// tracked.
+func (s *statusScreen) askIgnore(fs []git.File) *terminu.Ask {
+	if !slices.ContainsFunc(fs, inIndex) {
+		return nil
+	}
+	var d []string
+	if len(fs) > 1 {
+		d = listed(fs)
+	}
+	d = append(d, "Tracked ones stop being tracked: the next commit takes them out of the repository, the files stay.")
+	return &terminu.Ask{Title: "Ignore", Subject: named(fs), Question: "Add " + named(fs) + " to .gitignore?", Verb: "ignore",
+		Details: d, Warn: []int{len(d) - 1}}
+}
+
+// ignore adds files to the .gitignore at the top, untracking the tracked
+// ones (git ignores only what it does not track).
+func (s *statusScreen) ignore(fs []git.File) tea.Cmd {
+	g := s.g
+	var tracked []string
+	for _, f := range fs {
+		if inIndex(f) {
+			tracked = append(tracked, f.Path)
+		}
+	}
+	return g.run("Ignoring…", "Ignore", func() error { return g.repo.Ignore(paths(fs), tracked) }, func() tea.Cmd {
+		if len(fs) > 1 {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Added "+f.Path+" to .gitignore")
+			}
+		}
+		return g.a.Toast(terminu.Success, "Added "+named(fs)+" to .gitignore")
+	})
 }
 
 func (s *statusScreen) in(group string) func() bool {
@@ -175,7 +357,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Hidden: s.in(inStaged), Disabled: off, Do: func() tea.Cmd {
 				p := path()
 				unborn := g.snap.HeadSHA == ""
-				return g.run("Unstaging…", "Unstage", func() error { return g.repo.Unstage(p, unborn) },
+				return g.run("Unstaging…", "Unstage", func() error { return g.repo.Unstage(unborn, p) },
 					func() tea.Cmd { g.a.Log(terminu.Info, "Unstaged "+p); return nil })
 			}},
 		{Key: "Enter", Label: "Resolve", Desc: "its conflicts one by one", Scope: item, Hint: "resolve",
@@ -184,6 +366,18 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), false) }},
 		{Key: "t", Label: "Use theirs", Desc: "for the whole file, and stage it", Scope: item,
 			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), true) }},
+		{Label: "Remove", Desc: "this file from the repository", Scope: item,
+			Hidden: func() bool { f, gr, ok := s.file(); return !ok || gr == inConflict || !inIndex(f) }, Disabled: off,
+			AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askRemove([]git.File{f}) },
+			Do:     func() tea.Cmd { f, _, _ := s.file(); return s.remove([]git.File{f}) }},
+		{Label: "Ignore", Desc: "add this file to .gitignore", Scope: item,
+			Hidden: func() bool { _, gr, ok := s.file(); return !ok || gr == inConflict }, Disabled: off,
+			AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askIgnore([]git.File{f}) },
+			Do:     func() tea.Cmd { f, _, _ := s.file(); return s.ignore([]git.File{f}) }},
+		{Key: "x", Label: "Mark", Desc: "this file, to work on the marked together", Scope: item, Hint: "mark",
+			Hidden: func() bool { _, _, ok := s.file(); return !ok || s.isMarked() }, Do: s.toggleMark},
+		{Key: "x", Label: "Unmark", Desc: "this file", Scope: item, Hint: "unmark",
+			Hidden: func() bool { _, _, ok := s.file(); return !ok || !s.isMarked() }, Do: s.toggleMark},
 		{Key: "D", Label: "Discard", Desc: "this file's change", Scope: item,
 			Hidden: func() bool { _, gr, ok := s.file(); return !ok || gr == inConflict }, Disabled: off,
 			AskFor: func() *terminu.Ask {
@@ -211,7 +405,62 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Theirs) }},
 		{Key: "b", Label: "Use both", Desc: "mine first, then theirs", Scope: item, Hint: "both",
 			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Both) }},
-		// The panel.
+		// The panel: the marked files first (tdp P3).
+		s.batch("Stage the marked", "Staging…", "Stage", []string{inUnstaged}, nil, func(fs []git.File) error {
+			return g.repo.Stage(paths(fs)...)
+		}, func(fs []git.File) tea.Cmd {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Staged "+f.Path)
+			}
+			return nil
+		}),
+		s.batch("Unstage the marked", "Unstaging…", "Unstage", []string{inStaged}, nil, func(fs []git.File) error {
+			return g.repo.Unstage(g.snap.HeadSHA == "", paths(fs)...)
+		}, func(fs []git.File) tea.Cmd {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Unstaged "+f.Path)
+			}
+			return nil
+		}),
+		s.batch("Use mine for the marked", "Resolving…", "Resolve", []string{inConflict}, nil, func(fs []git.File) error {
+			return g.repo.UseSide(false, paths(fs)...)
+		}, func(fs []git.File) tea.Cmd {
+			return g.a.Toast(terminu.Success, plural(len(fs), "file", "files")+" resolved with mine and staged")
+		}),
+		s.batch("Use theirs for the marked", "Resolving…", "Resolve", []string{inConflict}, nil, func(fs []git.File) error {
+			return g.repo.UseSide(true, paths(fs)...)
+		}, func(fs []git.File) tea.Cmd {
+			return g.a.Toast(terminu.Success, plural(len(fs), "file", "files")+" resolved with theirs and staged")
+		}),
+		s.batch("Discard the marked", "Discarding…", "Discard", []string{inStaged, inUnstaged}, s.askDiscard, func(fs []git.File) error {
+			for _, f := range fs {
+				if err := g.repo.Discard(f, f.Staged()); err != nil {
+					return err
+				}
+			}
+			return nil
+		}, func(fs []git.File) tea.Cmd {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Discarded the change to "+f.Path)
+			}
+			return g.a.Toast(terminu.Success, "Discarded the changes to "+plural(len(fs), "file", "files"))
+		}),
+		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
+		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
+		{Label: "Mark all", Desc: "every file listed", Scope: panel,
+			Hidden: func() bool { return inFiles() || s.files.Empty() || len(s.files.Marked()) == len(s.files.Rows()) },
+			Do: func() tea.Cmd {
+				var ids []string
+				for _, r := range s.files.Rows() {
+					ids = append(ids, r.ID)
+				}
+				s.files.SetMarked(ids)
+				g.a.Log(terminu.Info, "Marked every file")
+				return nil
+			}},
+		{Label: "Clear marks", Desc: "unmark every file", Scope: panel,
+			Hidden: func() bool { return inFiles() || len(s.files.Marked()) == 0 },
+			Do:     func() tea.Cmd { s.files.ClearMarks(); g.a.Log(terminu.Info, "Cleared the marks"); return nil }},
 		{Key: "a", Label: "Stage all", Desc: "every change, untracked files too", Scope: panel,
 			Hidden: inFiles, Disabled: func() bool {
 				return off() || !slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return f.Unstaged() })
@@ -569,7 +818,7 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 	if theirs {
 		word = "theirs"
 	}
-	return g.run("Resolving…", "Resolve", func() error { return g.repo.UseSide(path, theirs) },
+	return g.run("Resolving…", "Resolve", func() error { return g.repo.UseSide(theirs, path) },
 		func() tea.Cmd {
 			s.files.Select(inStaged + path)
 			return g.a.Toast(terminu.Success, path+" resolved with "+word+" and staged")
@@ -625,6 +874,13 @@ func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
 
 // changeFlag is a working tree change's letter in its colour, in [1]'s flag
 // column (tdp panel.7; tdp P5: the letters and colours are the app's).
+// fileRow is a file's row in a group: its state's letter in its colour, then
+// the path as shown.
+func fileRow(in, group, path, shown string, status byte) terminu.Row {
+	return terminu.Row{ID: in + path, Group: group, Cells: []string{string(status), shown},
+		Styled: [][]terminu.Span{{changeFlag(status)}}}
+}
+
 func changeFlag(status byte) terminu.Span {
 	c := terminu.Peach
 	switch status {
