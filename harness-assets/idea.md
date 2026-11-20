@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 整個檔的 Use mine、Use theirs 沒有熱鍵，Mark all 用 M（2026-11-20）
+
+user 照原話：「Use mine 沒有熱鍵, Use theirs 也移除, [m]ark 單一筆, [M]ark all 大寫M」
+
 ## Diff 模式的結果放在 [3]（2026-11-20）
 
 user 照原話：「關於剛剛那個兩個 commit 點 diff 的情況，我想要的是，當進入 diff mode 之後，panel 3 的內容就直接跟著 cursor 移動對兩個 commit 進行 diff, 顯示內容，也就是說 panel 3 的邏輯是，當只有一個 commit 被 focus 的時候，就顯示那一個 commit 的 detail 內容，當有兩個 commit 備 focus (diff mode) 的時候，就顯示那兩個 commit 點的 diff 內容, 這樣 panel 2 diff mode 按下 enter 的時候，就直接 focus 到 panel 3 就好，但這問題是，這時候 panel 3 應該要要有 diff mode 的狀態，然後 panel 2 應該也是保持 diff 2, 這還需要考慮」

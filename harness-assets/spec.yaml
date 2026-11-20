@@ -1,4 +1,4 @@
-id: 30
+id: 31
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -182,7 +182,7 @@ tasks:
       - "textarea 打開時是空的、什麼都沒打就送出，照 tdp K3 是不合格：錯誤列寫 Message can't be empty、popup 不關。2026-11-19 回報的 tgo #7（空的 textarea 直接關掉、沒有 Unchanged），terminu-go v1.2.19-beta.3 修好"
       - "textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
-    spec: 26
+    spec: 31
     request: merge 和解衝突：每個衝突的區塊都要選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
     tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5]
     remark:
@@ -190,7 +190,7 @@ tasks:
       - "Working tree 的 [1] CHANGES 在衝突的檔上按 Enter，照 tdp panel.10 一層一層進去：[1] 換成這個檔的衝突區塊，一個區塊一列（Conflict 1 · lines 12–18），位置列 All changes › <路徑>；Esc 回到檔案清單，cursor 停在那個檔（tdp K4）"
       - "[2] 是 cursor 那個區塊的明細（tdp panel.13）：label CONFLICT: <路徑>，上面 MINE · <HEAD 的分支> 一段、下面 THEIRS · <合進來的> 一段，兩段的標題用 Teal 與 Mauve（tdp P5 內容的顏色），內容是那一段原本的行；合進來的那一段有 diff3 的 base 時不畫（先求兩邊）"
       - "區塊的 item operation：Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs），下框 hint 寫 Enter:read m:mine t:theirs b:both；Enter 把 focus 送到 [2] 讀長的區塊（tdp K3：清單上的 Enter 可以送 focus 到明細）。選了就改寫那個檔、那個區塊換成選的內容，cursor 到下一個區塊；最後一個區塊解完就 git add，Success toast <路徑> resolved and staged，[1] 回到檔案清單（那一層已經沒有東西了，tdp T1 的「那一項不在了」同理）"
-      - "檔案那一層也有 Use mine for the whole file、Use [t]heirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞；檔案那一層的 m 是標記（task 21，使用者 2026-11-20），所以 Use mine 沒有熱鍵、從 Space menu 執行，區塊那一層（不能標記）還是 m"
+      - "檔案那一層也有 Use mine for the whole file、Use theirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞；兩個都沒有熱鍵、從 Space menu 執行（使用者 2026-11-20：「Use mine 沒有熱鍵, Use theirs 也移除」；檔案那一層的 m 是標記，task 21），t 因此回到全域的 [t]ag；區塊那一層（不能標記）還是 m、t、b"
       - "merge、rebase、cherry-pick、revert 做到一半時（task 1 的 statusbar 寫著）：global operation [A]bort <merge／rebase／cherry-pick／revert>（confirm，警告這次做到一半的會不見）、Continue（rebase、cherry-pick、revert；還有衝突時停用）；merge 解完用 [c]ommit 結束（task 13）"
       - "記 App Log：Used mine in conflict 2 of README.md 之類，每一次選擇一筆"
   - id: 15
@@ -250,14 +250,14 @@ tasks:
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
       - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
   - id: 21
-    spec: 30
+    spec: 31
     request: Working tree 的 [1] CHANGES 可以複選（勾選），再從 Space menu 對勾選的檔一起操作：stage、unstage、用我的、用對方的、discard、remove、加進 .gitignore（user 2026-11-20：「不就是 checkbox 勾選 -> space menu 操作嗎?」）
     tdp: [tdp panel.7, tdp P3, tdp M2, tdp M5, tdp M6, tdp note.7, tdp confirm, tdp toast.2, tdp F5, tdp F6, tdp K3, tdp panel.5, tdp K13, tdp K13-2, tdp K13-3]
     remark:
       - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 檔案的 [x] Discard；有標記時 [X] Discard the marked（先 confirm）；全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部；K13 只規定給了鍵就在 X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，x 已經是 Discard，所以沒有熱鍵"
       - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；m 標記或取消 cursor 那一列（item operation [m]ark／Un[m]ark，hint m:mark／m:unmark；使用者 2026-11-20 定 m，檔案那一層的 Use mine 因此沒有熱鍵，task 14）"
       - "對標記的檔做事是 panel operation（tdp P3），只在有標記時出現，沒有熱鍵（使用者：勾選 → Space menu 操作）：Stage the marked、Unstage the marked、Use mine for the marked、Use theirs for the marked、Discard the marked、Remove the marked、Ignore the marked；說明欄寫會作用在幾個檔。每一個只作用在適用的檔：Stage 對 UNSTAGED 的列、Unstage 對 STAGED、Use mine／theirs 對 CONFLICTS、Discard 與 Ignore 對 STAGED 與 UNSTAGED、Remove 對還在 index 裡的；同一個檔兩列都標了算一次；一個都不適用時停用（tdp M6）；開始做就清掉標記"
-      - "Mark all（標記清單裡每一列，全都標了時不出現）、Clear marks（有標記時）：panel operation，沒有熱鍵"
+      - "[M]ark all（標記清單裡每一列；使用者 2026-11-20：「[m]ark 單一筆, [M]ark all 大寫M」）：panel operation；M 也是全域的 [M]erge，panel 的鍵優先（tdp M4），所以 Working tree [1] 上 M 是 Mark all，Merge 從 Space menu 的全域列、或其他 panel 按 M；清單是空的或全都標了時停用、不隱藏（M6），M 才不會換成 Merge；進到一個檔的衝突區塊時不出現（那一層不能標記）。Clear marks（有標記時）：panel operation，沒有熱鍵"
       - "Remove（item operation，沒有熱鍵；還在 index 裡、不在衝突的檔）是 git 的 remove：git rm -f，刪掉檔案並 stage 刪除，下一個 commit 把它從 repo 拿掉；先 confirm（REMOVE），有沒 commit 的改動時多一句會不見（Peach，tdp confirm）。已經 stage 成刪除的檔不在 index 裡，沒有 Remove"
       - "Ignore（item operation，沒有熱鍵；不在衝突的檔）：寫進 repo 頂層的 .gitignore，一個檔一行 /<路徑>（從頂層算、只對到它；* ? [ \\ 與尾端空白跳脫），已經有那一行就不重寫；還在 index 裡的檔先 git rm --cached（git 不會忽略已經追蹤的檔），檔案留著；有這種檔時先 confirm（IGNORE）說它們不再被追蹤，只有沒追蹤的檔時不問"
       - "App Log（tdp note.7：P3 的動作都記）：Marked <路徑>、Unmarked <路徑>、Marked every file、Cleared the marks；整批的 stage、unstage 每個檔一筆（跟單一的同一句）；Discard、Remove、Ignore 整批時每個檔一筆，再加一個 Success toast 說幾個檔；Use mine／theirs 整批時一個 Success toast（<N> files resolved with mine and staged）"

@@ -368,9 +368,9 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}},
 		{Key: "Enter", Label: "Resolve", Desc: "its conflicts one by one", Scope: item, Hint: "resolve",
 			Hidden: s.in(inConflict), Do: func() tea.Cmd { return s.goIn(path()) }},
-		{Label: "Use mine", Desc: "for the whole file, and stage it", Scope: item, // m marks (the user)
+		{Label: "Use mine", Desc: "for the whole file, and stage it", Scope: item, // no key (the user)
 			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), false) }},
-		{Key: "t", Label: "Use theirs", Desc: "for the whole file, and stage it", Scope: item,
+		{Label: "Use theirs", Desc: "for the whole file, and stage it", Scope: item, // no key (the user)
 			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), true) }},
 		{Label: "Remove", Desc: "this file from the repository", Scope: item,
 			Hidden: func() bool { f, gr, ok := s.file(); return !ok || gr == inConflict || !inIndex(f) }, Disabled: off,
@@ -453,8 +453,10 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		})), // X: the marked at once (tdp K13)
 		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
-		{Label: "Mark all", Desc: "every file listed", Scope: panel,
-			Hidden: func() bool { return inFiles() || s.files.Empty() || len(s.files.Marked()) == len(s.files.Rows()) },
+		// M (the user) is the panel's over the global Merge (tdp M4): off, not
+		// hidden, when there is nothing to mark, so M never merges here.
+		{Key: "M", Label: "Mark all", Desc: "every file listed", Scope: panel,
+			Hidden: inFiles, Disabled: func() bool { return s.files.Empty() || len(s.files.Marked()) == len(s.files.Rows()) },
 			Do: func() tea.Cmd {
 				var ids []string
 				for _, r := range s.files.Rows() {

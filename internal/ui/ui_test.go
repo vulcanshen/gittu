@@ -1195,7 +1195,7 @@ func TestPickMerge(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "M")
+	d.Press("W", "2", "M") // on [1] M is Mark all
 	has(t, d, "MERGE: main", "topic", "origin/main")
 	d.Press("/")
 	d.Type("topic")
@@ -1575,8 +1575,9 @@ func markFile(d *tdptest.Driver, g *gittu, id string) {
 }
 
 // TestMarkFiles: m marks the file under the cursor, its tick in the mark
-// column, the file's state in its row; again unmarks it; Mark all and Clear
-// marks are in the Space menu (the user; tdp panel.7).
+// column, the file's state in its row; again unmarks it; M marks them all,
+// and again does nothing, not the global Merge; Clear marks is in the Space
+// menu (the user; tdp panel.7, M4, M6).
 func TestMarkFiles(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
@@ -1593,10 +1594,12 @@ func TestMarkFiles(t *testing.T) {
 	if len(g.status.files.Marked()) != 0 {
 		t.Fatal("m again did not unmark")
 	}
-	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Mark all") })
+	d.Press("M")
 	if len(g.status.files.Marked()) != 2 {
-		t.Fatalf("Mark all marked %v", g.status.files.Marked())
+		t.Fatalf("M marked %v", g.status.files.Marked())
 	}
+	d.Press("M")
+	hasNot(t, d, "MERGE")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Clear marks") })
 	if len(g.status.files.Marked()) != 0 {
 		t.Fatal("Clear marks left some")
@@ -1863,7 +1866,11 @@ func TestUseSideWholeFile(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine") }) // no key: m marks
+	d.Press("Space")
+	has(t, d, "Use mine", "Use theirs") // no keys (the user)
+	hasNot(t, d, "Use [m]ine", "Use [t]heirs")
+	d.Press("Esc")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine") })
 	done(t, g, d)
 	has(t, d, "notes.txt resolved with mine and staged")
 	if !strings.Contains(r.Read("notes.txt"), "B from main") {

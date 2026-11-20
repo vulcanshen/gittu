@@ -196,7 +196,7 @@ tasks:
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 26
+    spec: 31
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Resolve）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
       [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 All changes › <路徑>，Panel.OnEsc 設好；
@@ -205,7 +205,7 @@ tasks:
       區塊的 item operation：[Enter] Read（ToDetails：focus 到 [2]）、Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs）；hint Enter:read m:mine t:theirs b:both：
       選了就改寫那個檔（同一個權限，其他行照舊、保留結尾的換行），那個區塊換成選的行，App Log 記 Info Used <mine／theirs／both> in conflict N of <路徑>；
       還有區塊時重新讀、cursor 停在下一個；最後一個解完在背景 git add，Success「<路徑> resolved and staged」，[1] 回到檔案清單、cursor 在 STAGED 的那個檔
-      檔案那一層的衝突檔：Use mine（沒有熱鍵，m 是標記，task 21）、Use [t]heirs（for the whole file, and stage it）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」
+      檔案那一層的衝突檔：Use mine、Use theirs（for the whole file, and stage it；都沒有熱鍵，m 是標記，task 21；t 是全域的 Tag）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」
       做到一半的操作（.git 裡有 rebase-merge／rebase-apply、MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD）：global operation [A]bort <merge／rebase／cherry-pick／revert>
       （只有那一種時看得到；confirm「Abort the <op>?」，內容寫做到一半的會還原（Peach）；git <op> --abort；Success Aborted the <op>）、
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
@@ -269,7 +269,7 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 30
+    spec: 31
     implementation: |
       [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
@@ -278,7 +278,7 @@ tasks:
       [X] Discard the marked（熱鍵 X，tdp K13；有標記時才在，沒有標記時 X 什麼都不做；STAGED、UNSTAGED；confirm DISCARD: <N> files「Discard the changes to <N> files?」，內容列出路徑（最多 8 個，其他寫 and <N> more）與無法復原、沒追蹤的會刪掉（Peach）；一個一個照 task 12 的 Discard，有 stage 的連 index 一起；每個檔記 Discarded the change to <路徑>，Success Discarded the changes to <N> files）、
       Remove the marked、Ignore the marked（同下面單一的，路徑列在 confirm 裡）
       標記的列照它的組（ID 的前綴）與 snapshot 找到檔；同一個檔兩列只算一次；開始做時 List.ClearMarks
-      Mark all（List.SetMarked 每一列；App Log Marked every file）、Clear marks（List.ClearMarks；App Log Cleared the marks）
+      [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的或全都標了時 Disabled，不 Hidden，M 不會落到 Merge；進到衝突區塊時 Hidden）、Clear marks（沒有熱鍵；List.ClearMarks；App Log Cleared the marks）
       item operation Remove — this file from the repository（沒有熱鍵；還在 index 裡的檔：不是沒追蹤、不是已經 stage 成刪除，不在衝突）：confirm REMOVE「Remove <路徑>|<N> files from the repository?」，
       內容 Deleted, and the next commit takes them out of the repository.，有沒 commit 的改動時加 Their changes not committed are lost: it can't be undone.（Peach）；git rm -q -f -- <路徑>…；Success Removed <路徑>|<N> files from the repository
       item operation Ignore — add this file to .gitignore（沒有熱鍵；不在衝突）：有還在 index 裡的檔時 confirm IGNORE「Add <路徑>|<N> files to .gitignore?」，內容 Tracked ones stop being tracked…（Peach），沒有就不問；
