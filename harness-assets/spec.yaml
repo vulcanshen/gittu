@@ -1,4 +1,4 @@
-id: 48
+id: 49
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -243,13 +243,14 @@ tasks:
       - "位置列在遠端分支畫出來時接 · with remote branches（tdp panel.10），看得出現在是哪一種"
       - "切換記 App Log（Info：Showing remote branches／Hiding remote branches；tdp note.7）"
   - id: 19
-    spec: 12
+    spec: 49
     request: repo 有變動就跟上，每一次跟上都記進 App Log；用定時刷新，每 3 秒（user 2026-11-19：先選了 watch，聊過做法與困難點後「ok 改定時刷新，3 秒」）
     tdp: [tdp note.7, tdp note.9, tdp F5, tdp panel.15, tdp toast.2, tdp K3, tdp P5]
     remark:
       - "每 3 秒在背景重新讀一次 repo（沒有 git 指令在跑、上一次還沒讀完時不讀）。怎麼得知變動是 app 的事（tdp P5）；不用 watch：watch 有平台的監看上限（macOS 每個檔一個 file handle、Linux inotify 的數量）、網路磁碟與 WSL 收不到事件、分不出是不是 gittu 自己改的、要過濾編輯器暫存檔，定時刷新沒有這些問題，代價是最慢 3 秒才跟上"
       - "每次刷新拿讀到的跟上一次比：HEAD、本地分支、遠端分支、tag、stash、做到一半的操作、每個檔的狀態，加上 [2] DIFF 正在畫的那個檔的內容（git status 看不出已經改過的檔又改了一次）。有不一樣才在 App Log 記一筆 Info（tdp note.7：app 自己在背景做的事），寫出變了什麼：Changed outside gittu: <最多三項>（多的接 and N more）；沒變的刷新不記，App Log 才不會被每 3 秒一筆洗掉（tdp v1.2.18 的 note.7、note-104：app 自己重讀的內容只有讀到變了才記一筆 INFO，使用者 2026-11-19 在 tdp session 選 A）"
       - "gittu 自己的操作做完馬上重讀，下一次刷新跟它比就沒有差別，所以自己的操作不會被記成外面的變動；按 R 的照 task 10 記 Info toast"
+      - "gittu 開的 editor（task 14）開著時不刷新（使用者 2026-11-20 選 1）：editor 自己的暫存檔（vi 的 .swp）與存的檔是在 gittu 裡改的，不是外面的變動；editor 結束時 gittu 本來就重新讀一次，那一次也當作自己的操作，不記 Changed outside gittu"
       - "刷新不移動 focus、cursor 留在同一列（tdp K3），[2] 的內容照 tdp note.9 重新放進去"
       - "重新讀失敗照 task 3、10：舊的內容留著、Error toast；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳"
   - id: 20

@@ -70,6 +70,10 @@ type gittu struct {
 	busy string
 	// reading reports a read of the repository on its way.
 	reading bool
+	// editing reports gittu's editor open: no reading again meanwhile, its
+	// files (an editor's swap file) are not changes made outside gittu (the
+	// user).
+	editing bool
 	// readErr is why the last read failed, "" when it did not.
 	readErr string
 	// draft is a commit message written but not committed yet (a hook
@@ -134,6 +138,9 @@ type readMsg struct {
 	err  error
 	// asked reports a read the user asked for (Refresh), to log.
 	asked bool
+	// own reports a read after gittu's own change (its editor): what changed
+	// is not logged as changed outside gittu.
+	own bool
 }
 
 // doneMsg is an operation done, with the repository read after it.
@@ -152,7 +159,7 @@ type doneMsg struct {
 func (g *gittu) onMsg(msg tea.Msg) tea.Cmd {
 	switch m := msg.(type) {
 	case tickMsg:
-		if g.busy == "" && !g.reading {
+		if g.busy == "" && !g.reading && !g.editing {
 			g.reading = true
 			return tea.Batch(g.read(false), g.tick())
 		}
@@ -165,7 +172,7 @@ func (g *gittu) onMsg(msg tea.Msg) tea.Cmd {
 		was, old := g.readErr, g.snap
 		g.show(m.snap, m.err)
 		reread := g.status.takeReread()
-		if !m.asked && m.err == nil {
+		if !m.asked && !m.own && m.err == nil {
 			// What changed outside gittu since the last read: its own
 			// operations read the repository as they end (task 19).
 			if what := changes(old, m.snap, reread); len(what) > 0 {
@@ -210,6 +217,16 @@ func (g *gittu) read(asked bool) tea.Cmd {
 	return func() tea.Msg {
 		snap, err := repo.Read(remote)
 		return readMsg{snap: snap, err: err, asked: asked}
+	}
+}
+
+// readOwn reads the repository after a change gittu made outside run (its
+// editor), not logged as changed outside gittu.
+func (g *gittu) readOwn() tea.Cmd {
+	repo, remote := g.repo, g.remote
+	return func() tea.Msg {
+		snap, err := repo.Read(remote)
+		return readMsg{snap: snap, err: err, own: true}
 	}
 }
 

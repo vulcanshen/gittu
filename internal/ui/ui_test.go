@@ -2144,6 +2144,40 @@ func TestEditConflict(t *testing.T) {
 	has(t, d, "Editing notes.txt")
 }
 
+// TestEditorPausesRefresh: while gittu's editor is open the repository is not
+// read again, so its swap file is not logged as changed outside gittu; nor is
+// the file it saved, read when it ends (the user).
+func TestEditorPausesRefresh(t *testing.T) {
+	r := gittest.Conflicted(t)
+	dir := t.TempDir()
+	editor, goOn := filepath.Join(dir, "editor"), filepath.Join(dir, "go-on")
+	swap := filepath.Join(r.Dir, ".notes.txt.swp")
+	script := "#!/bin/sh\ntouch " + swap + "\necho editing\n" + // the output wakes WaitFor
+		"while [ ! -f " + goOn + " ]; do sleep 0.05; done\n" +
+		"rm " + swap + "\nprintf 'a\\nB\\nc\\n' > \"$1\"\n"
+	if err := os.WriteFile(editor, []byte(script), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_EDITOR", editor)
+	g, d := start(t, r, 100, 32)
+	d.Press("W", "Enter", "Enter")
+	d.WaitFor(func() bool { _, err := os.Stat(swap); return err == nil }, 5*time.Second)
+	d.Advance(refreshEvery + time.Second)
+	if g.reading {
+		t.Error("read again while the editor is open")
+	}
+	if err := os.WriteFile(goOn, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	d.WaitFor(func() bool { return d.Has("no conflicts left") }, 5*time.Second)
+	d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+	d.Advance(refreshEvery + time.Second)
+	d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+	d.Press("!")
+	has(t, d, "Editing notes.txt")
+	hasNot(t, d, "Changed outside gittu")
+}
+
 // TestMarkResolvedAsks: Mark [r]esolved (so the Space menu writes it, the
 // user; tdp main M5-1)
 // on a file with conflict markers left asks first, naming their lines: they

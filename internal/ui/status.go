@@ -1045,6 +1045,7 @@ func (s *statusScreen) edit(path string) tea.Cmd {
 		return g.a.ErrorAbout("Edit failed", path, err.Error())
 	}
 	g.a.Log(terminu.Info, "Editing "+path)
+	g.editing = true
 	term := &terminu.Terminal{Title: "Edit", Subject: path, Dir: g.repo.Dir, Ends: true, Env: editorEnv(),
 		Command: []string{"sh", "-c", ed + ` "$@"`, "sh", filepath.Join(g.repo.Dir, path)}}
 	term.OnExit = func(err error) tea.Cmd { return s.edited(path, err) }
@@ -1056,7 +1057,8 @@ func (s *statusScreen) edit(path string) tea.Cmd {
 // mark it resolved.
 func (s *statusScreen) edited(path string, err error) tea.Cmd {
 	g := s.g
-	read := g.read(false)
+	g.editing = false
+	read := g.readOwn()
 	if err != nil { // the file is checked all the same
 		g.a.Log(terminu.Warning, "The editor of "+path+" ended with "+err.Error())
 	}

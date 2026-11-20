@@ -273,15 +273,16 @@ tasks:
       [1] 的 REMOTES 分頁與 statusbar、[1] 的 ↑N ↓N 不受影響
     test: [TestRemoteBranchesToggle, TestEnterOnARemoteBranchHidden, TestReadTheSample]
   - id: 19
-    spec: 12
+    spec: 49
     implementation: |
       啟動時（tgo App.Start）起一個 tgo App.Tick，每 3 秒在背景重新讀一次 repo（git.Read 在另一個 goroutine），沒有 git 指令在跑、上一次還沒讀完時不讀
       讀回來時（不是按 R 的）拿上一次的 Snapshot 比：每個檔的狀態（路徑、X、Y；多出來、不見了、變了的）、[2] DIFF 正在畫的那個檔兩邊的文字（同一列重新讀時變了，task 11 記下它的路徑）、
       HEAD（換了分支寫 HEAD (on <分支>)、變成 detached 寫 HEAD (detached)，detached 時移動寫 HEAD）、本地分支／遠端分支／tag（branch <名> (new)、(deleted)，指的 commit 變了寫 branch <名>）、
       stash（筆數或最上面那筆變了寫 stashes）、做到一半的操作（a <op> under way、the <op> ended）；有不一樣才 App Log 記 Info：Changed outside gittu: <最多三項>（多的接 and N more）
       gittu 自己的操作做完時（doneMsg）與切換遠端分支時（task 18）讀的那一次換上新的 Snapshot、丟掉 [2] 的變動，所以下一次刷新不會把自己的操作記成外面的變動
+      gittu 開的 editor（task 14 的 Edit）開著時 Tick 照樣排、但不讀；editor 結束時讀的那一次（readMsg.own）照樣換上新的 Snapshot，不比、不記
       讀失敗照 task 3：舊的內容留著；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳
-    test: [TestRefreshAndReadingAgain, TestRefreshLogsOnlyChanges, TestChanges, TestDiffFollowsCursor, TestRefreshFailureKeepsContent, TestFirstReadFails]
+    test: [TestRefreshAndReadingAgain, TestRefreshLogsOnlyChanges, TestChanges, TestDiffFollowsCursor, TestRefreshFailureKeepsContent, TestFirstReadFails, TestEditorPausesRefresh]
   - id: 20
     spec: 19
     implementation: |
