@@ -102,6 +102,7 @@ tasks:
       cursor 在 anchor 上 [3] 是空狀態 Move to another commit to diff with <anchor>，在一樣的 commit 上 No differences between <anchor> and <另一個>，不跳 toast；
       [2] 上 D 或 Enter：focus 到 [3]（footer Esc:back）；[3] 的檔案上 D 或 Enter 打開比較；Esc：比較 → [3] → [2]（模式與 anchor 留著）→ 離開模式，[3] 回到 gittu 自己的內容（showFiles 照樣從 OnMove 更新）；
       模式裡 Tab、2、3 在 [2]、[3] 之間換，1 跳 Info toast Press [Esc] to leave Diff first；[1] 與其他鍵暫停
+      模式裡 [2]、[3] 的下框 hint 是模式的鍵 D|Enter:diff（tgo v1.2.21-beta.3 起），離開模式回到 [2] 自己的 Enter:files h|l:tab z:zoom
       原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉；原本進到 [2] 的差異清單（panel.10）改成放在 [3]
     test: [TestDiffTwoCommits, TestDiffSameCommits]
   - id: 8

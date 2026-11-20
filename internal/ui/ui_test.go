@@ -756,6 +756,7 @@ func TestDiffTwoCommits(t *testing.T) {
 	if h.histP.InMode() == nil || h.filesP.InMode() == nil || g.a.Screen().Focused() != h.histP {
 		t.Fatal("D did not put [2] and [3] in the Diff mode, the focus on [2]")
 	}
+	hasNot(t, d, "Enter:files", "z:zoom") // the bottom hints are the mode's keys (tdp K11)
 	b := g.snap.Commits[0] // gg: the top commit, [3] following
 	d.Press("g", "g")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
@@ -784,7 +785,7 @@ func TestDiffTwoCommits(t *testing.T) {
 	if h.histP.InMode() != nil || h.filesP.InMode() != nil {
 		t.Error("Esc did not leave the Diff mode")
 	}
-	has(t, d, "GRAPH", git.Short(b.Parents[0])+" ↔ "+git.Short(b.SHA)) // [3] the commit's own files again
+	has(t, d, "GRAPH", git.Short(b.Parents[0])+" ↔ "+git.Short(b.SHA), "Enter:files") // [3] the commit's own files again, [2]'s own hint
 }
 
 // TestDiffSameCommits: on a commit the same as the anchor (an empty commit
