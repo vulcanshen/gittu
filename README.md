@@ -10,8 +10,8 @@
 `gittu` in a repository opens three panels: the branches, remote branches, tags and stashes on the left, the commits
 and their graph on the right, and under them the files of the commit under the cursor. What you can do with the branch or the commit under the cursor is in the `Space` menu,
 and what works on the whole repository is in its global operations. Look into a commit's files and their diffs,
-compare two commits, stage and commit, merge, and resolve conflicts one block at a time with both sides in sight — with
-no keys to learn first.
+compare two commits, stage and commit, merge, and resolve conflicts in your own editor — with no keys to learn
+first.
 
 ![gittu: the history graph, a commit's files and a diff, the files to commit, a merge and its conflicts resolved](docs/demo.gif)
 
@@ -29,8 +29,10 @@ no keys to learn first.
   delete, stash, fetch, pull, push — each with the question it needs before it runs.
 - **Working tree**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
   stage, unstage, discard and commit.
-- **Conflicts one block at a time**: mine above theirs, both in sight; use mine, theirs or both, and the file is staged
-  when the last block is done. Abort or continue a merge, rebase, cherry-pick or revert.
+- **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[2]`, and `Enter` there opens it in the editor
+  git uses; when you leave it, gittu says which lines still have conflict markers, and `r` marks it resolved (`R` the
+  marked ones). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
+  revert.
 - **Your git**: gittu runs the git you have, so your hooks, credential helper, ssh keys and settings work as they do
   in the shell.
 
@@ -136,9 +138,9 @@ and on `[2]` leaves the mode.
 |---|---|---|
 | An unstaged file | Stage | `[m]`ark, Discard, Remove, Ignore |
 | A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
-| A conflicted file | Resolve its conflicts one by one | `[m]`ark, Use mine, Use theirs, for the whole file |
+| A conflicted file | Show it in `[2]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, `[r]` Mark resolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
-| The panel | | With files marked: stage, unstage, use mine, use theirs, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |
+| The panel | | With files marked: stage, unstage, use mine, use theirs, `[R]` mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |
 
 Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if

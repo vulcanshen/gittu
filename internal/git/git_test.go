@@ -322,3 +322,31 @@ func TestGraphMostLines(t *testing.T) {
 		}
 	}
 }
+
+// TestMarkers: the lines that open or close a conflict, a block half deleted
+// too; ======= alone is a line of the file.
+func TestMarkers(t *testing.T) {
+	r := gittest.Conflicted(t)
+	repo, _ := git.Open(r.Dir)
+	at, err := repo.Markers("notes.txt")
+	if err != nil || !slices.Equal(at, []int{2, 6, 14, 18}) {
+		t.Fatalf("markers %v, %v", at, err)
+	}
+	r.Write("notes.txt", "a\n=======\n<<<<<<< HEAD\nB\n")
+	if at, _ = repo.Markers("notes.txt"); !slices.Equal(at, []int{3}) {
+		t.Errorf("half a block: %v", at)
+	}
+	r.Write("notes.txt", "a\n=======\nb\n")
+	if at, _ = repo.Markers("notes.txt"); len(at) != 0 {
+		t.Errorf("no conflict: %v", at)
+	}
+}
+
+// TestEditor: the editor git would open, GIT_EDITOR first.
+func TestEditor(t *testing.T) {
+	t.Setenv("GIT_EDITOR", "my-editor --wait")
+	repo, _ := git.Open(gittest.Sample(t).Dir)
+	if ed, err := repo.Editor(); err != nil || ed != "my-editor --wait" {
+		t.Errorf("editor %q, %v", ed, err)
+	}
+}

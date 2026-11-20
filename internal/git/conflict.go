@@ -43,6 +43,36 @@ func (r *Repo) Conflicts(path string) ([]Hunk, error) {
 	return parseHunks(lines), nil
 }
 
+// Markers are the lines of a working tree file, from 1, that open or close a
+// conflict (<<<<<<< and >>>>>>>), a block half deleted too: what is left of
+// its conflicts after the user edited it. ======= alone is not counted: a
+// file may have it as a line of its own.
+func (r *Repo) Markers(path string) ([]int, error) {
+	lines, _, err := r.readLines(path)
+	if err != nil {
+		return nil, err
+	}
+	var at []int
+	for i, l := range lines {
+		_, open := marker(l, '<')
+		_, end := marker(l, '>')
+		if open || end {
+			at = append(at, i+1)
+		}
+	}
+	return at, nil
+}
+
+// Editor is the editor git would open, as a shell command: GIT_EDITOR,
+// core.editor, VISUAL, EDITOR, then vi (git var GIT_EDITOR).
+func (r *Repo) Editor() (string, error) {
+	out, err := r.Run("var", "GIT_EDITOR")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(out), nil
+}
+
 // readLines reads a working tree file as lines, each keeping a \r of a CRLF;
 // end reports a line break after the last line.
 func (r *Repo) readLines(path string) (lines []string, end bool, err error) {

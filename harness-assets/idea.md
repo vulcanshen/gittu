@@ -161,6 +161,11 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 衝突用 editor 解，自己標成已解決（2026-11-20）
+
+user 試了 demo 的衝突後，照原話：「然後現在解決 conflict 的方式很不行，這樣根本沒有解決，我們應該是按下 enter 打開 editor, 讓使用者編輯, 編輯結束後 reload, 並幫使用者檢查是否還有衝突的標注區域, 然後要有 mark as [r]esolved (單一檔)的功能, [R] 就是多選後 mark as resolved 所有勾選檔案」
+接著：「我們的ux 應該是，在 conflict 的 item 上按下 enter -> focus 到 panel 2(diff), 然後在按下 enter -> 開啟 editor」
+
 ## 一個檔的 Discard 沒有熱鍵（2026-11-20）
 
 user 照原話：「discard 不要用 x, 一樣沒有熱鍵」

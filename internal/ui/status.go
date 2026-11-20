@@ -75,8 +75,13 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = s.fileActions()
 	s.diffP.Actions = []terminu.Action{
+		// A conflicted file: Enter edits it, r marks it resolved (the user).
+		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
+			Hidden: s.in(inConflict), Disabled: func() bool { return !g.idle() },
+			Do: func() tea.Cmd { f, _, _ := s.file(); return s.edit(f.Path) }},
+		s.resolvedAction(panel),
 		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "diff",
-			Hidden: func() bool { return s.diff.Empty() || !s.text }, Do: s.openDiff},
+			Hidden: func() bool { return s.diff.Empty() || !s.text || !s.in(inConflict)() }, Do: s.openDiff},
 	}
 	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
 		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: oneToTwo}
@@ -366,7 +371,12 @@ func (s *statusScreen) fileActions() []terminu.Action {
 				return g.run("Unstaging…", "Unstage", func() error { return g.repo.Unstage(unborn, p) },
 					func() tea.Cmd { g.a.Log(terminu.Info, "Unstaged "+p); return nil })
 			}},
-		{Key: "Enter", Label: "Resolve", Desc: "its conflicts one by one", Scope: item, Hint: "resolve",
+		// A conflicted file: Enter goes to [2], Enter there edits it in the
+		// user's editor, r marks it resolved (the user).
+		{Key: "Enter", Label: "Show", Desc: "it in [2], to edit it there", Scope: item, Hint: "show",
+			Hidden: s.in(inConflict), ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
+		s.resolvedAction(item),
+		{Label: "Resolve one by one", Desc: "pick mine, theirs or both for each conflict", Scope: item,
 			Hidden: s.in(inConflict), Do: func() tea.Cmd { return s.goIn(path()) }},
 		{Label: "Use mine", Desc: "for the whole file, and stage it", Scope: item, // no key (the user)
 			Hidden: s.in(inConflict), Disabled: off, Do: func() tea.Cmd { return s.useSide(path(), false) }},
@@ -451,6 +461,9 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}
 			return g.a.Toast(terminu.Success, "Discarded the changes to "+plural(len(fs), "file", "files"))
 		})), // X: the marked at once (tdp K13)
+		// R (the user) is the panel's over the global Refresh (tdp M4) while
+		// some files are marked.
+		withKey("R", s.batchWith("Mark the marked resolved", []string{inConflict}, nil, s.askResolved, s.markResolved)),
 		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
 		// M (the user) is the panel's over the global Merge (tdp M4): off, not
@@ -831,6 +844,115 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 			s.files.Select(inStaged + path)
 			return g.a.Toast(terminu.Success, path+" resolved with "+word+" and staged")
 		})
+}
+
+// edit opens a conflicted file in the editor git would open, in a terminal
+// popup EDIT: <path> (tdp terminal; textarea.1: a file of lines is the
+// user's editor's). When it ends, the repository is read again and the file
+// checked for conflict markers left (the user).
+func (s *statusScreen) edit(path string) tea.Cmd {
+	g := s.g
+	ed, err := g.repo.Editor()
+	if err != nil {
+		return g.a.ErrorAbout("Edit failed", path, err.Error())
+	}
+	g.a.Log(terminu.Info, "Editing "+path)
+	term := &terminu.Terminal{Title: "Edit", Subject: path, Dir: g.repo.Dir, Ends: true, Env: editorEnv(),
+		Command: []string{"sh", "-c", ed + ` "$@"`, "sh", filepath.Join(g.repo.Dir, path)}}
+	term.OnExit = func(err error) tea.Cmd { return s.edited(path, err) }
+	return g.a.OpenTerminal(term)
+}
+
+// edited reads the repository again after the editor ended and says what is
+// left of the file's conflicts: the lines of its markers, or none and how to
+// mark it resolved.
+func (s *statusScreen) edited(path string, err error) tea.Cmd {
+	g := s.g
+	read := g.read(false)
+	if err != nil { // the file is checked all the same
+		g.a.Log(terminu.Warning, "The editor of "+path+" ended with "+err.Error())
+	}
+	at, rerr := g.repo.Markers(path)
+	switch {
+	case rerr != nil:
+		return tea.Batch(read, g.a.Toast(terminu.Error, "Can't read "+path+": "+rerr.Error()))
+	case len(at) > 0:
+		return tea.Batch(read, g.a.Toast(terminu.Warning, path+" still has conflict markers on "+lineList(at)))
+	}
+	return tea.Batch(read, g.a.Toast(terminu.Info, path+" has no conflict markers left: press [r] to mark it resolved"))
+}
+
+// lineList names lines: line 4, lines 4, 9 and 12; eight at the most.
+func lineList(at []int) string {
+	if len(at) == 1 {
+		return "line " + strconv.Itoa(at[0])
+	}
+	var ns []string
+	for i, n := range at {
+		if i == 8 {
+			ns = append(ns, "and "+strconv.Itoa(len(at)-8)+" more")
+			break
+		}
+		ns = append(ns, strconv.Itoa(n))
+	}
+	return "lines " + strings.Join(ns, ", ")
+}
+
+// editorEnv hides the outer terminal's name from the editor: it runs in the
+// lib's emulator, not there (as sshu does).
+func editorEnv() []string {
+	var out []string
+	for _, k := range []string{"TERM_PROGRAM", "TERM_PROGRAM_VERSION", "TERM_SESSION_ID", "KITTY_WINDOW_ID",
+		"KITTY_PUBLIC_KEY", "ITERM_SESSION_ID", "ITERM_PROFILE", "LC_TERMINAL", "LC_TERMINAL_VERSION",
+		"WEZTERM_EXECUTABLE", "WEZTERM_PANE", "GHOSTTY_RESOURCES_DIR"} {
+		out = append(out, k+"=")
+	}
+	return out
+}
+
+// resolvedAction is [r] Mark resolved, the conflicted file under [1]'s
+// cursor, on [1] and on [2] showing it (the user).
+func (s *statusScreen) resolvedAction(scope terminu.Scope) terminu.Action {
+	return terminu.Action{Key: "r", Label: "Mark resolved", Desc: "stage it: its conflicts are done", Scope: scope, Hint: "resolved",
+		Hidden: s.in(inConflict), Disabled: func() bool { return !s.g.idle() },
+		AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askResolved([]git.File{f}) },
+		Do:     func() tea.Cmd { f, _, _ := s.file(); return s.markResolved([]git.File{f}) }}
+}
+
+// askResolved asks only when a file still has conflict markers: they are
+// staged as they are.
+func (s *statusScreen) askResolved(fs []git.File) *terminu.Ask {
+	var d []string
+	for _, f := range fs {
+		if at, err := s.g.repo.Markers(f.Path); err == nil && len(at) > 0 {
+			d = append(d, f.Path+": conflict markers on "+lineList(at))
+		}
+	}
+	if len(d) == 0 {
+		return nil
+	}
+	d = append(d, "They are staged as they are, and the commit takes them.")
+	warn := make([]int, len(d))
+	for i := range warn {
+		warn[i] = i
+	}
+	return &terminu.Ask{Title: "Mark resolved", Subject: named(fs), Question: "Mark " + named(fs) + " resolved?", Verb: "mark resolved",
+		Details: d, Warn: warn}
+}
+
+// markResolved stages conflicted files: git takes them as resolved.
+func (s *statusScreen) markResolved(fs []git.File) tea.Cmd {
+	g := s.g
+	return g.run("Staging…", "Mark resolved", func() error { return g.repo.Stage(paths(fs)...) }, func() tea.Cmd {
+		if len(fs) > 1 {
+			for _, f := range fs {
+				g.a.Log(terminu.Info, "Marked "+f.Path+" resolved")
+			}
+		} else {
+			s.files.Select(inStaged + fs[0].Path)
+		}
+		return g.a.Toast(terminu.Success, "Marked "+named(fs)+" resolved")
+	})
 }
 
 // commit commits the staged changes with a message the user writes

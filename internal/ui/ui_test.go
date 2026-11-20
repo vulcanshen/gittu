@@ -1843,8 +1843,8 @@ func TestResolveHunks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "CONFLICTS", "U notes.txt", "Enter:resolve")
-	d.Press("Enter")
+	has(t, d, "CONFLICTS", "U notes.txt", "Enter:show r:resolved")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Resolve one by one") }) // from the Space menu
 	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
 		"Enter:read m:mine")
 	d.Press("Enter")
@@ -1868,6 +1868,95 @@ func TestResolveHunks(t *testing.T) {
 	d.Press("Esc", "Enter")                       // unchanged: it commits
 	done(t, g, d)
 	hasNot(t, d, "Merging:")
+}
+
+// TestEditConflict: Enter on a conflicted file goes to [2], Enter there
+// opens it in the editor git would open (a stand-in here) in a terminal
+// popup; when it ends the file is checked: markers left are a Warning naming
+// their lines, none an Info saying r marks it resolved; r on [2] stages it
+// (the user; tdp terminal, textarea.1).
+func TestEditConflict(t *testing.T) {
+	r := gittest.Conflicted(t)
+	dir := t.TempDir()
+	editor, runs := filepath.Join(dir, "editor"), filepath.Join(dir, "runs")
+	// The first run leaves the file as it is, the second resolves it.
+	script := "#!/bin/sh\necho run >> " + runs + "\n" +
+		"if [ $(wc -l < " + runs + ") -ge 2 ]; then printf 'a\\nB\\nc\\nd\\ne\\nx1\\nx2\\nx3\\nx4\\nF\\ng\\n' > \"$1\"; fi\n"
+	if err := os.WriteFile(editor, []byte(script), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_EDITOR", editor)
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	has(t, d, "U notes.txt", "Enter:show r:resolved")
+	d.Press("Enter")
+	if g.a.Screen().Focused() != g.status.diffP {
+		t.Fatal("Enter on a conflicted file did not go to [2]")
+	}
+	has(t, d, "Enter:edit r:resolved")
+	d.Press("Enter")
+	d.WaitFor(func() bool { return d.Has("still has conflict markers") }, 5*time.Second)
+	has(t, d, "notes.txt still has conflict markers on lines 2, 6, 14, 18")
+	d.Press("Esc", "Enter")
+	d.WaitFor(func() bool { return d.Has("no conflict markers left") }, 5*time.Second)
+	has(t, d, "notes.txt has no conflict markers left: press [r] to mark it resolved")
+	d.Press("r")
+	done(t, g, d)
+	has(t, d, "Marked notes.txt resolved", "STAGED")
+	if out := r.Git("diff", "--name-only", "--diff-filter=U"); strings.TrimSpace(out) != "" {
+		t.Errorf("still unmerged: %s", out)
+	}
+	d.Press("!")
+	has(t, d, "Editing notes.txt")
+}
+
+// TestMarkResolvedAsks: r on a file with conflict markers left asks first,
+// naming their lines: they would be staged as they are.
+func TestMarkResolvedAsks(t *testing.T) {
+	r := gittest.Conflicted(t)
+	g, d := start(t, r, 100, 32)
+	d.Press("W", "r")
+	has(t, d, "Mark notes.txt resolved?", "notes.txt: conflict markers on lines 2, 6, 14, 18")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Marked notes.txt resolved")
+}
+
+// TestMarkTheMarkedResolved: R marks the marked conflicted files resolved,
+// asking first when one still has markers (the user; tdp P3); with none
+// marked, R is the global Refresh again (tdp M4).
+func TestMarkTheMarkedResolved(t *testing.T) {
+	r := gittest.New(t)
+	r.Git("commit", "-q", "--allow-empty", "-m", "Start")
+	r.Commit("a.txt", "a\n", "Add a")
+	r.Commit("b.txt", "b\n", "Add b")
+	r.Git("checkout", "-q", "-b", "feature")
+	r.Write("a.txt", "a from feature\n")
+	r.Commit("b.txt", "b from feature\n", "Change both on feature")
+	r.Git("checkout", "-q", "main")
+	r.Write("a.txt", "a from main\n")
+	r.Commit("b.txt", "b from main\n", "Change both on main")
+	if _, err := r.Try("merge", "--no-edit", "feature"); err == nil {
+		t.Fatal("no conflict")
+	}
+	r.Write("a.txt", "a resolved\n")
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	markFile(d, g, inConflict+"a.txt")
+	markFile(d, g, inConflict+"b.txt")
+	d.Press("R")
+	has(t, d, "Mark 2 files resolved?", "b.txt: conflict markers on lines 1, 5")
+	hasNot(t, d, "a.txt: conflict markers")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Marked 2 files resolved")
+	if out := r.Git("diff", "--name-only", "--diff-filter=U"); strings.TrimSpace(out) != "" {
+		t.Errorf("still unmerged: %s", out)
+	}
+	d.Press("R")
+	hasNot(t, d, "resolved?")
+	d.Press("!")
+	has(t, d, "Marked a.txt resolved", "Marked b.txt resolved")
 }
 
 func TestUseSideWholeFile(t *testing.T) {
