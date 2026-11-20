@@ -490,23 +490,40 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		{Label: "Clear marks", Desc: "unmark every file", Scope: panel,
 			Hidden: func() bool { return inFiles() || len(s.files.Marked()) == 0 || s.allMarked() },
 			Do:     func() tea.Cmd { s.files.ClearMarks(); g.a.Log(terminu.Info, "Cleared the marks"); return nil }},
-		{Key: "a", Label: "Stage all", Desc: "every change, untracked files too", Scope: panel,
-			Hidden: inFiles, Disabled: func() bool {
-				return off() || !slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return f.Unstaged() })
-			},
-			Do: func() tea.Cmd {
-				return g.run("Staging…", "Stage", g.repo.StageAll, func() tea.Cmd { g.a.Log(terminu.Info, "Staged every change"); return nil })
-			}},
-		{Label: "Unstage all", Desc: "every staged change, keeping them", Scope: panel,
-			Hidden: inFiles, Disabled: func() bool {
-				return off() || !slices.ContainsFunc(g.snap.Files, func(f git.File) bool { return f.Staged() })
-			},
-			Do: func() tea.Cmd {
-				unborn := g.snap.HeadSHA == ""
-				return g.run("Unstaging…", "Unstage", func() error { return g.repo.UnstageAll(unborn) },
-					func() tea.Cmd { g.a.Log(terminu.Info, "Unstaged every change"); return nil })
-			}},
+		// a toggles (the user): [a]ll staged while some change is not, then
+		// [a]ll unstaged; their labels start with a so that the key is at
+		// their start (tdp M5, the user). With some staged and some not, All
+		// unstaged is in the menu too, with no key.
+		{Key: "a", Label: "All staged", Desc: "stage every change, untracked files too", Scope: panel,
+			Hidden:   func() bool { return inFiles() || !s.anyUnstaged() && s.anyStaged() },
+			Disabled: func() bool { return off() || !s.anyUnstaged() }, Do: s.stageAll},
+		{Key: "a", Label: "All unstaged", Desc: "unstage every staged change, keeping them", Scope: panel,
+			Hidden: func() bool { return inFiles() || s.anyUnstaged() || !s.anyStaged() }, Disabled: off, Do: s.unstageAll},
+		{Label: "All unstaged", Desc: "unstage every staged change, keeping them", Scope: panel,
+			Hidden: func() bool { return inFiles() || !s.anyUnstaged() || !s.anyStaged() }, Disabled: off, Do: s.unstageAll},
 	}
+}
+
+func (s *statusScreen) anyStaged() bool {
+	return s.g.snap != nil && slices.ContainsFunc(s.g.snap.Files, git.File.Staged)
+}
+
+func (s *statusScreen) anyUnstaged() bool {
+	return s.g.snap != nil && slices.ContainsFunc(s.g.snap.Files, git.File.Unstaged)
+}
+
+// stageAll stages every change, untracked files too.
+func (s *statusScreen) stageAll() tea.Cmd {
+	g := s.g
+	return g.run("Staging…", "Stage", g.repo.StageAll, func() tea.Cmd { g.a.Log(terminu.Info, "Staged every change"); return nil })
+}
+
+// unstageAll unstages every staged change, keeping them in the working tree.
+func (s *statusScreen) unstageAll() tea.Cmd {
+	g := s.g
+	unborn := g.snap.HeadSHA == ""
+	return g.run("Unstaging…", "Unstage", func() error { return g.repo.UnstageAll(unborn) },
+		func() tea.Cmd { g.a.Log(terminu.Info, "Unstaged every change"); return nil })
 }
 
 // showDiff shows in [2] the change of the row under [1]'s cursor, its two
