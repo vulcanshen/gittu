@@ -1619,6 +1619,19 @@ func TestDiffNotText(t *testing.T) {
 	hasNot(t, d, "Enter:diff")
 }
 
+// TestDiffNewFile: an untracked file is not in the index, so its left side
+// is written empty, as a commit's new file (the user).
+func TestDiffNewFile(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("brand-new.txt", "hello\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "brand-new.txt"); return nil })
+	d.Press("j", "k")
+	has(t, d, "brand-new.txt @ empty ↔ brand-new.txt", "+hello")
+	hasNot(t, d, "brand-new.txt @ index")
+}
+
 // TestDiffNewFolder is task 11 on tdp note.8 (note-106): an untracked
 // folder's files are listed with their marks, all +, and Enter goes into
 // that list as into a commit; [1]'s cursor moving on leaves it.
@@ -1631,12 +1644,12 @@ func TestDiffNewFolder(t *testing.T) {
 	d.Press("W")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "newdir/"); return nil })
 	d.Press("j", "k")
-	has(t, d, "DIFF: newdir/", "newdir/ @ index ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:diff")
+	has(t, d, "DIFF: newdir/", "newdir/ @ empty ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:diff")
 	d.Press("Tab", "Enter") // into the list
 	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
-	hasNot(t, d, "blob.bin @ index ↔")
+	hasNot(t, d, "blob.bin @ empty ↔")
 	d.Press("j", "Enter")
-	has(t, d, "newdir/one.txt @ index ↔ newdir/one.txt", "UNIFIED")
+	has(t, d, "newdir/one.txt @ empty ↔ newdir/one.txt", "UNIFIED")
 	d.Press("Esc")
 	d.Press("1", "k") // [1]'s cursor on another row: out of the list
 	d.Press("j")

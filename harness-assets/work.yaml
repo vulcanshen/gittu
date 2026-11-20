@@ -160,7 +160,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 44
+    spec: 55
     implementation: |
       Working tree 畫面：[1] CHANGES 是 tgo List（Marks，task 21；一欄、沒有表頭：<字母> <路徑>，字母用 Row.Styled 上色；路徑由 gittu 照 [1] 的寬度從前面截（寬度 − 9：框、邊距、標記欄、字母與空白、cursor 的箭頭、多留一格），…接在字母後面，Working tree 的 Layout 記下 [1] 的寬度，變了就重新做每一列；Row.Cells 是完整的 <字母> <路徑>，篩選照它比對；Shrink、Path 留著當保險），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -168,18 +168,18 @@ tasks:
       [2] DIFF 是 tgo Pager（Follow），[1] 的 Details（panel.13）：[1] 的 cursor 一移動（List.OnMove）就換成那一列，label DIFF: <路徑>（Panel.Name）；
       讀出下面 Enter 那兩個版本的文字，tgo Pager.SetDiff(舊的, 新的) 照 UNIFIED 畫（只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，沒有 @@），位置列（Panel.Location）<Anchor> ↔ <Other>；
       兩邊一樣時 EmptyFact No differences between the two / Press [1] to go to the files；任一邊前 8000 位元組有 NUL（二進位檔）時 SetLines(nil)、Not a text file: no lines to compare / Press [1] to go to the files；
-      沒追蹤的資料夾：tgo Pager.SetDiffItems(裡面的檔)，每一項 DiffItem{Mark: DiffAdded, Name: <路徑>, Anchor: <路徑> @ index, Other: <路徑>, Text: "" 對工作區的檔}
-      （git ls-files --others --exclude-standard -- <資料夾>；前 8000 位元組有 NUL 的檔沒有 Text，清單裡那一項的 Enter 停用），位置列 <資料夾> @ index ↔ <資料夾>，沒有檔時 No files in it to show / Press [1] to go to the files；
+      沒追蹤的資料夾：tgo Pager.SetDiffItems(裡面的檔)，每一項 DiffItem{Mark: DiffAdded, Name: <路徑>, Anchor: <路徑> @ empty, Other: <路徑>, Text: "" 對工作區的檔}
+      （git ls-files --others --exclude-standard -- <資料夾>；前 8000 位元組有 NUL 的檔沒有 Text，清單裡那一項的 Enter 停用），位置列 <資料夾> @ empty ↔ <資料夾>，沒有檔時 No files in it to show / Press [1] to go to the files；
       [1] 換到另一列（不是同一列重新讀）時先 tgo Panel.LeaveDiff，退出上一列進去的清單；
       讀不到時：換了一列（沒有舊內容）Panel.Fail Can't show the change: <說原因的那一行> / Press [R] to read it again；同一列重新讀時讀不到，舊的內容留著，Error toast「Can't show the change to <路徑>: <說原因的那一行>」「Press [R] to read it again」
       （原因跟上一次一樣時不跳也不記，同 task 3；又讀得到時 App Log 記 INFO The change to <路徑> can be shown again，不跳 toast）；兩種都把那一句（Error）與 git 印的全文記進 App Log
       背景重新讀時（task 19），同一列的兩邊文字變了才再 SetDiff（view 留在原處，tdp note.9），換了一列也是 SetDiff；衝突區塊那一層照 task 14
       [2] 上的 Enter（[Enter] Diff — its two versions, UNIFIED or SPLIT；hint Enter:diff；沒有內容、二進位檔時 Hidden；沒追蹤的資料夾是 App.OpenDiff(diffP, DiffItem{Anchor, Other, Items: 同上})，在 [2] 裡進到那份清單）：
       tgo App.OpenDiff(diffP, DiffItem{Anchor, Other, Text})：STAGED <舊路徑> @ HEAD ↔ <路徑> @ index（git show HEAD:<舊路徑>、git show :<路徑>）；
-      UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔；不在 index 的那一邊是空的）；衝突的檔 <路徑> @ HEAD ↔ <路徑>；
+      UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔）；沒追蹤的檔 <路徑> @ empty ↔ <路徑>（index 裡沒有它，左邊是空的，跟 History 裡 commit 新增的檔一樣寫 empty）；衝突的檔 <路徑> @ HEAD ↔ <路徑>；
       衝突區塊那一層 MINE · <標記> ↔ THEIRS · <標記>（那一塊兩邊的行）；tgo 打開比較（UNIFIED、SPLIT）或兩邊一樣時 Info toast；App Log 記 Info：Compared <左> with <右>
       沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
-    test: [TestLongPathKeepsItsLetter, TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
+    test: [TestLongPathKeepsItsLetter, TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFile, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
     spec: 54
     implementation: |

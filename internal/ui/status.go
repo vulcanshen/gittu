@@ -799,7 +799,7 @@ func (s *statusScreen) folderItems(dir string) ([]terminu.DiffItem, error) {
 	}
 	items := make([]terminu.DiffItem, 0, len(files))
 	for _, p := range files {
-		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: p + " @ index", Other: p}
+		it := terminu.DiffItem{Mark: terminu.DiffAdded, Name: p, Anchor: p + " @ empty", Other: p}
 		if !binaryFile(filepath.Join(repo.Dir, filepath.FromSlash(p))) {
 			it.Text = func() (string, string, error) {
 				b, err := repo.WorkFile(p)
@@ -872,7 +872,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 	} else if f, group, ok := s.file(); ok {
 		path := f.Path
 		if f.Untracked() && repo.IsDir(path) {
-			return terminu.DiffItem{Anchor: path + " @ index", Other: path,
+			return terminu.DiffItem{Anchor: path + " @ empty", Other: path,
 				Items: func() ([]terminu.DiffItem, error) { return s.folderItems(path) }}, true
 		}
 		switch group {
@@ -890,7 +890,11 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 				return a, b, err
 			}}
 		case inUnstaged:
-			item = terminu.DiffItem{Anchor: path + " @ index", Other: path, Text: func() (string, string, error) {
+			from := path + " @ index"
+			if f.Untracked() { // not in the index: nothing on the left, as a commit's new file (the user)
+				from = path + " @ empty"
+			}
+			item = terminu.DiffItem{Anchor: from, Other: path, Text: func() (string, string, error) {
 				a, err := repo.Show("", path)
 				if err != nil {
 					return "", "", err
