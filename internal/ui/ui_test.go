@@ -757,7 +757,7 @@ func TestDiffTwoCommits(t *testing.T) {
 		t.Fatal("D did not put [2] and [3] in the Diff mode, the focus on [2]")
 	}
 	hasNot(t, d, "Enter:files", "z:zoom") // the bottom hints are the mode's keys (tdp K11)
-	b := g.snap.Commits[0] // gg: the top commit, [3] following
+	b := g.snap.Commits[0]                // gg: the top commit, [3] following
 	d.Press("g", "g")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
 	d.Press("Enter")
