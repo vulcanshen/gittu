@@ -1,4 +1,4 @@
-id: 49
+id: 50
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -123,7 +123,7 @@ tasks:
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp components.5、F5）；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、到 Working tree [W] 解（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9
-    spec: 26
+    spec: 50
     request: 對 commit 能做的事，都在分支圖的 Space 選單
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14, tdp K3, tdp M4, tdp F5]
     remark:
@@ -132,6 +132,7 @@ tasks:
       - "Cherry-pick、Revert 沒有熱鍵（tdp M5：沒有熱鍵不加括號；不常用，留在 menu 裡）"
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
+      - "打 tag 成功的 toast 寫 Tagged <短 hash> as <名>（使用者 2026-11-20 選 1；原本是 Tagged <短 hash> <名>，兩個名字連在一起像一串）"
   - id: 10
     spec: 32
     request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到

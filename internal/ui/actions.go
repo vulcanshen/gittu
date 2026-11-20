@@ -553,7 +553,7 @@ func (g *gittu) newTag(ref string) tea.Cmd {
 				func() tea.Cmd {
 					g.history.tabs[2].ClearFilter() // the cursor goes on the new tag (tdp panel.14)
 					g.history.tabs[2].Select(kindTag + n)
-					return g.a.Toast(terminu.Success, "Tagged "+at+" "+n)
+					return g.a.Toast(terminu.Success, "Tagged "+at+" as "+n)
 				})
 		}})
 }

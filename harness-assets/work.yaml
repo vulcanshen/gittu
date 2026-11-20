@@ -131,11 +131,11 @@ tasks:
       merge、rebase、cherry-pick、revert 做到一半時（State.Op 不是空的），[1] 與 [2] 的 Merge、Rebase、Cherry-pick、Revert 與全域的 Merge 停用（tdp M6：git 不接受）；停在衝突時（Warning toast），下一次讀 repo 後 Working tree [1] 的 cursor 放在第一個衝突的檔
     test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts, TestNoMergeHalfway]
   - id: 9
-    spec: 26
+    spec: 50
     implementation: |
       [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
-      [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> <名>；cursor 移到 TAGS 新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp v1.2.18 panel.14 的「app 自己的動作先清掉篩選」、panel-180））、
+      [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> as <名>；cursor 移到 TAGS 新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp v1.2.18 panel.14 的「app 自己的動作先清掉篩選」、panel-180））、
       [M]erge、Rebase（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號）；同 task 8，對象是那個 commit）、Cherry-pick（沒有熱鍵；confirm；git cherry-pick，merge commit 加 -m 1）、Revert（沒有熱鍵；confirm；git revert --no-edit，merge commit 加 -m 1）、
       Reset（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號）；tgo Select RESET: <短 hash>，選項 [s]oft: keep the changes, staged、[m]ixed: keep the changes, unstaged、[H]ard: throw the changes away；
       Soft、Mixed 直接 git reset --soft／--mixed；Hard 再開 confirm，內容 Every change not committed is lost…（Peach）；Success Reset <分支> to <短 hash> (<mode>)；還沒有 commit 時停用）、

@@ -1082,7 +1082,7 @@ func TestCommitOperations(t *testing.T) {
 	d.Type("v0.0.1")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Tagged "+git.Short(c.SHA)+" v0.0.1")
+	has(t, d, "Tagged "+git.Short(c.SHA)+" as v0.0.1")
 	selectCommit(t, d, g, "Add the feature")
 	d.Press("b")
 	d.Type("fix")
@@ -1259,7 +1259,7 @@ func TestNewBranchAndTagAtHead(t *testing.T) {
 	d.Type("v9")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Tagged HEAD v9")
+	has(t, d, "Tagged HEAD as v9")
 }
 
 func TestPickMerge(t *testing.T) {
