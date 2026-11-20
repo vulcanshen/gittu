@@ -97,7 +97,7 @@ tasks:
       [4] 的 panel operation z Unzoom（task 17）
     test: [TestCommitDescription, TestCommitFilesAndDiff, TestFirstCommitFiles]
   - id: 7
-    spec: 38
+    spec: 39
     implementation: |
       [2] 的 item operation [D]iff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: D, InDetails: true, Noun: commit, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction，InDetails 從 v1.2.21-beta.1 起）：
       進入 Diff 模式，[2] 與它的明細 [4]（histP.Details = filesP）一起在模式裡（tgo：兩個框都 Yellow、都寫 Diff，粗線在 focus 那個，focus 留在 [2]；anchor 那一列 Yellow；hint D|Enter:diff）；

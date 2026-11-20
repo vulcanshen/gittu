@@ -1,4 +1,4 @@
-id: 38
+id: 39
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -93,10 +93,11 @@ tasks:
       - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
       - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
-    spec: 38
+    spec: 39
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel-185, tdp panel-186, tdp panel-187, tdp K13, tdp K13-1, tdp panel.14, tdp toast.2, tdp F7]
     remark:
+      - "Diff 模式裡 [3] DESCRIPTION 不在模式裡（框不變色，按 3 跟 1 一樣提示先 Esc），照樣只跟著 [2] 的 cursor，顯示 cursor 那個 commit 的訊息，不是 anchor 的、也不列兩者之間的 commit（使用者 2026-11-20：「我認為應該只跟著 cursor 的 description」）"
       - "使用者 2026-11-20 要 Diff 模式的結果放在 [3]（[2] 的明細），送給 tdp session：tdp v1.2.20 收了（tdp main 71dd99a；panel.9「有明細 panel 時」，app 自行選用；K11；panel-185、panel-186），terminu-go v1.2.21-beta.1 做了（DiffMode.InDetails；正式版 v1.2.21）；照它做，不再進到 [2] 的清單"
       - "比較模式改名叫 Diff 模式（tdp v1.2.19 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [D]iff、hint D|Enter:diff，都由 tgo 畫；Diff 模式的鍵是 D（使用者 2026-11-20；原本是 C；tdp v1.2.20 的 K13、K13-1 定成每個 app 都是 D）；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
       - "tdp #20 定案（使用者選 A；panel.9「裝著許多項目的列」與 note.8）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
