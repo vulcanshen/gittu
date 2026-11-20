@@ -461,9 +461,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}
 			return g.a.Toast(terminu.Success, "Discarded the changes to "+plural(len(fs), "file", "files"))
 		})), // X: the marked at once (tdp K13)
-		// R (the user) is the panel's over the global Refresh (tdp M4) while
-		// some files are marked.
-		withKey("R", s.batchWith("Mark the marked resolved", []string{inConflict}, nil, s.askResolved, s.markResolved)),
+		s.batchWith("Mark the marked resolved", []string{inConflict}, nil, s.askResolved, s.markResolved),
 		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
 		// M (the user) is the panel's over the global Merge (tdp M4): off, not

@@ -1,4 +1,4 @@
-id: 33
+id: 34
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -182,9 +182,9 @@ tasks:
       - "textarea 打開時是空的、什麼都沒打就送出，照 tdp K3 是不合格：錯誤列寫 Message can't be empty、popup 不關。2026-11-19 回報的 tgo #7（空的 textarea 直接關掉、沒有 Unchanged），terminu-go v1.2.19-beta.3 修好"
       - "textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
-    spec: 33
-    request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、[R] 把勾選的都標成已解決（user 2026-11-20）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
-    tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5, tdp terminal, tdp terminal.4, tdp textarea.1, tdp T1-8, tdp M4]
+    spec: 34
+    request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
+    tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5, tdp terminal, tdp terminal.4, tdp textarea.1, tdp T1-8]
     remark:
       - "衝突的檔用使用者的 editor 解（使用者 2026-11-20：「按下 enter 打開 editor」「在 conflict 的 item 上按下 enter -> focus 到 panel 2(diff), 然後在按下 enter -> 開啟 editor」）：[1] 衝突的檔上 Enter（Show，hint Enter:show）把 focus 送到 [2]（tdp K3：清單上的 Enter 可以送 focus 到明細、panel.13）；[2] 顯示那個檔 HEAD 對工作區（帶著衝突標記），[2] 的 Enter 是 Edit（hint Enter:edit）：用 git 會開的 editor（git var GIT_EDITOR：GIT_EDITOR、core.editor、VISUAL、EDITOR、vi）在 tgo 的 terminal popup 打開 EDIT: <路徑>（tdp terminal、terminal.4：app 開一個程式做一件事的 PTY；textarea.1：一行就是一行的內容交給使用者的 $EDITOR）；editor 結束後回到原本的地方（T1-8），重新讀 repo（[2] 照 note.9 讀進來），檢查那個檔還有沒有衝突標記（<<<<<<< 或 >>>>>>> 開頭的行，半個區塊也算；======= 單獨一行不算，檔案本來可能就有）：還有時 Warning toast <路徑> still has conflict markers on lines <行號>，沒有時 Info toast <路徑> has no conflict markers left: press [r] to mark it resolved；editor 沒好好結束時照樣檢查，App Log 記一筆 Warning"
       - "[r] Mark resolved（使用者 2026-11-20：「mark as [r]esolved (單一檔)」）：git add 那個檔，git 就當它解決了；[1] 的衝突檔與 [2] 顯示衝突檔時都有（editor 關掉後 focus 在 [2]，toast 叫使用者按 r）；還有衝突標記時先 confirm（MARK RESOLVED，列出哪幾行，Peach：會照原樣 stage、commit 會帶著它們），沒有就不問；Success Marked <路徑> resolved"
@@ -253,7 +253,7 @@ tasks:
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
       - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
   - id: 21
-    spec: 33
+    spec: 34
     request: Working tree 的 [1] CHANGES 可以複選（勾選），再從 Space menu 對勾選的檔一起操作：stage、unstage、用我的、用對方的、discard、remove、加進 .gitignore（user 2026-11-20：「不就是 checkbox 勾選 -> space menu 操作嗎?」）
     tdp: [tdp panel.7, tdp P3, tdp M2, tdp M5, tdp M6, tdp note.7, tdp confirm, tdp toast.2, tdp F5, tdp F6, tdp K3, tdp panel.5, tdp K13, tdp K13-2, tdp K13-3, tdp M4]
     remark:
@@ -261,7 +261,7 @@ tasks:
       - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；m 標記或取消 cursor 那一列（item operation [m]ark／Un[m]ark，hint m:mark／m:unmark；使用者 2026-11-20 定 m，檔案那一層的 Use mine 因此沒有熱鍵，task 14）"
       - "對標記的檔做事是 panel operation（tdp P3），只在有標記時出現，沒有熱鍵（使用者：勾選 → Space menu 操作）：Stage the marked、Unstage the marked、Use mine for the marked、Use theirs for the marked、Discard the marked、Remove the marked、Ignore the marked；說明欄寫會作用在幾個檔。每一個只作用在適用的檔：Stage 對 UNSTAGED 的列、Unstage 對 STAGED、Use mine／theirs 對 CONFLICTS、Discard 與 Ignore 對 STAGED 與 UNSTAGED、Remove 對還在 index 裡的；同一個檔兩列都標了算一次；一個都不適用時停用（tdp M6）；開始做就清掉標記"
       - "[M]ark all（標記清單裡每一列；使用者 2026-11-20：「[m]ark 單一筆, [M]ark all 大寫M」）：panel operation；M 也是全域的 [M]erge，panel 的鍵優先（tdp M4），所以 Working tree [1] 上 M 是 Mark all，Merge 從 Space menu 的全域列、或其他 panel 按 M；清單是空的或全都標了時停用、不隱藏（M6），M 才不會換成 Merge；進到一個檔的衝突區塊時不出現（那一層不能標記）。Clear marks（有標記時）：panel operation，沒有熱鍵"
-      - "[R] Mark the marked resolved（使用者 2026-11-20：「[R] 就是多選後 mark as resolved 所有勾選檔案」）：panel operation，對標記的衝突檔 git add（task 14 的 Mark resolved）；有檔還有衝突標記時先 confirm，列出那些檔與行號，沒有就不問；R 也是全域的 [R]efresh，有標記時 panel 的鍵優先（tdp M4），沒有標記時這一項不出現、R 照舊是 Refresh"
+      - "Mark the marked resolved（使用者 2026-11-20：「[R] 就是多選後 mark as resolved 所有勾選檔案」；說了 R 也是全域的 [R]efresh 後改成：「[R]esolve 全部這個熱鍵就取消, 一樣用 mark 多筆或單筆 resovle」）：panel operation，沒有熱鍵，跟其他對標記的檔做的事一樣從 Space menu；對標記的衝突檔 git add（task 14 的 Mark resolved）；有檔還有衝突標記時先 confirm，列出那些檔與行號，沒有就不問"
       - "Remove（item operation，沒有熱鍵；還在 index 裡、不在衝突的檔）是 git 的 remove：git rm -f，刪掉檔案並 stage 刪除，下一個 commit 把它從 repo 拿掉；先 confirm（REMOVE），有沒 commit 的改動時多一句會不見（Peach，tdp confirm）。已經 stage 成刪除的檔不在 index 裡，沒有 Remove"
       - "Ignore（item operation，沒有熱鍵；不在衝突的檔）：寫進 repo 頂層的 .gitignore，一個檔一行 /<路徑>（從頂層算、只對到它；* ? [ \\ 與尾端空白跳脫），已經有那一行就不重寫；還在 index 裡的檔先 git rm --cached（git 不會忽略已經追蹤的檔），檔案留著；有這種檔時先 confirm（IGNORE）說它們不再被追蹤，只有沒追蹤的檔時不問"
       - "App Log（tdp note.7：P3 的動作都記）：Marked <路徑>、Unmarked <路徑>、Marked every file、Cleared the marks；整批的 stage、unstage 每個檔一筆（跟單一的同一句）；Discard、Remove、Ignore 整批時每個檔一筆，再加一個 Success toast 說幾個檔；Use mine／theirs 整批時一個 Success toast（<N> files resolved with mine and staged）"

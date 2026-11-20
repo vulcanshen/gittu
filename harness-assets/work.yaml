@@ -196,7 +196,7 @@ tasks:
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 33
+    spec: 34
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [2], to edit it there；hint Enter:show；ToDetails）：focus 到 [2]；[2] 顯示 HEAD 對工作區的檔（帶著標記）
       [2] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
@@ -276,7 +276,7 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 33
+    spec: 34
     implementation: |
       [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
@@ -284,7 +284,7 @@ tasks:
       Use mine／Use theirs for the marked（CONFLICTS；git checkout --ours|--theirs -- <路徑>… 再 git add -A；Success <N> files resolved with mine|theirs and staged）、
       [X] Discard the marked（熱鍵 X，tdp K13；有標記時才在，沒有標記時 X 什麼都不做；STAGED、UNSTAGED；confirm DISCARD: <N> files「Discard the changes to <N> files?」，內容列出路徑（最多 8 個，其他寫 and <N> more）與無法復原、沒追蹤的會刪掉（Peach）；一個一個照 task 12 的 Discard，有 stage 的連 index 一起；每個檔記 Discarded the change to <路徑>，Success Discarded the changes to <N> files）、
       Remove the marked、Ignore the marked（同下面單一的，路徑列在 confirm 裡）
-      [R] Mark the marked resolved（熱鍵 R，蓋過全域的 [R]efresh；沒有標記時不出現，R 是 Refresh；CONFLICTS；有檔還有衝突標記時 confirm MARK RESOLVED「Mark <N> files resolved?」，每個檔一行 <路徑>: conflict markers on lines <行號>（Peach），沒有就不問；
+      Mark the marked resolved（沒有熱鍵；CONFLICTS；有檔還有衝突標記時 confirm MARK RESOLVED「Mark <N> files resolved?」，每個檔一行 <路徑>: conflict markers on lines <行號>（Peach），沒有就不問；
       git add -A -- <路徑>…；每個檔記 Marked <路徑> resolved；Success Marked <N> files resolved）
       標記的列照它的組（ID 的前綴）與 snapshot 找到檔；同一個檔兩列只算一次；開始做時 List.ClearMarks
       [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的或全都標了時 Disabled，不 Hidden，M 不會落到 Merge；進到衝突區塊時 Hidden）、Clear marks（沒有熱鍵；List.ClearMarks；App Log Cleared the marks）

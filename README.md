@@ -30,8 +30,8 @@ first.
 - **Working tree**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
   stage, unstage, discard and commit.
 - **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[2]`, and `Enter` there opens it in the editor
-  git uses; when you leave it, gittu says which lines still have conflict markers, and `r` marks it resolved (`R` the
-  marked ones). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
+  git uses; when you leave it, gittu says which lines still have conflict markers, and `r` marks it resolved (the
+  marked ones from the `Space` menu). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
   revert.
 - **Your git**: gittu runs the git you have, so your hooks, credential helper, ssh keys and settings work as they do
   in the shell.
@@ -140,7 +140,7 @@ and on `[2]` leaves the mode.
 | A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
 | A conflicted file | Show it in `[2]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, `[r]` Mark resolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
-| The panel | | With files marked: stage, unstage, use mine, use theirs, `[R]` mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |
+| The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |
 
 Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if

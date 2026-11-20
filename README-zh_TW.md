@@ -25,7 +25,7 @@ commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global
   fetch、pull、push —— 需要先問的，執行前會先問。
 - **Working tree**：衝突、已經 stage、還沒 stage 的檔案，旁邊是 cursor 那個檔的差異；stage、unstage、捨棄改動、commit。
 - **用你自己的 editor 解衝突**：在有衝突的檔上按 `Enter` 到 `[2]`，再按 `Enter` 用 git 設定的 editor 打開；離開 editor 後，
-  gittu 會告訴你哪幾行還有衝突標記，`r` 把它標成已解決（`R` 是標記的那些）。也可以一塊一塊選用我的、用對方的或兩個都要。
+  gittu 會告訴你哪幾行還有衝突標記，`r` 把它標成已解決（標記的那些從 `Space` 選單）。也可以一塊一塊選用我的、用對方的或兩個都要。
   merge、rebase、cherry-pick、revert 做到一半時可以放棄或繼續。
 - **用你自己的 git**：gittu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
 
@@ -125,7 +125,7 @@ CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支�
 | 已經 stage 的檔 | Unstage | `[m]`ark、Discard、Remove、Ignore |
 | 有衝突的檔 | 到 `[2]`，在那裡按 `Enter` 用 editor 改、`[r]` 標成已解決 | `[m]`ark、`[r]` Mark resolved、Resolve one by one、整個檔 Use mine、Use theirs |
 | 一塊衝突 | 到 `[2]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
-| 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、`[R]` mark resolved、`[X]` discard、remove、ignore；`[M]`ark all、Clear marks、Stage `[a]`ll、Unstage all |
+| 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、mark resolved、`[X]` discard、remove、ignore；`[M]`ark all、Clear marks、Stage `[a]`ll、Unstage all |
 
 用 `m` 標記幾個檔，就能一起處理：`Space` 選單會列出能對標記的檔做的事，每一個只作用在適用的檔上。Remove 刪掉檔案並把刪除
 stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就停止追蹤。

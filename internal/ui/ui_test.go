@@ -1922,9 +1922,9 @@ func TestMarkResolvedAsks(t *testing.T) {
 	has(t, d, "Marked notes.txt resolved")
 }
 
-// TestMarkTheMarkedResolved: R marks the marked conflicted files resolved,
-// asking first when one still has markers (the user; tdp P3); with none
-// marked, R is the global Refresh again (tdp M4).
+// TestMarkTheMarkedResolved: Mark the marked resolved, from the Space menu
+// (no key, the user), stages the marked conflicted files, asking first when
+// one still has markers (tdp P3).
 func TestMarkTheMarkedResolved(t *testing.T) {
 	r := gittest.New(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Start")
@@ -1944,7 +1944,11 @@ func TestMarkTheMarkedResolved(t *testing.T) {
 	d.Press("W")
 	markFile(d, g, inConflict+"a.txt")
 	markFile(d, g, inConflict+"b.txt")
-	d.Press("R")
+	d.Press("Space")
+	has(t, d, "Mark the marked resolved")
+	hasNot(t, d, "[R]")
+	d.Press("Esc")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Mark the marked resolved") })
 	has(t, d, "Mark 2 files resolved?", "b.txt: conflict markers on lines 1, 5")
 	hasNot(t, d, "a.txt: conflict markers")
 	d.Press("Enter")
@@ -1953,8 +1957,6 @@ func TestMarkTheMarkedResolved(t *testing.T) {
 	if out := r.Git("diff", "--name-only", "--diff-filter=U"); strings.TrimSpace(out) != "" {
 		t.Errorf("still unmerged: %s", out)
 	}
-	d.Press("R")
-	hasNot(t, d, "resolved?")
 	d.Press("!")
 	has(t, d, "Marked a.txt resolved", "Marked b.txt resolved")
 }
