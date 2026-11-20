@@ -1,6 +1,6 @@
-id: 22
-from: v1.2.16
-to: v1.2.17
+id: 23
+from: v1.2.17
+to: v1.2.18
 tasks:
   - id: 1
     spec: 22
@@ -37,7 +37,7 @@ tasks:
     remark:
       - "gittu [路徑]：打開路徑所在的 git repo（repo 裡任何一個資料夾都可以，跟 git 一樣往上找）；沒給路徑是目前的目錄（tdp E1：其他指令 app 可以自行決定）"
       - "不是 git repo、路徑不在、找不到 git 指令時不開畫面：stderr 印 gittu: <原因>，結束碼 1，像 git 自己一樣（tdp P5 功能邏輯）"
-      - "不認得的旗標（- 開頭）、兩個以上的路徑是用錯：stderr 寫 gittu: <哪裡錯>、空一行、用法，結束碼 2；資料夾剛好叫 version、help 時寫 ./version（help 裡寫明）。輸出照 tdp main 的 E1（E1-4 到 E1-8）：結果到 stdout、錯誤到 stderr 開頭 gittu: 、結束碼 0 做完 1 沒做完 2 用錯、句子開頭大寫。gittu 沒有不開畫面又讀設定檔的指令，E3-40 管不到"
+      - "不認得的旗標（- 開頭）、兩個以上的路徑是用錯：stderr 寫 gittu: <哪裡錯>、空一行、用法，結束碼 2；資料夾剛好叫 version、help 時寫 ./version（help 裡寫明）。輸出照 tdp v1.2.18 的 E1（E1-4 到 E1-8）：結果到 stdout、錯誤到 stderr 開頭 gittu: 、結束碼 0 做完 1 沒做完 2 用錯、句子開頭大寫。gittu 沒有不開畫面又讀設定檔的指令，E3-40 管不到"
   - id: 3
     spec: 22
     request: 左邊是分支列表，看得到本地分支、遠端分支、tag、stash；upstream gone 也加個 glyph；點了分支，右邊的分支圖跳到那裡；在 panel 1 按 Enter 切換 focus 到 history panel，捲到那個分支的 commit 點；REMOTE 和 TAG 用分頁作，不要都擠在一個 panel
@@ -50,11 +50,11 @@ tasks:
       - "stash 一列寫 stash@{N}: <訊息>，訊息太長從尾端截（tdp panel.5）"
       - "/ 篩選（tdp panel.14）：分支多的 repo 找分支"
       - "cursor 移到分支、遠端分支、tag 上時（換分頁也算：換到的那一頁的 cursor），[2] COMMITS 的 cursor 跟著移到它指的 commit（不在目前的分支圖裡就不動）；focus 留在 [1]。這跟明細（tdp panel.13）一樣是「另一個 panel 跟著 cursor 換」，不移動 focus（tdp K3）；[2] 看得到的跟著換（tdp panel.13：cursor 一移動，明細的內容立刻換成新的那一筆）"
-      - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到。這個 Enter 與 cursor 移動都是 app 自己把 [2] 的 cursor 放到一個 commit 上：先清掉 [2] 的篩選，不管它有沒有擋住那個 commit；只是 focus 離開 [2] 不清（tdp main 7e62a11 的 panel.14、panel-180，使用者 2026-11-19 在 tdp session 選 A；還沒發版，發版後改引 panel-180）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [Space] on [2] to show remote branches（Show remote branches 沒有熱鍵）"
+      - "分支、遠端分支、tag 上的 Enter：focus 到 [2] COMMITS，cursor 停在它指的 commit、捲到看得到。這個 Enter 與 cursor 移動都是 app 自己把 [2] 的 cursor 放到一個 commit 上：先清掉 [2] 的篩選，不管它有沒有擋住那個 commit；只是 focus 離開 [2] 不清（tdp v1.2.18 的 panel.14、panel-180，使用者 2026-11-19 在 tdp session 選 A）；hint Enter:show（使用者 2026-11-19：Enter 不要 checkout，checkout 是 [c]heck out，task 8）。按 Enter 就預期換到分支圖，所以可以移動 focus（tdp K3：app 的動作可以移動 focus，條件是使用者按下去時就預期會換）；換 focus 不記 App Log（tdp note.7）。它指的 commit 不在分支圖裡（遠端分支隱藏著、或超過讀進來的 1000 個）時不移動，跳 Info toast 說它不在分支圖裡；遠端分支隱藏著時多一句 Press [Space] on [2] to show remote branches（Show remote branches 沒有熱鍵）"
       - "2026-11-20 起 [2] 不再進到 commit 的檔案（task 6 改放在 [3]）；比較模式（task 7）進到的清單裡 Tab、數字鍵不作用，[1] 動不了，所以不用再退回分支圖（原本用 tgo Panel.LeaveDiff，2026-11-19 回報給 tdp session 的缺口，terminu-go v1.2.18 加的）"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
   - id: 4
-    spec: 20
+    spec: 23
     request: 右邊是分支圖，在終端機裡把分支線畫得清楚又好看，大 repo 裡也要夠快；commit 點不要只是單調的圓點
     tdp: [tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.14, tdp panel.15, tdp screen.8, tdp components.5, tdp P4, tdp P5, tdp L2, tdp components.2, tdp F5]
     remark:
@@ -67,9 +67,8 @@ tasks:
       - "主線固定在最左邊（task 5）：主線 commit（All 是 main 或 master，Current 是 HEAD）沿著第一個 parent 往下的那一串，一律畫在第一條線；其他線不佔它，在主線 commit 出現之前那一欄留空"
       - "repo 還沒有 commit：空狀態 No commits yet / Press [W] to see the files to commit（tdp screen.8）；讀 log 失敗：tdp panel.15 的兩句（Red 的事實、Overlay0 的 Press [R] to read again）"
       - "/ 篩選（tdp panel.14）：找 commit 的標題、hash、作者"
-      - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列跟著畫 Surface1 底；移動、N of M 算筆數，篩選也比對第二列（tdp main 3e0f427 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
-      - note: "[2] 寬的時候（放大到整個畫面）各欄照最寬的值、右半邊空著；使用者 2026-11-20 要 DESCRIPTION 吃掉剩下的寬度、AUTHOR 與 DATE 靠右。tdp panel.5「可以截短的欄分剩下的寬度」沒寫清楚是撐滿還是只在不夠時分，tgo 的 List 照後者；暫時照舊"
-        issue: 送給 tdp session（2026-11-20，轉 terminu-go）
+      - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列跟著畫 Surface1 底；移動、N of M 算筆數，篩選也比對第二列（tdp v1.2.18 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
+      - "[2] 比各欄最寬的值加起來還寬時（放大到整個畫面、寬的終端機），多的寬度全給 DESCRIPTION（List.Spread = SpreadFill、DESCRIPTION 的 Column.Fill），AUTHOR 與 DATE 貼右邊（tdp main 的 panel.5「多出來的寬度」、panel-184：四種給 app 選；使用者 2026-11-20 在 gittu 上看過四種後選 Fill）；分支圖多畫的線先算（task 4 上面那條），剩下的才給 DESCRIPTION；寬度不夠時照 panel.5 縮"
   - id: 5
     spec: 19
     request: commits panel 有 Current 和 All 兩個分頁，預設是 Current；切換到哪一個就固定在那一個（只記到這次關掉為止）；兩個分頁都依照左方 panel 1 切換 branch 而切換內容（user 2026-11-20）
@@ -81,22 +80,23 @@ tasks:
       - "切到哪個分頁只記到 gittu 關掉（user：關掉再打開不記得），不存檔（tdp E3）；切分頁是換看的方式，不記 App Log（tdp note.7：切 tab 不是動作）"
       - "位置列寫目前是哪一條線：Current 寫那個分支、遠端分支或 tag 的名字，All 寫 All branches（tdp panel.10）"
   - id: 6
-    spec: 22
+    spec: 23
     request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異（使用者 2026-11-19）；檔案放在 [2] 下面常駐的 [3]，跟著 [2] 的 cursor 換，不再進到 [2] 裡（使用者 2026-11-20：進去後上面的 CURRENT／ALL 還在、切了沒差，很怪；popup 順序對、操作怪）
     tdp: [tdp panel.13, tdp note.8, tdp panel.9, tdp K3, tdp note.7, tdp P5, tdp M5, tdp M6, tdp panel-177, tdp panel-178, tdp note-101, tdp note-102, tdp F7, tdp toast.2, tdp note.6, tdp E8, tdp screen.8, tdp panel.15]
     remark:
-      - "tdp note.8 的「同一項的兩個版本」與 panel.9 的「裝著許多項目的列」（tdp main，還沒發版；tdp #20 定案，使用者在 tdp session 與這裡都選 A）：看同一項的兩個版本一律打開 note.8 的比較（UNIFIED 與 SPLIT），舊的當 anchor，標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp main 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；兩邊是 <舊的> ↔ <新的>；一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列出有差異的項目"
+      - "tdp note.8 的「同一項的兩個版本」與 panel.9 的「裝著許多項目的列」（tdp #20 定案，使用者在 tdp session 與這裡都選 A）：看同一項的兩個版本一律打開 note.8 的比較（UNIFIED 與 SPLIT），舊的當 anchor，標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp v1.2.18 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；兩邊是 <舊的> ↔ <新的>；一個 commit 對它第一個 parent 的改動裝著許多項目，進去後照 panel.9 列出有差異的項目"
       - "[3] FILES 是 [2] cursor 那個 commit 的明細（tdp panel.13）：cursor 一移動（按鍵移的、[1] 換分支帶動的、trace 的）就換成那個 commit 對它第一個 parent 有差異的檔案（第一個 commit 對空的），不用按 Enter，focus 不動；位置列是 <parent 的短 hash> ↔ <commit 的短 hash>（第一個 commit 的 parent 寫 empty）；[2] 的 commit 上按 Enter（[Enter] Files — this commit changed, in [3]）把 focus 送到 [3]（tdp panel.13、K3：清單上的 Enter 可以把 focus 送到明細，app 自行決定）；[3] 有篩選（/）；每個 commit 讀一次，讀失敗時 [3] 寫 Can't read the files of <短 hash>: <說原因的那一行> / Press [R] to read it again（tdp panel.15），下一次讀 repo 時再試；沒有 commit 時 [3] 的空狀態跟 [2] 一樣（No commits yet / Press [W] to see the files to commit），commit 沒改檔案時 No files changed / Press [2] to go to the commits（tdp screen.8）。每一項前面是 +（Green，新增）、-（Red，刪除）、~（Peach，修改），git 的 M／A／D／R 字母拿掉；一份平的路徑清單（panel.9：項目照 app 的叫法命名，檔案不裝東西，沒有再進一層）；改名是一列 ~ <舊> → <新>，比的是舊的對新的（panel.9）"
-      - "檔案上按 Enter 打開 note.8 的比較：兩邊是 <路徑> @ <parent> ↔ <路徑> @ <commit>，完整路徑（標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp main 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；原本標題太長、tab 被截掉時改成只寫檔名，tdp 改了之後改回完整路徑），新增的檔左邊是空的、刪除的右邊是空的；兩邊一樣（只改名）時不打開，Info toast（panel.9）。二進位檔沒有比較（panel.9：不是文字的項目沒有比較）。Esc 一層一層退回，最後回到分支圖、cursor 在剛剛那個 commit（tdp K4）"
+      - "檔案上按 Enter 打開 note.8 的比較：兩邊是 <路徑> @ <parent> ↔ <路徑> @ <commit>，完整路徑（標題只寫 DIFF、後面接 UNIFIED／SPLIT tab，兩邊寫在第一列（Lavender，固定在上面，太長折行、不截），寬度是終端機寬 − 2（tdp v1.2.18 的 note.8、note-107、F7-17；tgo v1.2.19-beta.3）；原本標題太長、tab 被截掉時改成只寫檔名，tdp 改了之後改回完整路徑），新增的檔左邊是空的、刪除的右邊是空的；兩邊一樣（只改名）時不打開，Info toast（panel.9）。二進位檔沒有比較（panel.9：不是文字的項目沒有比較）。Esc 一層一層退回，最後回到分支圖、cursor 在剛剛那個 commit（tdp K4）"
       - "記 App Log：在檔案上打開比較時 Compared <Anchor> with <Other>（跟 Working tree 的比較同一句；tdp note.7：只看不改的動作也記）；[3] 跟著換內容、Enter 換 focus 不記（tdp note.7）"
       - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
       - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
-    spec: 16
+    spec: 23
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel.14, tdp toast.2, tdp F7]
     remark:
-      - "tdp #20 定案（使用者選 A；tdp main 的 panel.9「裝著許多項目的列」與 note.8，還沒發版）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
+      - "比較模式改名叫 Diff 模式（tdp main 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [C] Diff、hint C|Enter:diff，都由 tgo 畫；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
+      - "tdp #20 定案（使用者選 A；panel.9「裝著許多項目的列」與 note.8）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
       - "[2] 的 commit 上按 [C]ompare（比較鍵 app 可以自行決定，tdp panel.9；跟 kbu 一樣是 C）進入比較模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 C 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
       - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
   - id: 8
@@ -134,9 +134,9 @@ tasks:
       - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Pull all 是 git pull --all（每個 remote 都 fetch，再 pull 目前的分支；使用者 2026-11-19 要的 pull all（sync），作用在整個 repo，照 tdp P3 是 global operation；沒有熱鍵）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
       - "fetch、pull、push 在背景跑：statusbar 寫 Fetching…／Pulling…／Pushing…（Green，tdp screen.4 進行中的工作），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
-      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
+      - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 16
+    spec: 23
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
     tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6]
     remark:
@@ -152,7 +152,7 @@ tasks:
         ┃ ? notes.txt          ┃│                                                     │
         ┗━ Enter:stage ━━━━━━━━┛└─ Enter:compare ─────────────────────── 1-20 of 48 ─┘
       - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。標記欄是改了什麼（tdp panel.7 的旗標）：M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）；一欄 PATH，太長從前面截（tdp panel.5）。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
-      - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；畫的是那個檔的兩個版本（跟 Enter 打開的比較同兩邊），照 UNIFIED 的樣子（tdp main 的 note.8「在 panel 裡」、note-103，使用者 2026-11-19 選 A；tgo Pager.SetDiff）：只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，不放 git diff 的 diff --git 與 @@；位置列寫 <舊的> ↔ <新的>；兩邊一樣時空狀態 No differences between the two / Press [1] to go to the files；二進位檔（前 8000 位元組有 NUL，跟 git 判的一樣）空狀態 Not a text file: no lines to compare / Press [1] to go to the files（tdp screen.8：一句事實、一句點名按鍵的提示）；沒追蹤的資料夾照 panel.9 列出裡面的檔、每個標 +（Green），Enter 進到那份清單，跟進到一個 commit 一樣（tdp main 的 note.8、note-106，使用者 2026-11-19 在 tdp session 選 A；tgo Pager.SetDiffItems，v1.2.19-beta.2）；[1] 換到另一列時先退出 [2] 進去的清單（Panel.LeaveDiff）；讀不到時照 tdp panel.15：沒有舊內容寫兩句（Can't show the change: <說原因的那一行> / Press [R] to read it again），同一列重新讀時讀不到則舊的內容留著、Error toast；那一句與 git 的全文記進 App Log（tdp F5、components.5）；沒有 cursor 的 panel（tgo Pager），j|k 捲動"
+      - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；畫的是那個檔的兩個版本（跟 Enter 打開的比較同兩邊），照 UNIFIED 的樣子（tdp v1.2.18 的 note.8「在 panel 裡」、note-103，使用者 2026-11-19 選 A；tgo Pager.SetDiff）：只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，不放 git diff 的 diff --git 與 @@；位置列寫 <舊的> ↔ <新的>；兩邊一樣時空狀態 No differences between the two / Press [1] to go to the files；二進位檔（前 8000 位元組有 NUL，跟 git 判的一樣）空狀態 Not a text file: no lines to compare / Press [1] to go to the files（tdp screen.8：一句事實、一句點名按鍵的提示）；沒追蹤的資料夾照 panel.9 列出裡面的檔、每個標 +（Green），Enter 進到那份清單，跟進到一個 commit 一樣（tdp v1.2.18 的 note.8、note-106，使用者 2026-11-19 在 tdp session 選 A；tgo Pager.SetDiffItems，v1.2.19-beta.2）；[1] 換到另一列時先退出 [2] 進去的清單（Panel.LeaveDiff）；讀不到時照 tdp panel.15：沒有舊內容寫兩句（Can't show the change: <說原因的那一行> / Press [R] to read it again），同一列重新讀時讀不到則舊的內容留著、Error toast；那一句與 git 的全文記進 App Log（tdp F5、components.5）；沒有 cursor 的 panel（tgo Pager），j|k 捲動"
       - "[2] DIFF 上的 Enter（[Enter] Compare，hint Enter:compare；tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事）打開 tdp note.8 的比較（同一項的兩個版本，舊的當 anchor）：STAGED 的是 <路徑> @ HEAD ↔ <路徑> @ index，UNSTAGED 的是 <路徑> @ index ↔ <路徑>（工作區；沒追蹤的檔左邊是空的），衝突的檔是 <路徑> @ HEAD ↔ <路徑>（工作區、有衝突標記；比較的畫法同 task 6），進到衝突區塊時是 MINE · <標記> ↔ THEIRS · <標記>；二進位檔沒有比較（Enter 隱藏）。由 tgo 的 App.OpenDiff 畫，記 App Log：Compared <左> with <右>"
       - "沒有改動時是空狀態（tdp screen.8）：Nothing to commit / Press [H] to see the history"
       - "重新讀（task 19）時，[2] 的內容換了就重新放進去（tdp note.9 的重新讀進來；不算串流，失焦時變暗）"
@@ -231,10 +231,10 @@ tasks:
     tdp: [tdp note.7, tdp note.9, tdp F5, tdp panel.15, tdp toast.2, tdp K3, tdp P5]
     remark:
       - "每 3 秒在背景重新讀一次 repo（沒有 git 指令在跑、上一次還沒讀完時不讀）。怎麼得知變動是 app 的事（tdp P5）；不用 watch：watch 有平台的監看上限（macOS 每個檔一個 file handle、Linux inotify 的數量）、網路磁碟與 WSL 收不到事件、分不出是不是 gittu 自己改的、要過濾編輯器暫存檔，定時刷新沒有這些問題，代價是最慢 3 秒才跟上"
-      - "每次刷新拿讀到的跟上一次比：HEAD、本地分支、遠端分支、tag、stash、做到一半的操作、每個檔的狀態，加上 [2] DIFF 正在畫的那個檔的內容（git status 看不出已經改過的檔又改了一次）。有不一樣才在 App Log 記一筆 Info（tdp note.7：app 自己在背景做的事），寫出變了什麼：Changed outside gittu: <最多三項>（多的接 and N more）；沒變的刷新不記，App Log 才不會被每 3 秒一筆洗掉（tdp main 的 note.7、note-104：app 自己重讀的內容只有讀到變了才記一筆 INFO，使用者 2026-11-19 在 tdp session 選 A）"
+      - "每次刷新拿讀到的跟上一次比：HEAD、本地分支、遠端分支、tag、stash、做到一半的操作、每個檔的狀態，加上 [2] DIFF 正在畫的那個檔的內容（git status 看不出已經改過的檔又改了一次）。有不一樣才在 App Log 記一筆 Info（tdp note.7：app 自己在背景做的事），寫出變了什麼：Changed outside gittu: <最多三項>（多的接 and N more）；沒變的刷新不記，App Log 才不會被每 3 秒一筆洗掉（tdp v1.2.18 的 note.7、note-104：app 自己重讀的內容只有讀到變了才記一筆 INFO，使用者 2026-11-19 在 tdp session 選 A）"
       - "gittu 自己的操作做完馬上重讀，下一次刷新跟它比就沒有差別，所以自己的操作不會被記成外面的變動；按 R 的照 task 10 記 Info toast"
       - "刷新不移動 focus、cursor 留在同一列（tdp K3），[2] 的內容照 tdp note.9 重新放進去"
-      - "重新讀失敗照 task 3、10：舊的內容留著、Error toast；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳"
+      - "重新讀失敗照 task 3、10：舊的內容留著、Error toast；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳"
   - id: 20
     spec: 19
     request: commits panel 是 current branch 的時候，按熱鍵直接跳去當前分支的上一個或下一個 commit（trace）；熱鍵 n 與 N（2026-11-20 起：Current 分頁，當前分支是 [1] cursor 那一個，task 5）
@@ -243,5 +243,5 @@ tasks:
       - "[2] COMMITS 的 panel operation（tdp P3：作用在整個 panel 的 cursor，不是對 cursor 那一列做事）：[n]ext commit（往下、較舊）、[N] Previous commit（往上、較新）；熱鍵 n、N 是使用者定的（tdp K12 只保留 j k u d g G h l，n、N 在清單上沒有用到；tdp M5：label 裡有 n 的原地包，沒有的放前面）"
       - "只在 Current branch 時有：All branches 時兩個都 Hidden（tdp M6：那時它們的對象不存在）；還沒有 commit 時停用"
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
-      - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp main panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
+      - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
 

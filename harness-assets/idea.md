@@ -156,6 +156,11 @@ user 先要「SETTING 分頁，現在有一個使用者設定，就是 commits p
 user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖）：「panel 2 在 zoom 的時候，是不是 GRAPH 區域可以動態放大」
 追問後選了：照 [2] 的寬度隨時調（終端機越寬、放大越多，線就畫越多；窄的時候至少還是 10 條；DESCRIPTION、AUTHOR、DATE 不會被擠窄）
 
+## 欄寬：DESCRIPTION 吃掉剩下的寬度（2026-11-20）
+
+user 照原話（附了一張放大後欄位擠在左半邊、右半邊空著的截圖）：「是可以了，但是可以平均點嗎?」
+選了「DESCRIPTION 吃掉剩下的寬度」（AUTHOR、DATE 靠右）；tdp session 做成試用版，在 gittu 上看過 Pack、Fill、Even、Gaps + Fill、Gaps 五種之後：「Fill」
+
 ## 一個 commit 的檔案放在常駐的 [3]（2026-11-20）
 
 user 照原話：「我認為 commit 點按下 enter drill into 看到檔案清單這個體驗有點怪怪 1. 上方 tab 還是顯示 current/all, 但是這時候切換 h|l 不會有任何差異，因為已經進入某一個 commit 的 detail 2. 改成按下跳出 commit detail popup 對順序的體驗是對的，但是對操作的體驗又怪怪的」

@@ -72,7 +72,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = s.fileActions()
 	s.diffP.Actions = []terminu.Action{
-		{Key: "Enter", Label: "Compare", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "compare",
+		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "diff",
 			Hidden: func() bool { return s.diff.Empty() || !s.text }, Do: s.openDiff},
 	}
 	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",

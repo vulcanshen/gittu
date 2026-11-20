@@ -81,10 +81,13 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		Columns: []terminu.Column{
 			{Title: "Graph"},
 			{Title: "Hash"},
-			{Title: "Description", Shrink: true, MinWidth: 12},
+			{Title: "Description", Shrink: true, MinWidth: 12, Fill: true},
 			{Title: "Author", Shrink: true, MinWidth: 6, Drop: 2},
 			{Title: "Date", Drop: 1},
 		},
+		// The room left over, wider than every value, goes to DESCRIPTION:
+		// AUTHOR and DATE at the right edge (tdp panel.5, panel-184; the user).
+		Spread:     terminu.SpreadFill,
 		Filterable: true,
 		EmptyFact:  "No commits yet",
 		EmptyHint:  "Press [W] to see the files to commit",
@@ -696,10 +699,10 @@ func (h *historyScreen) openFile() tea.Cmd {
 	return h.g.a.OpenDiff(h.filesP, it)
 }
 
-// compareMode is [2]'s compare mode (tdp panel.9): two commits hold many, so
-// comparing them goes into the files that differ, the anchor the base.
-func (h *historyScreen) compareMode() terminu.Action {
-	return h.g.a.CompareAction(h.histP, h.commits, terminu.Compare{Key: "C",
+// diffMode is [2]'s Diff mode (tdp panel.9): two commits hold many, so
+// diffing them goes into the files that differ, the anchor the base.
+func (h *historyScreen) diffMode() terminu.Action {
+	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "C",
 		Many: func(terminu.Row) bool { return true },
 		Name: func(r terminu.Row) string { return git.Short(r.ID) },
 		Items: func(anchor, other terminu.Row) ([]terminu.DiffItem, error) {

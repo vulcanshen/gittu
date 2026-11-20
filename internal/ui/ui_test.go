@@ -450,6 +450,27 @@ func TestGraphWidensWithRoom(t *testing.T) {
 	}
 }
 
+// TestDescriptionFills: on a wide [2], the room left over goes to
+// DESCRIPTION, AUTHOR and DATE at the right edge (tdp panel.5, panel-184;
+// the user picked Fill).
+func TestDescriptionFills(t *testing.T) {
+	_, d := start(t, gittest.Sample(t), 160, 32)
+	d.Press("Tab", "z", "z")
+	for _, row := range d.Screen() {
+		if !strings.Contains(row, "GRAPH") {
+			continue
+		}
+		rs := []rune(row)
+		at := strings.Index(row, "DATE")
+		col := len([]rune(row[:at]))
+		if want := len(rs) - 2 - 10; col != want { // the frame and its margin, DATE 10 wide
+			t.Errorf("DATE at column %d, want %d (the right edge):\n%s", col, want, row)
+		}
+		return
+	}
+	t.Fatalf("no header:\n%s", strings.Join(d.Screen(), "\n"))
+}
+
 func TestGraphWithWideIcons(t *testing.T) {
 	r := gittest.Sample(t)
 	tdptest.EachIconWidth(t, func(t *testing.T) {
@@ -716,17 +737,17 @@ func TestFirstCommitFiles(t *testing.T) {
 
 // --- task 7: two commits compared ---
 
-// TestCompareTwoCommits is task 7 on tdp panel.9: C on a commit makes it the
-// anchor of the compare mode, Enter on another goes into the files that differ,
+// TestDiffTwoCommits is task 7 on tdp panel.9: C on a commit makes it the
+// anchor of the Diff mode, Enter on another goes into the files that differ,
 // the anchor the base; Esc goes back up to the mode, the anchor kept.
-func TestCompareTwoCommits(t *testing.T) {
+func TestDiffTwoCommits(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 120, 32)
 	d.Press("Tab")
 	a := selectCommit(t, d, g, "Start the demo")
 	d.Press("Space")
-	has(t, d, "[C]ompare")
+	has(t, d, "[C] Diff")
 	d.Press("Esc", "C")
-	has(t, d, "Compare")
+	has(t, d, "Diff", "C|Enter:diff")
 	b := selectCommit(t, d, g, "Say even more")
 	d.Press("Enter")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
@@ -734,11 +755,11 @@ func TestCompareTwoCommits(t *testing.T) {
 	has(t, d, "README.md @ "+git.Short(a.SHA)+" ↔ README.md @ "+git.Short(b.SHA))
 	d.Press("Esc", "Esc")
 	if g.history.histP.InMode() == nil {
-		t.Error("Esc out of the files did not go back to the compare mode")
+		t.Error("Esc out of the files did not go back to the Diff mode")
 	}
 	d.Press("Esc")
 	if g.history.histP.InMode() != nil {
-		t.Error("Esc did not leave the compare mode")
+		t.Error("Esc did not leave the Diff mode")
 	}
 	has(t, d, "GRAPH")
 }
@@ -1438,7 +1459,7 @@ func TestDiffNotText(t *testing.T) {
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "blob.bin"); return nil })
 	d.Press("j", "k")
 	has(t, d, "DIFF: blob.bin", "Not a text file", "Press [1] to go to the files")
-	hasNot(t, d, "Enter:compare")
+	hasNot(t, d, "Enter:diff")
 }
 
 // TestDiffNewFolder is task 11 on tdp note.8 (note-106): an untracked
@@ -1453,7 +1474,7 @@ func TestDiffNewFolder(t *testing.T) {
 	d.Press("W")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "newdir/"); return nil })
 	d.Press("j", "k")
-	has(t, d, "DIFF: newdir/", "newdir/ @ index ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:compare")
+	has(t, d, "DIFF: newdir/", "newdir/ @ index ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:diff")
 	d.Press("Tab", "Enter") // into the list
 	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
 	hasNot(t, d, "blob.bin @ index ↔")
@@ -1477,7 +1498,7 @@ func TestDiffComparesVersions(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	_, d := start(t, r, 120, 32)
 	d.Press("W", "Tab")
-	has(t, d, "Enter:compare")
+	has(t, d, "Enter:diff")
 	d.Press("Enter")
 	has(t, d, "README.md @ index ↔ README.md", "UNIFIED", "+changed")
 	d.Press("Esc", "1", "Enter", "Tab", "Enter")

@@ -366,7 +366,7 @@ func (g *gittu) rebase(onto string) tea.Cmd {
 // (tdp screen.6).
 func (h *historyScreen) fileActions() []terminu.Action {
 	return []terminu.Action{
-		{Key: "Enter", Label: "Compare", Desc: "its two versions, UNIFIED or SPLIT", Scope: item, Hint: "compare",
+		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: item, Hint: "diff",
 			Hidden:   func() bool { _, ok := h.file(); return !ok },
 			Disabled: func() bool { it, _ := h.file(); return it.Text == nil }, // binary: no text to compare (tdp panel.9)
 			Do:       h.openFile},
@@ -385,7 +385,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	return []terminu.Action{
 		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [3]", Scope: item, Hint: "files",
 			Hidden: onGraph, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
-		h.compareMode(),
+		h.diffMode(),
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
 			Hidden: onGraph, Disabled: off,
 			AskFor: func() *terminu.Ask {
