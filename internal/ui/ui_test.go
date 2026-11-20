@@ -88,7 +88,7 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[1] BRANCHES", "[2] COMMITS", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–2:panels q:quit")
+	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–2:panels q:quit")
 	// [1] a third of the width, [2] the rest (tdp L1).
 	top := d.Screen()[2]
 	at := strings.Index(top, "┌")
@@ -376,7 +376,6 @@ func TestRemoteBranchesToggle(t *testing.T) {
 	r.Git("fetch", "-q", "origin")
 	g, d := start(t, r, 160, 32)
 	d.Press("Tab")
-	has(t, d, "All branches")
 	hasNot(t, d, "origin/main", "Try a topic", "with remote branches")
 	d.Press("Space")
 	has(t, d, "Show remote branches")
@@ -386,7 +385,7 @@ func TestRemoteBranchesToggle(t *testing.T) {
 		t.Error("r drew the remote branches")
 	}
 	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Show remote branches") })
-	has(t, d, "All branches · with remote branches", "origin/main", "origin/topic", "Try a topic")
+	has(t, d, "main · with remote branches", "origin/main", "origin/topic", "Try a topic")
 	if !g.remote {
 		t.Error("remote still off")
 	}
@@ -535,9 +534,9 @@ func TestTrace(t *testing.T) {
 		}
 	}
 	selectCommit(t, d, g, "Say even more")
-	d.Press("n") // All branches: no trace
+	d.Press("l", "n") // the All tab: no trace
 	on("Say even more")
-	d.Do(func() tea.Cmd { return runPanel(t, g.history.histP, "Current branch") })
+	d.Press("h") // the Current tab, main on the left
 	d.Press("Space")
 	has(t, d, "[n]ext commit", "[N] Previous commit")
 	d.Press("Esc")
@@ -578,25 +577,39 @@ func TestAllOrCurrentBranch(t *testing.T) {
 		}
 		return -1
 	}
+	// Current first: [1]'s cursor starts on topic, the branch checked out.
 	d.Press("Tab")
+	if g.all {
+		t.Error("[2] opens on All")
+	}
+	curMain, curTopic := nodeAt("Say even more"), nodeAt("Try a topic")
+	if curTopic >= curMain {
+		t.Errorf("Current: topic's commit at %d is not left of main's at %d", curTopic, curMain)
+	}
+	d.Press("l") // the All tab: main on the left
 	has(t, d, "All branches", "Try a topic", "Say even more")
 	allMain, allTopic := nodeAt("Say even more"), nodeAt("Try a topic")
 	if allMain >= allTopic {
 		t.Errorf("All: main's commit at %d is not left of topic's at %d", allMain, allTopic)
 	}
-	d.Press("a")
-	has(t, d, "Current branch", "Try a topic", "Say even more")
+	d.Press("1", "k") // [1] to main: All keeps main on the left
+	if nodeAt("Say even more") >= nodeAt("Try a topic") {
+		t.Error("All: main is not on the left")
+	}
+	d.Press("1", "j") // back to topic
+	d.Press("2", "h") // Current again: the tab chosen is kept
 	if g.all {
-		t.Error("still all")
+		t.Error("h did not go back to Current")
 	}
-	curMain, curTopic := nodeAt("Say even more"), nodeAt("Try a topic")
-	if curTopic >= curMain {
-		t.Errorf("Current: HEAD's commit at %d is not left of main's at %d", curTopic, curMain)
+	d.Press("1", "k") // [1] to main: Current follows it
+	has(t, d, "main")
+	if nodeAt("Say even more") >= nodeAt("Try a topic") {
+		t.Errorf("Current did not follow [1] to main:\n%s", strings.Join(d.Screen(), "\n"))
 	}
-	d.Press("a")
-	has(t, d, "All branches")
-	d.Press("!")
-	has(t, d, "Showing the current branch on the left", "Showing all branches, main on the left")
+	d.Press("j") // and back to topic
+	if nodeAt("Try a topic") >= nodeAt("Say even more") {
+		t.Errorf("Current did not follow [1] to topic:\n%s", strings.Join(d.Screen(), "\n"))
+	}
 }
 
 // --- task 6: a commit's files and their diffs ---
@@ -1763,12 +1776,12 @@ func TestZoomTwoSteps(t *testing.T) {
 	}
 	has(t, d, "z:zoom")
 	d.Press("z")
-	if w := leftWidth(d); w != 0 || !d.Has("[2] COMMITS") || d.Has("[1] BRANCHES") {
+	if w := leftWidth(d); w != 0 || !d.Has("[2] CURRENT") || d.Has("[1] BRANCHES") {
 		t.Fatalf("second step: [1] still drawn (%d):\n%s", w, strings.Join(d.Screen(), "\n"))
 	}
 	has(t, d, "z:unzoom")
 	d.Press("Tab")
-	if !d.Has("[1] BRANCHES") || d.Has("[2] COMMITS") {
+	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") {
 		t.Fatalf("Tab on the whole screen does not show [1] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("z")
@@ -1779,7 +1792,7 @@ func TestZoomTwoSteps(t *testing.T) {
 		t.Errorf("zoom %d", g.history.zoom)
 	}
 	d.Press("!")
-	has(t, d, "Zoomed [2] COMMITS", "Zoomed [2] COMMITS to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [2]", "Zoomed [2] to the whole screen", "Back to both panels")
 }
 
 func TestZoomNarrowSkipsTheFirstStep(t *testing.T) {

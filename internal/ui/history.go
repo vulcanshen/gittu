@@ -24,6 +24,8 @@ var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 // historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
 // [2] the history graph beside them.
 type historyScreen struct {
+	// line is the [1] row the Current tab follows (its ID), "" for HEAD.
+	line   string
 	g      *gittu
 	screen *terminu.Screen
 
@@ -77,7 +79,11 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		EmptyFact:  "No commits yet",
 		EmptyHint:  "Press [W] to see the files to commit",
 	}
-	h.histP = &terminu.Panel{Label: "Commits", Body: h.commits}
+	// Two tabs (the user): Current, the branch under [1]'s cursor on the left,
+	// and All, main on the left; Current first, the one chosen kept while
+	// gittu runs.
+	h.histP = &terminu.Panel{Label: "Current", Tabs: []string{"All"}, Body: h.commits,
+		OnTab: func(tab int) tea.Cmd { return h.setAll(tab == 1) }}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
 	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
 		Panels: []*terminu.Panel{h.branchP, h.histP}, Layout: h.layout}
@@ -123,9 +129,9 @@ func (h *historyScreen) zoomTo(z int) tea.Cmd {
 	case 0:
 		h.g.a.Log(terminu.Info, "Back to both panels")
 	case 1:
-		h.g.a.Log(terminu.Info, "Zoomed [2] COMMITS")
+		h.g.a.Log(terminu.Info, "Zoomed [2]")
 	case 2:
-		h.g.a.Log(terminu.Info, "Zoomed [2] COMMITS to the whole screen")
+		h.g.a.Log(terminu.Info, "Zoomed [2] to the whole screen")
 	}
 	return nil
 }
@@ -189,9 +195,9 @@ func (h *historyScreen) failed() {
 // scope is the location row of the graph: its main line, and the remote
 // branches when they are drawn (tdp panel.10).
 func (h *historyScreen) scope() string {
-	s := "Current branch"
-	if h.g.all {
-		s = "All branches"
+	s := "All branches"
+	if !h.g.all {
+		s = h.lineName()
 	}
 	if h.g.remote {
 		s += " · with remote branches"
@@ -200,12 +206,32 @@ func (h *historyScreen) scope() string {
 }
 
 // mainLine is the commit the graph keeps in its first column: main (else
-// master) for All, HEAD for Current.
+// master) on the All tab; on the Current tab the branch, remote branch or tag
+// under [1]'s cursor, HEAD before [1] has one (the user).
 func (h *historyScreen) mainLine(s *git.Snapshot) string {
 	if h.g.all {
 		return s.MainSHA()
 	}
+	return h.lineSHA(s)
+}
+
+// lineSHA is the commit the Current tab follows: the ref under [1]'s cursor
+// while it is in the graph, else HEAD.
+func (h *historyScreen) lineSHA(s *git.Snapshot) string {
+	if h.line != "" {
+		if sha := h.shaOf(h.line); sha != "" && slices.ContainsFunc(s.Commits, func(c git.Commit) bool { return c.SHA == sha }) {
+			return sha
+		}
+	}
 	return s.HeadSHA
+}
+
+// lineName names what the Current tab follows, as the location row says it.
+func (h *historyScreen) lineName() string {
+	if h.line != "" && h.g.snap != nil && h.lineSHA(h.g.snap) == h.shaOf(h.line) {
+		return h.line[2:]
+	}
+	return h.g.currentName()
 }
 
 func firstLine(s string) string {
@@ -358,6 +384,13 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 	if h.g.snap == nil {
 		return nil
 	}
+	if r.ID[:2] != kindStash { // the Current tab follows it: its line on the left
+		h.line = r.ID
+		if !h.g.all {
+			h.commits.SetRows(h.commitRows(h.g.snap))
+			h.commits.Location = h.scope()
+		}
+	}
 	if sha := h.shaOf(r.ID); h.inGraph(sha) {
 		h.commits.ClearFilter() // it puts [2]'s cursor on that commit (tdp panel.14)
 		h.commits.Select(sha)
@@ -372,7 +405,7 @@ func (h *historyScreen) branchMoved(r terminu.Row) tea.Cmd {
 // cursor where it was. The filter is cleared first (tdp panel.14).
 func (h *historyScreen) trace(older bool) tea.Cmd {
 	s := h.g.snap
-	reach := reached(s.Commits, s.HeadSHA)
+	reach := reached(s.Commits, h.lineSHA(s))
 	at := -1
 	if cur, ok := h.commits.Current(); ok {
 		at = slices.IndexFunc(s.Commits, func(c git.Commit) bool { return c.SHA == cur.ID })
@@ -392,7 +425,7 @@ func (h *historyScreen) trace(older bool) tea.Cmd {
 	if !older {
 		word = "newer"
 	}
-	return h.g.a.Toast(terminu.Info, "No "+word+" commit on "+h.g.currentName())
+	return h.g.a.Toast(terminu.Info, "No "+word+" commit on "+h.lineName())
 }
 
 // reached are the commits head reaches among commits, through every parent.

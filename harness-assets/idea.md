@@ -137,6 +137,20 @@ user 照原話：「我想要在 commit panel 有一個操作是『trace』，�
 追問後：熱鍵用 n 與 N（n 往下、較舊；N 往上、較新）；當前分支的 commit 是 HEAD 走得到的所有 commit（merge 進來的也算）；
 cursor 不在那些 commit 上時，往按的方向跳到最近的一個。
 
+## commits 的 Current／All 分頁（2026-11-20）
+
+user 先要「SETTING 分頁，現在有一個使用者設定，就是 commits panel 預設顯示『All branches』還是『Current branch』」，
+以及「當 commit panel 預設顯示 current branch 時，當 cursor 在左邊 panel 移動切換 branch 的時候，右邊 commit panel 也就會跟著切換」。
+接著改成，user 照原話：
+
+1. 「把上方 Branch: <current branch>, Repo: <repo> 的顯示，改放到 panel 1 上方，但是不給 focus，不給 focus 的功能你可以參考 tetru，這樣上方可以空出來」
+   （tdp 沒有不拿 focus 的框，要先請 tdp 定；user：「等等讓我想一下」）
+2. 「我們的 panel 2 也多一個分頁，COMMITS 有分 Current 和 All 兩個分頁，預設是 Current，使用者切換到哪一個，就固定在那一個，
+   兩個分頁都會依照左方 panel 1 切換 branch 而切換內容」
+3. 「這樣 Settings 就先不需要」
+
+先做 2：「先作 COMMIT current/all 分頁，關掉在打開不記得，只記到這次關掉為止」
+
 ## 不寫別的工具（2026-11-19）
 
 user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」

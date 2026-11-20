@@ -79,7 +79,7 @@ type gittu struct {
 func New(repo *git.Repo) *terminu.App { return newGittu(repo).a }
 
 func newGittu(repo *git.Repo) *gittu {
-	g := &gittu{a: terminu.New("gittu"), repo: repo, all: true}
+	g := &gittu{a: terminu.New("gittu"), repo: repo}
 	g.a.Splash = splash()
 	g.a.QuitFlow = g.quit
 	g.a.Status = g.statusbar

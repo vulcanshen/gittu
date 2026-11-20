@@ -86,7 +86,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 	off := h.busyOr(nil)
 	return []terminu.Action{
 		// A branch, a remote branch, a tag: Enter shows its commit in [2].
-		{Key: "Enter", Label: "Show", Desc: "its commit in [2] COMMITS", Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: "its commit in [2]", Scope: item, Hint: "show",
 			Hidden: func() bool { k, _ := h.rowKind(); return k == "" || k == kindStash }, Do: h.showRef},
 		// A branch.
 		{Key: "c", Label: "Check out", Desc: "this branch", Scope: item,
@@ -406,18 +406,14 @@ func (h *historyScreen) commitActions() []terminu.Action {
 				terminu.Clipboard(c.SHA)
 				return g.a.Toast(terminu.Success, "Copied "+git.Short(c.SHA))
 			}},
-		// trace (the user): with the current branch's line on the left, n and N
-		// go down and up from commit to commit HEAD reaches, merged ones too.
-		{Key: "n", Label: "Next commit", Desc: "older, that the current branch reaches", Scope: panel,
+		// trace (the user): on the Current tab, n and N go down and up from
+		// commit to commit the branch on the left reaches, merged ones too.
+		{Key: "n", Label: "Next commit", Desc: "older, that the branch on the left reaches", Scope: panel,
 			Hidden: func() bool { return g.all }, Disabled: func() bool { return g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return h.trace(true) }},
-		{Key: "N", Label: "Previous commit", Desc: "newer, that the current branch reaches", Scope: panel,
+		{Key: "N", Label: "Previous commit", Desc: "newer, that the branch on the left reaches", Scope: panel,
 			Hidden: func() bool { return g.all }, Disabled: func() bool { return g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return h.trace(false) }},
-		{Key: "a", Label: "Current branch", Desc: "HEAD's line on the left", Scope: panel,
-			Hidden: func() bool { return !g.all }, Do: func() tea.Cmd { return h.setAll(false) }},
-		{Key: "a", Label: "All branches", Desc: "main's line on the left", Scope: panel,
-			Hidden: func() bool { return g.all }, Do: func() tea.Cmd { return h.setAll(true) }},
 		{Label: "Show remote branches", Desc: "in the graph", Scope: panel, // no hotkey: not by a stray key
 			Hidden: func() bool { return g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
 		{Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
@@ -431,18 +427,13 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	}
 }
 
-// setAll switches the graph's main line between main (All) and HEAD
-// (Current) (tdp P3: the panel's operation).
+// setAll is [2]'s tab: All, main's line on the left, or Current, the line
+// of what [1]'s cursor is on (the user).
 func (h *historyScreen) setAll(all bool) tea.Cmd {
 	g := h.g
 	g.all = all
 	if g.snap != nil {
 		h.show(g.snap)
-	}
-	if all {
-		g.a.Log(terminu.Info, "Showing all branches, main on the left")
-	} else {
-		g.a.Log(terminu.Info, "Showing the current branch on the left")
 	}
 	return nil
 }

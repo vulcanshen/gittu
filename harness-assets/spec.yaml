@@ -1,9 +1,9 @@
-id: 18
+id: 19
 from: v1.2.16
 to: v1.2.17
 tasks:
   - id: 1
-    spec: 11
+    spec: 19
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6]
     remark:
@@ -35,7 +35,7 @@ tasks:
       - "不是 git repo、路徑不在、找不到 git 指令時不開畫面：stderr 印 gittu: <原因>，結束碼 1，像 git 自己一樣（tdp P5 功能邏輯）"
       - "不認得的旗標（- 開頭）、兩個以上的路徑是用錯：stderr 寫 gittu: <哪裡錯>、空一行、用法，結束碼 2；資料夾剛好叫 version、help 時寫 ./version（help 裡寫明）。輸出照 tdp main 的 E1（E1-4 到 E1-8）：結果到 stdout、錯誤到 stderr 開頭 gittu: 、結束碼 0 做完 1 沒做完 2 用錯、句子開頭大寫。gittu 沒有不開畫面又讀設定檔的指令，E3-40 管不到"
   - id: 3
-    spec: 14
+    spec: 19
     request: 左邊是分支列表，看得到本地分支、遠端分支、tag、stash；upstream gone 也加個 glyph；點了分支，右邊的分支圖跳到那裡；在 panel 1 按 Enter 切換 focus 到 history panel，捲到那個分支的 commit 點；REMOTE 和 TAG 用分頁作，不要都擠在一個 panel
     tdp: [tdp panel.1, tdp panel.4, tdp panel.5, tdp panel.7, tdp panel.13, tdp panel.14, tdp terms.4, tdp K12, tdp screen.8, tdp components.5, tdp P5, tdp K3, tdp toast.2, tdp panel.15, tdp M5, tdp note.8, tdp note.7, tdp F5, tdp panel.10, tdp panel.9]
     remark:
@@ -65,15 +65,15 @@ tasks:
       - "/ 篩選（tdp panel.14）：找 commit 的標題、hash、作者"
       - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列跟著畫 Surface1 底；移動、N of M 算筆數，篩選也比對第二列（tdp main 3e0f427 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
   - id: 5
-    spec: 6
-    request: 分支圖可以切換「全部分支」和「目前分支」；兩者只差主線是誰：current 的時候 HEAD 一定在最左邊，all 的時候 main／master 在最左邊，或沒有主線
-    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp panel.10, tdp note.7, tdp P5, tdp E3]
+    spec: 19
+    request: commits panel 有 Current 和 All 兩個分頁，預設是 Current；切換到哪一個就固定在那一個（只記到這次關掉為止）；兩個分頁都依照左方 panel 1 切換 branch 而切換內容（user 2026-11-20）
+    tdp: [tdp P3, tdp panel.1, tdp panel.4, tdp K12, tdp panel.10, tdp panel.13, tdp note.7, tdp P5, tdp E3]
     remark:
-      - "使用者 2026-11-19：All 與 Current 都畫全部的分支（遠端分支照 task 18 的開關），只差最左邊固定的主線：Current 是 HEAD 那一串，All 是 main（沒有就 master；兩個都沒有就不固定）。以下原本 Current 只畫 HEAD 走得到的 commit 的寫法改掉"
-      - "[2] COMMITS 的 panel operation（tdp P3：作用在整個 panel），一個鍵 a 來回切：All 時是 Current br[a]nch（HEAD's line on the left），Current 時是 [a]ll branches（main's line on the left）；label 裡有 a，照 tdp M5 包第一次出現的那個（tgo 畫）；另一個用 Hidden 藏起來（tdp M6：對象不存在）"
-      - "畫的 commit = 所有本地分支、tag 與 HEAD 走得到的（遠端分支照 task 18；不含 stash：stash 在 [1] 的 STASHES）。預設是 All；不存下來（tdp E3：刪了只是回到預設的東西才是狀態，這裡沒有必要多一個檔）"
-      - "位置列寫目前是哪一種：All branches／Current branch（tdp panel.10：位置列寫目前的位置，要不要有 app 可以自行決定）"
-      - "切換記 App Log（Info：Showing all branches, main on the left／Showing the current branch on the left；tdp note.7：只看不改的動作也記）"
+      - "[2] 分成兩個分頁（tdp panel.4、terms.4；有分頁的 panel 第一個分頁的名字就是 label，tdp panel.1：標題是 [2] CURRENT 接 ALL）：Current（預設）與 All，h|l 切換（tdp K12：一維清單放在有 tab 的 panel 裡，h|l 給 tab）；原本的 a 鍵與 Current br[a]nch／[a]ll branches 兩個 panel operation 拿掉"
+      - "兩個分頁都畫全部的分支（遠端分支照 task 18 的開關），只差最左邊固定的主線：Current 是 [1] cursor 那個分支、遠端分支或 tag 那一串（[1] 還沒有 cursor 時是 HEAD），All 是 main（沒有就 master；兩個都沒有就不固定）"
+      - "依照 [1] 切換（user）：[1] 的 cursor 一移動，Current 分頁的主線就換成它（tdp panel.13：另一個 panel 跟著 cursor 換，focus 留在 [1]）；All 分頁的主線不變，兩個分頁的 cursor 都照 task 3 跳到它的 commit"
+      - "切到哪個分頁只記到 gittu 關掉（user：關掉再打開不記得），不存檔（tdp E3）；切分頁是換看的方式，不記 App Log（tdp note.7：切 tab 不是動作）"
+      - "位置列寫目前是哪一條線：Current 寫那個分支、遠端分支或 tag 的名字，All 寫 All branches（tdp panel.10）"
   - id: 6
     spec: 16
     request: 看一個 commit：有哪些檔案變了，在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回；跟比較兩個 commit 一樣（使用者 2026-11-19）
@@ -201,7 +201,7 @@ tasks:
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
-    spec: 11
+    spec: 19
     request: history [2] commits 需要可以 zoom，分兩段：第一段還保留 panel 1 最小寬度，第二段完全展開、panel 1 完全被覆蓋；窄寬時沒有保留 panel 1 最小寬度那一段
     tdp: [tdp screen.6, tdp screen.5, tdp terms.8, tdp P3, tdp M2, tdp M5, tdp K1, tdp K2, tdp note.7, tdp L1, tdp L4, tdp M6]
     remark:
@@ -230,8 +230,8 @@ tasks:
       - "刷新不移動 focus、cursor 留在同一列（tdp K3），[2] 的內容照 tdp note.9 重新放進去"
       - "重新讀失敗照 task 3、10：舊的內容留著、Error toast；背景的刷新接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp main 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；按 R 的失敗都跳"
   - id: 20
-    spec: 18
-    request: commits panel 是 current branch 的時候，按熱鍵直接跳去當前分支的上一個或下一個 commit（trace）；熱鍵 n 與 N
+    spec: 19
+    request: commits panel 是 current branch 的時候，按熱鍵直接跳去當前分支的上一個或下一個 commit（trace）；熱鍵 n 與 N（2026-11-20 起：Current 分頁，當前分支是 [1] cursor 那一個，task 5）
     tdp: [tdp P3, tdp M2, tdp M5, tdp M6, tdp K12, tdp K3, tdp panel.14, tdp toast.2, tdp P5]
     remark:
       - "[2] COMMITS 的 panel operation（tdp P3：作用在整個 panel 的 cursor，不是對 cursor 那一列做事）：[n]ext commit（往下、較舊）、[N] Previous commit（往上、較新）；熱鍵 n、N 是使用者定的（tdp K12 只保留 j k u d g G h l，n、N 在清單上沒有用到；tdp M5：label 裡有 n 的原地包，沒有的放前面）"

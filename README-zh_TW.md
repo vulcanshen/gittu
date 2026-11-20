@@ -17,8 +17,8 @@ commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global
 
 - **分支與分支圖並排**：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖；cursor 移到分支上，分支圖就跳到它的
   commit，按 `Enter` 就過去。
-- **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，分支與 tag 標在它們的 commit 上；main 那條固定在最左邊（All），或目前的分支
-  那條（Current）；遠端分支要看時才畫。
+- **看得懂的分支圖**：一個 commit 一列，每條線一個顏色，分支與 tag 標在它們的 commit 上；CURRENT 分頁把 `[1]` cursor 所在的分支那條
+  固定在最左邊，ALL 分頁是 main 那條；遠端分支要看時才畫。
 - **先看再動手**：一個 commit 的檔案標上 `+` `-` `~`，再左右對照看每個檔的兩個版本；兩個 commit 也一樣這樣比；`Esc` 一層一層退回。
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
@@ -103,10 +103,11 @@ gittu
 | `[1]` TAGS：tag | 到 `[2]` 它的 commit | `[c]`heck out（HEAD 會 detached）、`[D]`elete、Push |
 | `[1]` STASHES：stash | 它存的檔案，跟 commit 一樣 | `[a]`pply、P`[o]`p、`[D]`rop |
 | `[2]` commit | 它改了的檔案 | 跟另一個 commit `[C]`ompare、`[c]`heck out、`[b]`ranch here、`[t]`ag、`[M]`erge、Rebase、Cherry-pick、Revert、Reset 到這裡、Cop`[y]` hash |
-| `[2]` 整個 panel | | Current br`[a]`nch／`[a]`ll branches、`[n]`ext／`[N]` Previous commit（只在 Current branch：目前的分支走得到的 commit）、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
+| `[2]` 整個 panel | | `[n]`ext／`[N]` Previous commit（只在 CURRENT 分頁：最左邊那個分支走得到的 commit）、Show／Hide remote branches、`[z]`oom、`[/]` 篩選 |
 
-`[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag：All 把 main（或 master）那條固定
-在最左邊，Current 是你現在的分支那條；遠端分支一開始不畫，在 `[2]` 的 `Space` 選單選 Show remote branches 才畫。`[2]` 是 COMMITS，在上面按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
+`[1]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag。`[2]` 有兩個分頁，用 `h`、`l` 切換：
+CURRENT（打開時在這裡）把 `[1]` cursor 所在的分支、遠端分支或 tag 那條固定在最左邊，`[1]` 移動時跟著換；ALL 把 main（或 master）
+那條固定在最左邊。遠端分支一開始不畫，在 `[2]` 的 `Space` 選單選 Show remote branches 才畫。在 `[2]` 上按 `z` 放大：先放大到 `[1]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
 在 commit 上按 `Enter`，進到它對上一個 commit 改了的檔案：`+` 新增、`-` 刪除、`~` 修改（改名是 `~ 舊 → 新`）。在檔案上按
 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。在一個 commit 上按 `C`、再到另一個按 `Enter`，用同樣的方式

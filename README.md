@@ -20,8 +20,8 @@ no keys to learn first.
 - **Branches beside the graph**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
   the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
 - **A graph you can read**: one row a commit, each line of history in its own colour, the branches and tags on their
-  commits; main's line kept on the left (All) or the current branch's (Current), the remote branches only when you want
-  them.
+  commits; on the CURRENT tab the line of the branch under `[1]`'s cursor kept on the left, on the ALL tab main's,
+  the remote branches only when you want them.
 - **Look before you act**: a commit's files marked `+` `-` `~`, then a file's two versions side by side; two commits
   compared the same way; `Esc`
   goes back one level at a time.
@@ -113,11 +113,12 @@ the App Log, what gittu did and what went wrong.
 | `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
 | `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
 | `[2]` a commit | Its files | `[C]`ompare with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
-| `[2]` the panel | | Current br`[a]`nch / `[a]`ll branches, `[n]`ext / `[N]` Previous commit (Current branch only: the commits the current branch reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
+| `[2]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
 
 `[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
-and tag; All keeps main's line (or master's) on the left, Current the branch you are on. The remote branches are hidden
-at first: Show remote branches in `[2]`'s `Space` menu draws them. `[2]` is COMMITS; `z` on it zooms it wider, with `[1]` at its least width, then to the
+and tag. `[2]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
+branch or tag under `[1]`'s cursor, and follows it as you move; ALL keeps main's line (or master's) there. The remote
+branches are hidden at first: Show remote branches in `[2]`'s `Space` menu draws them. `z` on `[2]` zooms it wider, with `[1]` at its least width, then to the
 whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
