@@ -134,8 +134,8 @@ and on `[2]` leaves the mode.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| An unstaged file | Stage | `[m]`ark, `[x]` Discard, Remove, Ignore |
-| A staged file | Unstage | `[m]`ark, `[x]` Discard, Remove, Ignore |
+| An unstaged file | Stage | `[m]`ark, Discard, Remove, Ignore |
+| A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
 | A conflicted file | Resolve its conflicts one by one | `[m]`ark, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |

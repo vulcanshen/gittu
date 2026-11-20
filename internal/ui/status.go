@@ -384,7 +384,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Hidden: func() bool { _, _, ok := s.file(); return !ok || s.isMarked() }, Do: s.toggleMark},
 		{Key: "m", Label: "Unmark", Desc: "this file", Scope: item, Hint: "unmark",
 			Hidden: func() bool { _, _, ok := s.file(); return !ok || !s.isMarked() }, Do: s.toggleMark},
-		{Key: "x", Label: "Discard", Desc: "this file's change", Scope: item, // x deletes (tdp K13)
+		{Label: "Discard", Desc: "this file's change", Scope: item, // no key (the user)
 			Hidden: func() bool { _, gr, ok := s.file(); return !ok || gr == inConflict }, Disabled: off,
 			AskFor: func() *terminu.Ask {
 				f, gr, _ := s.file()

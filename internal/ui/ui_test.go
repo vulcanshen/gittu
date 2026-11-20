@@ -1720,17 +1720,25 @@ func TestXDiscardsMany(t *testing.T) {
 	hasNot(t, d, "Discard every change to the tracked files?")
 }
 
+// TestDiscardFile: Discard, from the Space menu (no key, the user), asks
+// first; on a file git does not track it deletes it.
 func TestDiscardFile(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
 	d.Press("W", "x")
+	hasNot(t, d, "Discard the change to README.md?")
+	d.Press("Space")
+	has(t, d, "Discard")
+	hasNot(t, d, "[x] Discard")
+	d.Press("Esc")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Discard") })
 	has(t, d, "Discard the change to README.md?", "can't be undone")
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Discarded the change to README.md")
-	d.Press("x")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Discard") })
 	has(t, d, "Delete new.txt?")
 	d.Press("Enter")
 	done(t, g, d)

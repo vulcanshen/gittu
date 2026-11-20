@@ -1,4 +1,4 @@
-id: 31
+id: 32
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -102,11 +102,11 @@ tasks:
       - "Diff 模式與 [3] 裡的差異由 tgo 畫（DiffModeAction 的 DiffMode.Many、Items；terminu-go v1.2.21-beta.1 起的 InDetails、Noun: commit）；模式裡 [3] 自己的內容藏起來，gittu 照樣從 [2] 的 OnMove 更新，離開模式就回來；Diff 模式不記 App Log（tdp note.7）"
       - "模式裡 [2]、[3] 下框的 hint 是模式的鍵 D|Enter:diff，不是 [2] 自己的 Enter:files z:zoom（tdp K11：模式的鍵寫在 footer 與下框 hint）；原本 tgo 的 Panel.hint() 沒看模式，gittu 2026-11-20 發現，tdp session 轉 terminu-go，v1.2.21-beta.3 修了，gittu 不用改"
   - id: 8
-    spec: 30
+    spec: 32
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；分支、遠端分支、tag、stash 能做的事都在 Space 選單
     tdp: [tdp note.8, tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.9, tdp panel.10, tdp note-102, tdp input.5, tdp screen.4, tdp panel.14, tdp M4, tdp K13, tdp K13-2, tdp K13-3]
     remark:
-      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 檔案的 [x] Discard；有標記時 [X] Discard the marked（先 confirm）；全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部；K13 只規定給了鍵就在 X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，x 已經是 Discard，所以沒有熱鍵"
+      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 有標記時 [X] Discard the marked（先 confirm）；一個檔的 Discard 沒有熱鍵（使用者 2026-11-20：「discard 不要用 x, 一樣沒有熱鍵」）、全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部）（K13 只規定給了鍵就在 x、X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，沒有熱鍵"
       - "[1] 的 item operation 依那一列是什麼而不同（tdp K3：同一種項目永遠是同一個動作；不同的種類用 Hidden 分開，tdp M6）：
         本地分支（BRANCHES 分頁） — Enter：Show（task 3）、[c]heck out（目前的分支停用）、[M]erge into the current branch、Re[b]ase the current branch onto it、[r]ename、[x] Delete、Push（沒有熱鍵）；
         遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、Re[b]ase、[x] Delete（刪遠端的分支）；
@@ -129,11 +129,11 @@ tasks:
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
   - id: 10
-    spec: 30
+    spec: 32
     request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
     tdp: [tdp P3, tdp M2, tdp M4, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp note.6, tdp note.7, tdp toast.2, tdp screen.4, tdp F5, tdp P5, tdp components.5, tdp panel.15, tdp K3, tdp input.6, tdp panel.14, tdp T1, tdp F7, tdp K13, tdp K13-2, tdp K13-3]
     remark:
-      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 檔案的 [x] Discard；有標記時 [X] Discard the marked（先 confirm）；全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部；K13 只規定給了鍵就在 X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，x 已經是 Discard，所以沒有熱鍵"
+      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 有標記時 [X] Discard the marked（先 confirm）；一個檔的 Discard 沒有熱鍵（使用者 2026-11-20：「discard 不要用 x, 一樣沒有熱鍵」）、全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部）（K13 只規定給了鍵就在 x、X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，沒有熱鍵"
       - "照 idea.md：對整個 repo 的動作是 global operation（tdp P3、M4）：[c]ommit（task 13）、[p]ull、[P]ush、[f]etch、[b]ranch（從 HEAD 開分支）、[M]erge（select 選一個分支合進目前的分支）、[S]tash、[t]ag（在 HEAD 打 tag）、Discard all（沒有熱鍵）、[R]efresh。global 熱鍵在 panel 上也能按，跟 panel 自己的熱鍵撞到時 panel 的優先（tdp M4）：[2] 上的 b、t、M 是對 cursor 那個 commit"
       - "Pull 是 git pull（照使用者的 pull.rebase 設定）；Pull all 是 git pull --all（每個 remote 都 fetch，再 pull 目前的分支；使用者 2026-11-19 要的 pull all（sync），作用在整個 repo，照 tdp P3 是 global operation；沒有熱鍵）；Push 推目前的分支到它的 upstream，沒有 upstream 時 confirm 問要不要推到 origin 並追蹤（git push -u）；repo 沒有 remote 時 Push 停用（tdp M6：對象存在、但現在不能執行），[1] 上分支與 tag 的 Push 也是；Fetch 是 git fetch --all"
       - "fetch、pull、push 在背景跑：statusbar 寫 Fetching…／Pulling…／Pushing…（Green，tdp screen.4 進行中的工作），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
@@ -162,13 +162,13 @@ tasks:
       - "重新讀（task 19）時，[2] 的內容換了就重新放進去（tdp note.9 的重新讀進來；不算串流，失焦時變暗）"
       - "[2] DIFF 原本用 Pager 畫 git diff 的 patch；2026-11-19 回報給 tdp session 的缺口（panel 畫不出 note.8 的 UNIFIED），terminu-go v1.2.19-beta.1 加了 Pager.SetDiff，已經照它改"
   - id: 12
-    spec: 30
+    spec: 32
     request: stage、unstage、捨棄改動都在 app 裡做
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp K3, tdp F6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp K12, tdp M6, tdp panel.1, tdp F5, tdp K13, tdp K13-2, tdp K13-3]
     remark:
-      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 檔案的 [x] Discard；有標記時 [X] Discard the marked（先 confirm）；全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部；K13 只規定給了鍵就在 X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，x 已經是 Discard，所以沒有熱鍵"
+      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 有標記時 [X] Discard the marked（先 confirm）；一個檔的 Discard 沒有熱鍵（使用者 2026-11-20：「discard 不要用 x, 一樣沒有熱鍵」）、全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部）（K13 只規定給了鍵就在 x、X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，沒有熱鍵"
       - "[1] CHANGES 的 Enter 照那一列在哪一組：UNSTAGED 是 Stage、STAGED 是 Unstage、CONFLICTS 是進去解衝突（task 14）；hint 照 cursor 那一列寫 Enter:stage／Enter:unstage／Enter:resolve（tdp K3：三組是三種項目，同一種永遠同一個動作）"
-      - "item operation：[x] Discard（這個檔的改動，confirm、警告無法復原；沒追蹤的檔是刪掉它）；panel operation：St[a]ge all、Unstage all（沒有熱鍵；u 是移動鍵，tdp K12）"
+      - "item operation：Discard（沒有熱鍵，使用者 2026-11-20；這個檔的改動，confirm、警告無法復原；沒追蹤的檔是刪掉它）；panel operation：St[a]ge all、Unstage all（沒有熱鍵；u 是移動鍵，tdp K12）"
       - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 Enter 可以一個一個 stage 下去）"
   - id: 13
     spec: 16
@@ -250,11 +250,11 @@ tasks:
       - "當前分支的 commit 是 HEAD 走得到的所有 commit，merge 進來的也算（使用者 2026-11-20 選的），只算分支圖讀進來的那些；cursor 不在這些 commit 上時，往按的方向跳到最近的一個（使用者選的）"
       - "那個方向沒有了：cursor 不動，Info toast No older／newer commit on <分支>（tdp toast.2）；跳之前先清掉 [2] 的篩選（tdp v1.2.18 panel.14：app 自己的動作把 cursor 放到某一項上）；移動 cursor 不記 App Log（tdp note.7），提示的 toast 照記"
   - id: 21
-    spec: 31
+    spec: 32
     request: Working tree 的 [1] CHANGES 可以複選（勾選），再從 Space menu 對勾選的檔一起操作：stage、unstage、用我的、用對方的、discard、remove、加進 .gitignore（user 2026-11-20：「不就是 checkbox 勾選 -> space menu 操作嗎?」）
     tdp: [tdp panel.7, tdp P3, tdp M2, tdp M5, tdp M6, tdp note.7, tdp confirm, tdp toast.2, tdp F5, tdp F6, tdp K3, tdp panel.5, tdp K13, tdp K13-2, tdp K13-3]
     remark:
-      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 檔案的 [x] Discard；有標記時 [X] Discard the marked（先 confirm）；全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部；K13 只規定給了鍵就在 X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，x 已經是 Discard，所以沒有熱鍵"
+      - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 有標記時 [X] Discard the marked（先 confirm）；一個檔的 Discard 沒有熱鍵（使用者 2026-11-20：「discard 不要用 x, 一樣沒有熱鍵」）、全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部）（K13 只規定給了鍵就在 x、X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，沒有熱鍵"
       - "[1] CHANGES 是可以標記的清單（tdp panel.7、P3 的整批標記）：標記的列在標記欄畫 Green 的 nf-md-checkbox_marked（tgo 畫）；m 標記或取消 cursor 那一列（item operation [m]ark／Un[m]ark，hint m:mark／m:unmark；使用者 2026-11-20 定 m，檔案那一層的 Use mine 因此沒有熱鍵，task 14）"
       - "對標記的檔做事是 panel operation（tdp P3），只在有標記時出現，沒有熱鍵（使用者：勾選 → Space menu 操作）：Stage the marked、Unstage the marked、Use mine for the marked、Use theirs for the marked、Discard the marked、Remove the marked、Ignore the marked；說明欄寫會作用在幾個檔。每一個只作用在適用的檔：Stage 對 UNSTAGED 的列、Unstage 對 STAGED、Use mine／theirs 對 CONFLICTS、Discard 與 Ignore 對 STAGED 與 UNSTAGED、Remove 對還在 index 裡的；同一個檔兩列都標了算一次；一個都不適用時停用（tdp M6）；開始做就清掉標記"
       - "[M]ark all（標記清單裡每一列；使用者 2026-11-20：「[m]ark 單一筆, [M]ark all 大寫M」）：panel operation；M 也是全域的 [M]erge，panel 的鍵優先（tdp M4），所以 Working tree [1] 上 M 是 Mark all，Merge 從 Space menu 的全域列、或其他 panel 按 M；清單是空的或全都標了時停用、不隱藏（M6），M 才不會換成 Merge；進到一個檔的衝突區塊時不出現（那一層不能標記）。Clear marks（有標記時）：panel operation，沒有熱鍵"
