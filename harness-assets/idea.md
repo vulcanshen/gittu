@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## tdp 開放了框的位置：改回 Stage [a]ll（2026-11-20）
+
+tdp main 3f82387 照 user 的要求改了 M5（M5-1）：預設框第一次出現的字母，app 可以挑別的。user 原本要的是「toggle stage [a]ll」，所以 a 的兩個 label 改回 Stage [a]ll／Unstage [a]ll
+
 ## a 切換全部 stage／unstage，寫成 [a]ll staged（2026-11-20）
 
 user 照原話：「st[a]ge all -> toggle stage [a]ll」；說了 tdp M5 把鍵框在 label 第一次出現的字母上、Stage all 一定畫成 St[a]ge all 之後，選第 1 種：label 改成 a 開頭的 [a]ll staged／[a]ll unstaged

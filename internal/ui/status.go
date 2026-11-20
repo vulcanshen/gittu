@@ -490,16 +490,17 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		{Label: "Clear marks", Desc: "unmark every file", Scope: panel,
 			Hidden: func() bool { return inFiles() || len(s.files.Marked()) == 0 || s.allMarked() },
 			Do:     func() tea.Cmd { s.files.ClearMarks(); g.a.Log(terminu.Info, "Cleared the marks"); return nil }},
-		// a toggles (the user): [a]ll staged while some change is not, then
-		// [a]ll unstaged; their labels start with a so that the key is at
-		// their start (tdp M5, the user). With some staged and some not, All
-		// unstaged is in the menu too, with no key.
-		{Key: "a", Label: "All staged", Desc: "stage every change, untracked files too", Scope: panel,
+		// a toggles (the user): Stage [a]ll while some change is not staged,
+		// then Unstage [a]ll; the key bracketed at "all", which the label
+		// writes itself (tdp main M5-1: the app may pick the appearance; the
+		// lib leaves a label showing its key as it is). With some staged and
+		// some not, Unstage all is in the menu too, with no key.
+		{Key: "a", Label: "Stage [a]ll", Desc: "every change, untracked files too", Scope: panel,
 			Hidden:   func() bool { return inFiles() || !s.anyUnstaged() && s.anyStaged() },
 			Disabled: func() bool { return off() || !s.anyUnstaged() }, Do: s.stageAll},
-		{Key: "a", Label: "All unstaged", Desc: "unstage every staged change, keeping them", Scope: panel,
+		{Key: "a", Label: "Unstage [a]ll", Desc: "every staged change, keeping them", Scope: panel,
 			Hidden: func() bool { return inFiles() || s.anyUnstaged() || !s.anyStaged() }, Disabled: off, Do: s.unstageAll},
-		{Label: "All unstaged", Desc: "unstage every staged change, keeping them", Scope: panel,
+		{Label: "Unstage all", Desc: "every staged change, keeping them", Scope: panel,
 			Hidden: func() bool { return inFiles() || !s.anyUnstaged() || !s.anyStaged() }, Disabled: off, Do: s.unstageAll},
 	}
 }

@@ -175,14 +175,14 @@ tasks:
       沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
     test: [TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
-    spec: 40
+    spec: 41
     implementation: |
       [1] CHANGES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
       Conflicts → Resolve（task 14；hint Enter:resolve）；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀，cursor 留在原本的位置
       Discard（沒有熱鍵，從 Space menu；衝突的列沒有）：confirm DISCARD: <路徑>，「Discard the change to <路徑>?」（沒追蹤的是「Delete <路徑>?」），內容寫無法復原（Peach）；
       Unstaged 的 git restore -- <路徑>、沒追蹤的刪掉檔案、Staged 的 git restore --staged --worktree --source=HEAD（新加的檔 git rm -f）；Success Discarded the change to <路徑>
-      panel operation 熱鍵 a 切換：[a]ll staged — stage every change, untracked files too（git add -A；App Log Staged every change；還有 Unstaged 時出現，什麼改動都沒有時停用）、全部都 stage 了換成 [a]ll unstaged — unstage every staged change, keeping them（git reset -q，還沒有 commit 時 git rm --cached -r .；App Log Unstaged every change）；有 Staged 也有 Unstaged 時，Space menu 另外有沒有熱鍵的 All unstaged；進到衝突的檔裡時都 Hidden
-      Stage、Unstage、Discard、All staged、All unstaged 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
+      panel operation 熱鍵 a 切換：Stage [a]ll — every change, untracked files too（label 自己寫 [a]，tgo 照原樣畫；git add -A；App Log Staged every change；還有 Unstaged 時出現，什麼改動都沒有時停用）、全部都 stage 了換成 Unstage [a]ll — every staged change, keeping them（git reset -q，還沒有 commit 時 git rm --cached -r .；App Log Unstaged every change）；有 Staged 也有 Unstaged 時，Space menu 另外有沒有熱鍵的 Unstage all；進到衝突的檔裡時都 Hidden
+      Stage、Unstage、Discard、Stage all、Unstage all 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
     test: [TestStageUnstage, TestDiscardFile]
   - id: 13
     spec: 36
