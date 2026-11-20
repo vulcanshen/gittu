@@ -1,19 +1,19 @@
 tasks:
   - id: 1
-    spec: 22
+    spec: 36
     implementation: |
       兩個畫面（tgo Screen）：History（Key H，打開時的畫面；[1] BRANCHES、[2] 的 CURRENT／ALL 分頁，task 5）與 Working tree（Key W；[1] CHANGES、[2] DIFF）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
       Working tree 兩個 panel、History 三個；Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40），History 的 [3] FILES 在 [2] 下面、高度是右邊的三分之一（task 6）；最低尺寸用 tgo 的預設 60×32，沒有設 NarrowBelow
       statusbar（tgo App.Status）：先 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），
       有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；再 Repo: <repo 資料夾名>（Lavender）；merge、rebase、cherry-pick、revert 做到一半時接
-      Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green）；背景有 git 指令在跑時改寫 Pushing…、Merging… 之類（Green），兩個是同一欄、不同時出現；標籤 Overlay0
+      <狀態 glyph> Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green；glyph 在還有衝突的檔時是 nf-md-alarm_light Peach，沒有時 nf-md-check_circle Green，空一格接字）；背景有 git 指令在跑時改寫 Pushing…、Merging… 之類（Green），兩個是同一欄、不同時出現；標籤 Overlay0
       寬度固定：給 tgo 的 span 一律是 tgo 給的寬度 w（畫面的一半），左邊對齊、最後補空白；Branch 那一欄（名字加 ↑N ↓N）寬 clamp((w − 16 − repo 名的寬) / 2, 8, 28)，
       放不下時名字從尾端截、加 …（太窄時只留名字），後面補空白；所以換到名字比較長的分支時，Branch 與 Repo 都不動
       q 與 Ctrl-C：tgo App.QuitFlow；沒有 git 指令在跑時直接離開（tea.Quit）；有在跑時開 confirm QUIT「Quit gittu?」，內容 git is still at work: <在做什麼>（Peach）；有 popup 開著時 tgo 先問
       git 指令都是 internal/git 呼叫使用者 PATH 上的 git：工作目錄是 repo 的頂層，環境加 GIT_TERMINAL_PROMPT=0、GIT_MERGE_AUTOEDIT=no、GIT_OPTIONAL_LOCKS=0，
       Setsid（沒有控制終端機，ssh、gpg 開不了 /dev/tty）；改 repo 的操作在背景跑（tea.Cmd），跑完重新讀整個 repo、換上畫面
       L4 的畫面測試：tdptest 每一格畫面都量；tdptest.Check 在各種尺寸與 icon 寬度走第一次啟動；gittu 自己會開的 popup（diff viewer、new branch 的 text input、
-      reset 的 select、checkout 的 confirm、commit 的 textarea、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
+      reset 的 select、checkout 的 confirm、commit 的 form、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
     test: [TestHistoryLayout, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
@@ -182,17 +182,19 @@ tasks:
       Stage、Unstage、Discard、Stage all、Unstage all 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
     test: [TestStageUnstage, TestDiscardFile]
   - id: 13
-    spec: 16
+    spec: 36
     implementation: |
       global operation [c]ommit：沒有 staged 的改動時停用（merge 做到一半、沒有衝突時不停用）
-      tgo Textarea COMMIT（glyph nf-dev-git_commit，Name Message），打開時帶著準備好的訊息：上次沒 commit 成功的、merge 做到一半時 .git/MERGE_MSG 去掉註解的，都沒有就空的；
-      Check 擋空白的訊息（ErrEmpty）：打開時是空的、什麼都沒打就送出（Esc 再 Enter）也照不合格處理，錯誤列寫 Message can't be empty、popup 不關（tdp K3、K3-7；tgo v1.2.19-beta.3 修好 tgo #7）；
-      帶著訊息打開、沒改就送出時用那份訊息 commit（tgo Textarea.Unchanged）；改過的照改過的
+      tgo Form COMMIT（glyph nf-dev-git_commit，Name the commit message：改過後 Esc 問 Discard changes to the commit message?）：
+      Title（上下式；空的寫 not set；Enter 開 tgo TextInput TITLE，Old 是現在的值；Check：空白是 Title is required）、
+      Description（上下式；空的寫 none；顯示第一行，後面還有接 …；Enter 開 tgo Textarea DESCRIPTION 帶著現在的值）；按鈕 Commit；hint Enter:edit Tab:actions Esc:cancel（tgo 畫）
+      打開時帶著準備好的訊息切成兩半（第一行是 Title，空行後面的是 Description）：上次沒 commit 成功的、merge 做到一半時 .git/MERGE_MSG 去掉註解的，都沒有就空的；
+      按下 Commit：訊息是 Title、空一行、Description（沒有 Description 就只有 Title），先留著，再在背景 commit
       送出後在背景跑 git commit --cleanup=strip -F -（訊息從 stdin），statusbar Committing…；成功 Success「Committed <短 hash> <第一行>」並清掉留著的訊息；
       失敗（hook 擋下）error popup COMMIT FAILED，內容是 git 與 hook 說原因的那一行，全文記進 App Log（同 task 8）；訊息留著，下次按 [c] 打開時就在裡面
       Amend（沒有熱鍵；還沒有 commit 時停用）：HEAD 已經在 upstream 上（git merge-base --is-ancestor HEAD @{upstream}）時先 confirm AMEND「Amend the last commit?」，
-      內容是上一個訊息的第一行與 It is on <upstream> already: pushing it again takes a force push.（Peach）；沒推上去時不問；接著 tgo Textarea AMEND 帶著上一個訊息打開，
-      沒改就送出用原本的訊息、改過的用改過的 git commit --amend；清空了送出同 COMMIT 用 Check 擋（Message can't be empty）；
+      內容是上一個訊息的第一行與 It is on <upstream> already: pushing it again takes a force push.（Peach）；沒推上去時不問；接著同一張 form AMEND（按鈕 Amend）帶著上一個訊息打開，
+      按 Amend 用 form 上的訊息 git commit --amend；Title 清空了送出同 COMMIT 擋（Title is required）；
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14

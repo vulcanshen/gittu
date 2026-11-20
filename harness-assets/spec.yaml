@@ -1,12 +1,13 @@
-id: 35
+id: 36
 from: v1.2.19
 to: v1.2.20
 tasks:
   - id: 1
-    spec: 22
+    spec: 36
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6]
     remark:
+      - "merge、rebase、cherry-pick、revert 做到一半時，statusbar 那一欄前面加狀態的 glyph（使用者 2026-11-20：「merge conflict 發生中，status bar 應該要有一個狀態 icon 才對，顯示當前狀態」）：還有衝突的檔時 nf-md-alarm_light（Peach，跟 Warning toast 同一個 glyph；tdp screen.4：警告 Peach），衝突都解完、可以 commit 或 continue 時 nf-md-check_circle（Green，跟 Success toast 同一個；進行中的工作 Green）；兩個形狀不同，不只靠顏色（tdp L5）；glyph 與後面的字空一格（tdp components.2 的通則；statusbar 的內容是 app 的，tdp P5）"
       - |
         版面（打開時是 History 畫面；tdp screen.1、screen.3、screen.4）：
          [H]ISTORY[W]ORKING TREE                 Branch: main ↑1        Repo: gittu
@@ -171,16 +172,16 @@ tasks:
       - "item operation：Discard（沒有熱鍵，使用者 2026-11-20；這個檔的改動，confirm、警告無法復原；沒追蹤的檔是刪掉它）；panel operation：St[a]ge all、Unstage all（沒有熱鍵；u 是移動鍵，tdp K12）"
       - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 Enter 可以一個一個 stage 下去）"
   - id: 13
-    spec: 16
-    request: commit 在 app 裡完成
-    tdp: [tdp textarea, tdp P3, tdp M4, tdp M6, tdp F6, tdp note.6, tdp note.7, tdp toast.2, tdp E3, tdp components.5, tdp K3, tdp confirm, tdp screen.4, tdp F5]
+    spec: 36
+    request: commit 在 app 裡完成；commit 的輸入是一張 form：第一列 title、第二列 textarea、第三列送出的按鈕（user 2026-11-20）
+    tdp: [tdp form, tdp textarea, tdp text, tdp input.5, tdp input.10, tdp P3, tdp M4, tdp M6, tdp F6, tdp note.6, tdp note.7, tdp toast.2, tdp E3, tdp components.5, tdp K3, tdp confirm, tdp screen.4, tdp F5]
     remark:
-      - "global operation [c]ommit（task 10）：開 textarea（tdp textarea，多行的 commit 訊息），標題 COMMIT，Esc 再 Enter 送出；git commit -F 收訊息，hooks 照樣跑。沒有 stage 任何檔案時停用（tdp M6）"
-      - "merge 做到一半時，[c]ommit 的 textarea 帶著 git 準備好的 merge 訊息打開，可以改；沒改就送出是用那份訊息 commit（tgo Textarea.Unchanged；tdp 沒寫 textarea 帶著準備好的值時沒改就送出算不算「用這個值」，review 判 tdp 不清楚）。原本因為 tgo #7 暫時改用 confirm，v1.2.19-beta.3 修好後改回來"
-      - "Amend（沒有熱鍵）：textarea 帶著上一個 commit 的訊息打開，把 staged 的改動併進上一個 commit（git commit --amend），沒改就送出是留著原本的訊息；已經推上 upstream 時先 confirm 警告要 force push（Peach，tdp F6），沒推上去時不問"
-      - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp note.6、components.5、F5）。git 在背景跑，textarea 已經關了：寫好的訊息留著，下次按 [c]ommit 打開時就在裡面，commit 成功才清掉；帶著它沒改就送出是用它 commit（Textarea.Unchanged）"
-      - "textarea 打開時是空的、什麼都沒打就送出，照 tdp K3 是不合格：錯誤列寫 Message can't be empty、popup 不關。2026-11-19 回報的 tgo #7（空的 textarea 直接關掉、沒有 Unchanged），terminu-go v1.2.19-beta.3 修好"
-      - "textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
+      - "global operation [c]ommit（task 10）：開 commit 的 form（使用者 2026-11-20：「commit 的輸入視窗太糟糕了，這部份我們得切個 form 出來，第一 row 是 title, 第二 row 是 textarea 第三是一個 Submit buttom」；tdp form），標題 COMMIT：Title（上下式，text：訊息的第一行）、Description（上下式，textarea：其他的行；form 上照 input.10 只寫第一行，後面還有加 …），動作區一個按鈕 Commit（tdp form.7：按鈕寫按下去要做的事，所以是 Commit，不是使用者說的 Submit）；Title 是必填，送出時檢查（form.16：Title is required）；送出的訊息是 Title、空一行、Description（沒有 Description 就只有 Title），git commit -F 收訊息，hooks 照樣跑。沒有 stage 任何檔案時停用（tdp M6）"
+      - "form 上不打字（tdp form.1）：Enter 打開那一欄的 input popup；Title 的 text input 照 input.5 把現在的值當灰字提議、Tab 拿來改；Description 的 textarea 帶著現在的值打開"
+      - "merge 做到一半時，form 帶著 git 準備好的 merge 訊息打開（第一行是 Title、其他是 Description），可以改；直接按 Commit 就是用那份訊息。原本的 textarea 要靠 tgo Textarea.Unchanged 判斷「沒改就送出」，form 用按鈕送出，不用再判斷"
+      - "Amend（沒有熱鍵）：同一張 form，標題 AMEND、按鈕 Amend，帶著上一個 commit 的訊息打開，把 staged 的改動併進上一個 commit（git commit --amend）；已經推上 upstream 時先 confirm 警告要 force push（Peach，tdp F6），沒推上去時不問"
+      - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp note.6、components.5、F5）。git 在背景跑，form 已經關了：寫好的訊息留著，下次按 [c]ommit 打開時在 form 裡"
+      - "Description 的 textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
     spec: 35
     request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊

@@ -7,6 +7,7 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,6 +35,10 @@ const (
 	glyphTag    = ""          // nf-fa-tag
 	glyphCommit = ""          // nf-dev-git_commit
 	glyphStash  = "\U000F01BC" // nf-md-database
+	// The statusbar's state of an operation stopped half way (the user): the
+	// glyphs of a Warning and a Success toast.
+	glyphConflicts = "\U000F078F" // nf-md-alarm_light: conflicts left
+	glyphReady     = "\U000F05E0" // nf-md-check_circle: none left, ready to go on
 )
 
 // The colours gittu gives content of its own (tdp P5), catppuccin-mocha.
@@ -304,7 +309,15 @@ func (g *gittu) statusbar(w int) []terminu.Span {
 		add("  "+g.busy, terminu.Fg(terminu.Green))
 	case g.snap != nil && g.snap.State.Op != "":
 		st := g.snap.State
-		add("  "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Green))
+		// Its state's glyph first (the user): conflicts left, Peach as a
+		// warning is (tdp screen.4); none, Green, ready to commit or go on.
+		glyph, colour := glyphReady, terminu.Green
+		if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
+			glyph, colour = glyphConflicts, terminu.Peach
+		}
+		add("  ", terminu.Style{})
+		add(glyph, terminu.Fg(colour))
+		add(" "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Green))
 	}
 	add(strings.Repeat(" ", max(w-used, 0)), terminu.Style{})
 	return spans

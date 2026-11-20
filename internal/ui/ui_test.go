@@ -109,10 +109,15 @@ func TestFileStatusScreen(t *testing.T) {
 func TestStatusbarSaysTheMerge(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 120, 32)
-	has(t, d, "Merging: feature")
-	// work in progress: Green (tdp screen.4)
-	if !strings.Contains(strings.Join(d.Styled(), "\n"), "38;2;166;227;161m  Merging: feature") {
+	has(t, d, glyphConflicts+" Merging: feature")
+	// work in progress: Green (tdp screen.4); its state's glyph Peach while
+	// conflicts are left (the user)
+	styled := strings.Join(d.Styled(), "\n")
+	if !strings.Contains(styled, "38;2;166;227;161m Merging: feature") {
 		t.Error("Merging: feature is not Green")
+	}
+	if !strings.Contains(styled, "38;2;250;179;135m"+glyphConflicts) {
+		t.Error("the conflicts glyph is not Peach")
 	}
 	// one last field (tdp L2): what git does takes its place while it runs
 	d.Do(func() tea.Cmd { g.busy = "Committing…"; return nil })
@@ -120,6 +125,12 @@ func TestStatusbarSaysTheMerge(t *testing.T) {
 	hasNot(t, d, "Merging: feature")
 	d.Do(func() tea.Cmd { g.busy = ""; return nil })
 	has(t, d, "Merging: feature")
+	// No conflict left: the ready glyph, Green.
+	r.Git("add", "notes.txt")
+	d.Do(func() tea.Cmd { return g.read(true) })
+	done(t, g, d)
+	has(t, d, glyphReady+" Merging: feature")
+	hasNot(t, d, glyphConflicts)
 }
 
 // TestStatusbarKeepsItsPlace is tdp L2: Branch first, then Repo, both values
@@ -825,7 +836,7 @@ func TestMergeBranchConflicts(t *testing.T) {
 	r.Commit("x.txt", "2\n", "Two")
 	r.Git("checkout", "-q", "main")
 	r.Commit("x.txt", "3\n", "Three")
-	g, d := start(t, r, 100, 32)
+	g, d := start(t, r, 120, 32) // the statusbar room for Merging: other
 	selectBranch(d, g, kindBranch+"other")
 	d.Press("M")
 	has(t, d, "Merge other into main?")
@@ -1749,21 +1760,29 @@ func TestDiscardFile(t *testing.T) {
 
 // --- task 13: commit ---
 
+// TestCommitMessage: c opens the commit form (the user; tdp form): Title, a
+// one-line input, Description, a textarea, and the Commit button; with no
+// title the button says so and the form stays; the message is the title, a
+// blank line, then the description.
 func TestCommitMessage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
 	d.Press("W", "c")
-	has(t, d, "Esc:move")
-	d.Press("Esc", "Enter") // nothing typed: an error, the popup kept (tdp K3, K3-7)
-	has(t, d, "Message can't be empty", "i:write")
-	d.Press("i")
+	has(t, d, "COMMIT", "Title", "not set", "Description", "none", "Commit", "Enter:edit Tab:actions Esc:cancel")
+	d.Press("Tab", "Enter") // no title: an error, the form kept (tdp form.16)
+	has(t, d, "Title is required")
+	d.Press("Enter") // the focus on Title: its input
 	d.Type("Change the readme")
+	d.Press("Enter", "j", "Enter") // Description: a textarea
+	d.Type("Why it changed")
 	d.Press("Esc", "Enter")
+	has(t, d, "Why it changed")
+	d.Press("Tab", "Enter")
 	done(t, g, d)
 	has(t, d, "Committed ", "Change the readme")
-	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Change the readme" {
+	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%B")); got != "Change the readme\n\nWhy it changed" {
 		t.Errorf("last commit %q", got)
 	}
 }
@@ -1771,7 +1790,7 @@ func TestCommitMessage(t *testing.T) {
 func TestCommitOffWithNothingStaged(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 100, 32)
 	d.Press("W", "c")
-	hasNot(t, d, "Esc:move")
+	hasNot(t, d, "Tab:actions")
 }
 
 func TestCommitHookKeepsTheMessage(t *testing.T) {
@@ -1783,9 +1802,9 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "c")
+	d.Press("W", "c", "Enter")
 	d.Type("Blocked")
-	d.Press("Esc", "Enter")
+	d.Press("Enter", "Tab", "Enter")
 	done(t, g, d)
 	has(t, d, "COMMIT FAILED", "no commits today")
 	if err := os.Remove(hook); err != nil {
@@ -1793,7 +1812,7 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	}
 	d.Press("Esc", "c")
 	has(t, d, "Blocked")
-	d.Press("Esc", "Enter") // the message kept, unchanged: it commits (Unchanged)
+	d.Press("Tab", "Enter") // the message kept: it commits
 	done(t, g, d)
 	has(t, d, "Committed ", "Blocked")
 }
@@ -1806,8 +1825,8 @@ func TestAmendKeepsMessage(t *testing.T) {
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Amend") })
 	has(t, d, "Amend the last commit?", "Say even more", "force push") // pushed: a warning first
 	d.Press("Enter")
-	has(t, d, "AMEND", "Say even more", "Esc:move") // its message, ready
-	d.Press("Esc", "Enter")                         // unchanged: kept
+	has(t, d, "AMEND", "Say even more", "Amend") // its message, ready
+	d.Press("Tab", "Enter")                      // unchanged: kept
 	done(t, g, d)
 	has(t, d, "Committed ")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Say even more" {
@@ -1829,8 +1848,9 @@ func TestAmendChangesMessage(t *testing.T) {
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Amend") })
 	hasNot(t, d, "force push")
 	has(t, d, "AMEND", "A local commit")
+	d.Press("Enter", "Tab") // Title's input; Tab takes the title it had (tdp input.5)
 	d.Type(" reworded")
-	d.Press("Esc", "Enter")
+	d.Press("Enter", "Tab", "Enter")
 	done(t, g, d)
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "A local commit reworded" {
 		t.Errorf("last commit %q", got)
@@ -1865,7 +1885,7 @@ func TestResolveHunks(t *testing.T) {
 	d.Advance(5 * time.Second)
 	d.Press("Esc", "c")
 	has(t, d, "COMMIT", "Merge branch 'feature'") // the message git prepared, ready
-	d.Press("Esc", "Enter")                       // unchanged: it commits
+	d.Press("Tab", "Enter")                       // as it is: it commits
 	done(t, g, d)
 	hasNot(t, d, "Merging:")
 }

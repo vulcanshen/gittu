@@ -953,10 +953,9 @@ func (s *statusScreen) markResolved(fs []git.File) tea.Cmd {
 	})
 }
 
-// commit commits the staged changes with a message the user writes
-// (tdp textarea): during a merge it opens with the message git prepared,
-// after a hook stopped one with that message; Enter on it unchanged commits
-// it (Textarea.Unchanged, tdp K3). Empty is an error, the popup kept open.
+// commit commits the staged changes with a message the user writes in the
+// commit form: during a merge it opens with the message git prepared, after
+// a hook stopped one with that message.
 func (g *gittu) commit() tea.Cmd {
 	ready := g.draft
 	if g.snap.State.Op == "merge" && ready == "" {
@@ -965,21 +964,67 @@ func (g *gittu) commit() tea.Cmd {
 	return g.messageFor("Commit", ready, false)
 }
 
-// amend opens the last commit's message to amend it with the staged
-// changes: Enter on it unchanged keeps it (tdp K3).
+// amend opens the commit form on the last commit's message, to amend it
+// with the staged changes.
 func (g *gittu) amend() tea.Cmd { return g.messageFor("Amend", g.repo.LastMessage(), true) }
 
-// messageFor opens the commit message's textarea with ready in it.
+// messageFor opens the commit form with ready in it (the user; tdp form):
+// Title, the message's first line, a one-line input; Description, the rest,
+// a textarea; the button commits (or amends). A title is required.
 func (g *gittu) messageFor(title, ready string, amend bool) tea.Cmd {
-	return g.a.Textarea(terminu.Textarea{Title: title, Glyph: glyphCommit, Name: "Message", Old: ready,
-		Check: func(msg string) error {
-			if strings.TrimSpace(msg) == "" {
-				return terminu.ErrEmpty
-			}
-			return nil
+	subject, body := splitMessage(ready)
+	titleF := &terminu.FormField{Label: "Title", Stacked: true, Empty: "not set",
+		Value: func() string { return subject },
+		Edit: func() terminu.Input {
+			return terminu.TextInput{Title: "Title", Glyph: glyphCommit, Old: subject,
+				Done: func(v string) tea.Cmd { subject = v; return nil }}
 		},
-		Unchanged: func() tea.Cmd { return g.doCommit(ready, amend) },
-		Done:      func(msg string) tea.Cmd { g.draft = msg; return g.doCommit(msg, amend) }})
+		Check: func() string {
+			if strings.TrimSpace(subject) == "" {
+				return "Title is required"
+			}
+			return ""
+		}}
+	descF := &terminu.FormField{Label: "Description", Stacked: true, Empty: "none",
+		Value: func() string { return firstLineMore(body) },
+		Edit: func() terminu.Input {
+			return terminu.Textarea{Title: "Description", Glyph: glyphCommit, Old: body,
+				Done: func(v string) tea.Cmd { body = v; return nil }}
+		}}
+	return g.a.Form(&terminu.Form{Title: title, Glyph: glyphCommit, Name: "the commit message",
+		Fields: []*terminu.FormField{titleF, descF}, Button: title,
+		Submit: func() (tea.Cmd, error) {
+			msg := joinMessage(subject, body)
+			g.draft = msg
+			return g.doCommit(msg, amend), nil
+		}})
+}
+
+// splitMessage cuts a commit message into its first line and the rest, the
+// blank lines between them left out.
+func splitMessage(msg string) (string, string) {
+	subject, body, _ := strings.Cut(strings.TrimSpace(msg), "\n")
+	return strings.TrimSpace(subject), strings.Trim(body, "\n")
+}
+
+// joinMessage is a commit message of a title and a description, a blank
+// line between them as git writes it.
+func joinMessage(subject, body string) string {
+	msg := strings.TrimSpace(subject)
+	if body = strings.TrimRight(body, "\n"); strings.TrimSpace(body) != "" {
+		msg += "\n\n" + body
+	}
+	return msg
+}
+
+// firstLineMore is a text as a form shows a textarea's value: its first
+// line, … when more follow (tdp input.10).
+func firstLineMore(text string) string {
+	first, rest, more := strings.Cut(text, "\n")
+	if more && strings.TrimSpace(rest) != "" {
+		return first + "…"
+	}
+	return first
 }
 
 // doCommit runs git commit; the message is kept until it goes through, to
