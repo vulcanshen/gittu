@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 衝突的行號寫成範圍（2026-11-20）
+
+提示原本寫 lines 2, 6, 14, 18（兩塊衝突的頭尾），列了改成範圍 lines 2–6, 14–18 與維持現狀之後，user 照原話：「1」
+
 ## 80×24 也能開（2026-11-20）
 
 實測發現 80×24 的終端機只看到最低尺寸的提示，列了支援到 24 列與維持 32 列之後，user 照原話：「1」（支援到 24 列）

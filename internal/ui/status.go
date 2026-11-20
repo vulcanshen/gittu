@@ -1024,23 +1024,28 @@ func (s *statusScreen) edited(path string, err error) tea.Cmd {
 	case rerr != nil:
 		return tea.Batch(read, g.a.Toast(terminu.Error, "Can't read "+path+": "+rerr.Error()))
 	case len(at) > 0:
-		return tea.Batch(read, g.a.Toast(terminu.Warning, path+" still has conflict markers on "+lineList(at)))
+		return tea.Batch(read, g.a.Toast(terminu.Warning, path+" still has conflicts on "+lineList(at)))
 	}
-	return tea.Batch(read, g.a.Toast(terminu.Info, path+" has no conflict markers left: press [r] to mark it resolved"))
+	return tea.Batch(read, g.a.Toast(terminu.Info, path+" has no conflicts left: press [r] to mark it resolved"))
 }
 
-// lineList names lines: line 4, lines 4, 9 and 12; eight at the most.
-func lineList(at []int) string {
-	if len(at) == 1 {
-		return "line " + strconv.Itoa(at[0])
+// lineList names conflicts by their lines, a block as a range (the user):
+// "lines 2–6, 14–18", "line 3"; eight at the most.
+func lineList(at [][2]int) string {
+	if len(at) == 1 && at[0][0] == at[0][1] {
+		return "line " + strconv.Itoa(at[0][0])
 	}
 	var ns []string
-	for i, n := range at {
+	for i, r := range at {
 		if i == 8 {
 			ns = append(ns, "and "+strconv.Itoa(len(at)-8)+" more")
 			break
 		}
-		ns = append(ns, strconv.Itoa(n))
+		n := strconv.Itoa(r[0])
+		if r[1] != r[0] {
+			n += "–" + strconv.Itoa(r[1])
+		}
+		ns = append(ns, n)
 	}
 	return "lines " + strings.Join(ns, ", ")
 }
@@ -1072,7 +1077,7 @@ func (s *statusScreen) askResolved(fs []git.File) *terminu.Ask {
 	var d []string
 	for _, f := range fs {
 		if at, err := s.g.repo.Markers(f.Path); err == nil && len(at) > 0 {
-			d = append(d, f.Path+": conflict markers on "+lineList(at))
+			d = append(d, f.Path+": conflicts on "+lineList(at))
 		}
 	}
 	if len(d) == 0 {

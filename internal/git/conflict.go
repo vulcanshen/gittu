@@ -43,22 +43,37 @@ func (r *Repo) Conflicts(path string) ([]Hunk, error) {
 	return parseHunks(lines), nil
 }
 
-// Markers are the lines of a working tree file, from 1, that open or close a
-// conflict (<<<<<<< and >>>>>>>), a block half deleted too: what is left of
-// its conflicts after the user edited it. ======= alone is not counted: a
-// file may have it as a line of its own.
-func (r *Repo) Markers(path string) ([]int, error) {
+// Markers are what is left of a working tree file's conflicts after the
+// user edited it, as ranges of lines from 1: a block from its <<<<<<< to its
+// >>>>>>>, or a marker line alone, a block half deleted ([n, n]). =======
+// alone is not counted: a file may have it as a line of its own.
+func (r *Repo) Markers(path string) ([][2]int, error) {
 	lines, _, err := r.readLines(path)
 	if err != nil {
 		return nil, err
 	}
-	var at []int
+	var at [][2]int
+	open := 0 // the line of a <<<<<<< not closed yet
 	for i, l := range lines {
-		_, open := marker(l, '<')
-		_, end := marker(l, '>')
-		if open || end {
-			at = append(at, i+1)
+		n := i + 1
+		if _, ok := marker(l, '<'); ok {
+			if open > 0 {
+				at = append(at, [2]int{open, open})
+			}
+			open = n
+			continue
 		}
+		if _, ok := marker(l, '>'); ok {
+			if open > 0 {
+				at = append(at, [2]int{open, n})
+				open = 0
+			} else {
+				at = append(at, [2]int{n, n})
+			}
+		}
+	}
+	if open > 0 {
+		at = append(at, [2]int{open, open})
 	}
 	return at, nil
 }
