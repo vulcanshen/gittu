@@ -59,7 +59,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 	// panel.7, P3). The mark column holds only the tick, so each file's
 	// state is in its row, before its path.
 	s.files = &terminu.List{
-		Columns:   []terminu.Column{{Title: ""}, {Title: "File", Shrink: true, Path: true}},
+		Columns:   []terminu.Column{{Title: "", Shrink: true, Path: true}},
 		Marks:     true,
 		Location:  "All changes",
 		EmptyFact: "Nothing to commit",
@@ -877,8 +877,8 @@ func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
 // fileRow is a file's row in a group: its state's letter in its colour, then
 // the path as shown.
 func fileRow(in, group, path, shown string, status byte) terminu.Row {
-	return terminu.Row{ID: in + path, Group: group, Cells: []string{string(status), shown},
-		Styled: [][]terminu.Span{{changeFlag(status)}}}
+	return terminu.Row{ID: in + path, Group: group, Cells: []string{string(status) + " " + shown},
+		Styled: [][]terminu.Span{{changeFlag(status), {Text: " " + shown}}}}
 }
 
 func changeFlag(status byte) terminu.Span {

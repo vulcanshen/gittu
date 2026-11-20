@@ -1393,7 +1393,7 @@ func TestFileGroups(t *testing.T) {
 	r.Write("new.txt", "new\n")
 	_, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "All changes", "FILE", "STAGED", "UNSTAGED", "?  new.txt")
+	has(t, d, "All changes", "STAGED", "UNSTAGED", "? new.txt")
 	screen := strings.Join(d.Screen(), "\n")
 	if strings.Count(screen, "README.md") < 2 {
 		t.Errorf("README.md is not in both groups:\n%s", screen)
@@ -1544,12 +1544,12 @@ func TestMarkFiles(t *testing.T) {
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "M  README.md", "?  new.txt", "x:mark")
+	has(t, d, "M README.md", "? new.txt", "x:mark")
 	markFile(d, g, inUnstaged+"README.md")
 	if got := g.status.files.Marked(); !slices.Equal(got, []string{inUnstaged + "README.md"}) {
 		t.Fatalf("marked %v", got)
 	}
-	has(t, d, "\U000F0132 M  README.md", "x:unmark")
+	has(t, d, "\U000F0132 M README.md", "x:unmark")
 	d.Press("x")
 	if len(g.status.files.Marked()) != 0 {
 		t.Fatal("x again did not unmark")
@@ -1771,7 +1771,7 @@ func TestResolveHunks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
 	d.Press("W")
-	has(t, d, "CONFLICTS", "U  notes.txt", "Enter:resolve")
+	has(t, d, "CONFLICTS", "U notes.txt", "Enter:resolve")
 	d.Press("Enter")
 	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
 		"Enter:read m:mine")
