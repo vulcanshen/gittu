@@ -8,6 +8,8 @@ import (
 	"os"
 	"strings"
 
+	terminu "github.com/vulcanshen/terminu-go"
+
 	"github.com/vulcanshen/gittu/internal/git"
 	"github.com/vulcanshen/gittu/internal/ui"
 	"github.com/vulcanshen/gittu/internal/version"
@@ -18,10 +20,11 @@ const usage = `gittu: a git client for the terminal
 Usage:
   gittu            open the repository the current directory is in
   gittu <path>     open the repository <path> is in
+  gittu update     update gittu to its latest release, the way it was installed
   gittu version    print the version (-v, --version)
   gittu help       print this help (-h, --help)
 
-A directory named version or help: write ./version.
+A directory named update, version or help: write ./version.
 `
 
 func main() {
@@ -33,6 +36,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 	dir := "."
 	if len(args) > 0 {
 		switch a := args[0]; {
+		case a == "update": // tdp E1
+			return terminu.SelfUpdate{App: "gittu", Version: version.Version, Owner: "vulcanshen", Tap: "vulcanshen/tap",
+				Source: "git pull && make install"}.Run(stdout, stderr)
 		case a == "version" || a == "-v" || a == "--version":
 			fmt.Fprintln(stdout, version.Display())
 			return 0

@@ -1067,6 +1067,7 @@ func TestStashOperations(t *testing.T) {
 	done(t, g, d)
 	d.WaitFor(func() bool { return len(g.snap.Stashes) == 1 }, 5*time.Second)
 	selectBranch(d, g, kindStash+"stash@{0}")
+	toastsGone(d, g) // stacked, they would cover the confirm's question
 	d.Press("x")
 	has(t, d, "Drop stash@{0}?")
 	d.Press("Enter")
@@ -1130,6 +1131,7 @@ func TestCommitOperations(t *testing.T) {
 	done(t, g, d)
 	has(t, d, "Reverted")
 	c = selectCommit(t, d, g, "Add the feature")
+	toastsGone(d, g) // stacked, they would cover the confirm's question
 	d.Press("c")
 	has(t, d, "Check out "+git.Short(c.SHA)+"?")
 	d.Press("Enter")
@@ -1814,6 +1816,13 @@ func TestStageUnstage(t *testing.T) {
 }
 
 // markFile puts [1]'s cursor on the row id and marks it with m.
+// toastsGone lets the Info and Success toasts showing run out (2.2 s; tdp
+// toast.2, stacked since v1.3.0), the read again on the way settled.
+func toastsGone(d *tdptest.Driver, g *gittu) {
+	d.Advance(2300 * time.Millisecond)
+	d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+}
+
 func markFile(d *tdptest.Driver, g *gittu, id string) {
 	d.Do(func() tea.Cmd { g.status.files.Select(id); return nil })
 	d.Press("m")

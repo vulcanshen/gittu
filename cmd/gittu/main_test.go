@@ -24,6 +24,21 @@ func TestVersionAndHelp(t *testing.T) {
 	}
 }
 
+// TestUpdateFromSource: a build from source (version dev) says to update it
+// there, exit 1 (tdp E1), looking nothing up.
+func TestUpdateFromSource(t *testing.T) {
+	var out, errOut bytes.Buffer
+	code := run([]string{"update"}, &out, &errOut)
+	if code != 1 || !strings.HasPrefix(errOut.String(), "gittu: This gittu is built from source: update it there (`git pull && make install`)") {
+		t.Errorf("exit %d, %q", code, errOut.String())
+	}
+	out.Reset()
+	run([]string{"help"}, &out, &errOut)
+	if !strings.Contains(out.String(), "gittu update") {
+		t.Errorf("help has no update: %q", out.String())
+	}
+}
+
 func TestNotARepository(t *testing.T) {
 	var out, errOut bytes.Buffer
 	dir := t.TempDir()

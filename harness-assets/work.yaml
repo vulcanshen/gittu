@@ -18,11 +18,12 @@ tasks:
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
     test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestStatusbarNarrow, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
-    spec: 17
+    spec: 54
     implementation: |
       cmd/gittu/main.go：
       gittu：打開目前目錄所在的 repo；gittu <路徑>：打開那個路徑所在的 repo（git rev-parse --show-toplevel 往上找；bare repo 不算）
-      gittu version、-v、--version：印 internal/version.Display()；gittu help、-h、--help：印用法，寫明資料夾叫 version、help 時打 ./version
+      gittu update：tgo terminu.SelfUpdate{App: gittu, Version: internal/version.Version, Owner: vulcanshen, Tap: vulcanshen/tap, Source: git pull && make install}.Run(stdout, stderr) 的結束碼
+      gittu version、-v、--version：印 internal/version.Display()；gittu help、-h、--help：印用法，寫明資料夾叫 update、version、help 時打 ./version
       - 開頭的不認得的旗標：stderr 印 gittu: Unknown flag "<旗標>"、空一行、用法，結束碼 2；兩個以上的路徑：gittu: One path at most、空一行、用法，結束碼 2
       句子照 toast 一列的寫法開頭大寫（名字或路徑開頭時照它的大小寫）；結果（版號、用法）寫到 stdout，錯誤寫到 stderr、開頭 gittu: （tdp v1.2.18 的 E1、E1-4 到 E1-8）
       不是 repo、路徑不在：不開畫面，stderr 印 gittu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gittu: git not found in PATH，結束碼 1
@@ -180,7 +181,7 @@ tasks:
       沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
     test: [TestLongPathKeepsItsLetter, TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
-    spec: 41
+    spec: 54
     implementation: |
       [1] CHANGES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
       Conflicts → Resolve（task 14；hint Enter:resolve）；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀，cursor 留在原本的位置
@@ -208,7 +209,7 @@ tasks:
       按下 Commit／Amend 時關掉整疊 popup（tgo App.CloseAll；tdp T1：從 Global operation 打開的也一起關）；Amend 成功的 toast 是 Amended <短 hash> <第一行>
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 51
+    spec: 54
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [2], to edit it there；hint Enter:show；ToDetails）：focus 到 [2]；[2] 顯示 HEAD 對工作區的檔（帶著標記）
       [2] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
@@ -235,13 +236,13 @@ tasks:
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
     test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestStatusbarSaysTheMerge]
   - id: 15
-    spec: 11
+    spec: 54
     implementation: |
       啟動時（tgo App.Start）讀設定檔：GITTU__CONFIG，否則 $XDG_CONFIG_HOME/gittu，否則 ~/.config/gittu，裡面的 config.yaml；沒有檔、沒有這個 key 時 input_tab_width 是 4；
       讀到的值交給 tgo App.InputTabWidth（textarea 的 Tab、viewer 與 Pager 裡的 Tab）；其他 key 不管、不改
       YAML 讀不了（格式錯、不是 mapping、沒有權限）：tgo MoveAside（MOVE ASIDE 的 confirm，Enter 改名成 .bak 後用預設值、Esc 離開並把路徑與原因交給 main 印到 stderr）
       input_tab_width 不是大於 0 的整數：terminu.KeepAside 複製一份 .bak，用 yaml.Node 把那個值改回 4、其他照舊寫回（同一個權限），
-      tgo Notify(MisfitNotice(path, copy, Misfit{input_tab_width, 原本的, 4}))：Warning toast 與 App Log 的 WARN；備份做不出來時不重寫，Notify 一件 Error（KeepAside 的錯誤）加 MisfitNotice(path, "")
+      tgo Notify(MisfitNotice(path, copy, Misfit{input_tab_width, 原本的, 4}))：Warning toast 與 App Log 的 WARN；備份做不出來時不重寫，Notify 一件 Error（KeepAside 的錯誤）加 MisfitNotice(path, "")：一件一個 toast，疊起來（tdp v1.3.0 的 toast.2、toast.3、E3-37；不再合成一個）
       input_tab_width 以外的 key 不讀、不改（重寫時也留著），每次啟動 tgo App.Log(Info)：Not read: <key> in <路徑，家目錄寫成 ~>; delete it if you don't need it；不跳 toast
       gittu 不建設定檔，沒有狀態、資料、快取
     test: [TestTabWidthSetting, TestConfigMisfit, TestConfigUnreadKey, TestConfigCannotBeRead]

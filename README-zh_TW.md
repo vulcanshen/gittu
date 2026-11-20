@@ -69,6 +69,14 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | 
 `gittu` 打開目前目錄所在的 repo；`gittu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。gittu 自己不寫任何東西：
 只有你執行操作時，才會改動你的 repo。
 
+### 更新
+
+```sh
+gittu update
+```
+
+照當初安裝的方式更新到最新的正式版：Homebrew 裝的用 Homebrew 更新，安裝腳本裝的直接換成新版。
+
 ### 移除
 
 ```sh

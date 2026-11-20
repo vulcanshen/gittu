@@ -78,6 +78,14 @@ No sudo: it installs to `~/.local/bin`.
 repository it says so and quits. gittu writes nothing of its own: it changes your repository only when you run an
 operation.
 
+### Update
+
+```sh
+gittu update
+```
+
+It brings gittu to its latest release the way it was installed: Homebrew upgrades it, the script's copy is replaced.
+
 ### Uninstall
 
 ```sh
