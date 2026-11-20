@@ -204,6 +204,11 @@ func withKey(key string, a terminu.Action) terminu.Action {
 	return a
 }
 
+// allMarked reports every file of [1] marked, some listed.
+func (s *statusScreen) allMarked() bool {
+	return !s.files.Empty() && len(s.files.Marked()) == len(s.files.Rows())
+}
+
 // isMarked reports the row under [1]'s cursor marked.
 func (s *statusScreen) isMarked() bool {
 	r, ok := s.files.Current()
@@ -464,10 +469,12 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		s.batchWith("Mark the marked resolved", []string{inConflict}, nil, s.askResolved, s.markResolved),
 		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
-		// M (the user) is the panel's over the global Merge (tdp M4): off, not
-		// hidden, when there is nothing to mark, so M never merges here.
+		// M (the user) is the panel's over the global Merge (tdp M4): Mark all,
+		// and Unmark all once every file is marked, as m is on one (the user);
+		// off, not hidden, when there is nothing to mark, so M never merges
+		// here.
 		{Key: "M", Label: "Mark all", Desc: "every file listed", Scope: panel,
-			Hidden: inFiles, Disabled: func() bool { return s.files.Empty() || len(s.files.Marked()) == len(s.files.Rows()) },
+			Hidden: func() bool { return inFiles() || s.allMarked() }, Disabled: s.files.Empty,
 			Do: func() tea.Cmd {
 				var ids []string
 				for _, r := range s.files.Rows() {
@@ -477,8 +484,11 @@ func (s *statusScreen) fileActions() []terminu.Action {
 				g.a.Log(terminu.Info, "Marked every file")
 				return nil
 			}},
+		{Key: "M", Label: "Unmark all", Desc: "every file listed", Scope: panel,
+			Hidden: func() bool { return inFiles() || !s.allMarked() },
+			Do:     func() tea.Cmd { s.files.ClearMarks(); g.a.Log(terminu.Info, "Unmarked every file"); return nil }},
 		{Label: "Clear marks", Desc: "unmark every file", Scope: panel,
-			Hidden: func() bool { return inFiles() || len(s.files.Marked()) == 0 },
+			Hidden: func() bool { return inFiles() || len(s.files.Marked()) == 0 || s.allMarked() },
 			Do:     func() tea.Cmd { s.files.ClearMarks(); g.a.Log(terminu.Info, "Cleared the marks"); return nil }},
 		{Key: "a", Label: "Stage all", Desc: "every change, untracked files too", Scope: panel,
 			Hidden: inFiles, Disabled: func() bool {

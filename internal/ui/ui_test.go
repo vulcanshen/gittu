@@ -133,18 +133,25 @@ func TestStatusbarSaysTheMerge(t *testing.T) {
 	hasNot(t, d, glyphConflicts)
 }
 
-// TestStatusbarKeepsItsPlace is tdp L2: Branch first, then Repo, both values
-// Lavender; switching to a branch with a longer name moves nothing.
+// TestStatusbarKeepsItsPlace is tdp L2 in the user's order: the work in
+// progress, Branch, Repo last, both values Lavender, two blanks between
+// them; switching to a branch with a longer name does not move Repo, nor the
+// screen's end of the statusbar.
 func TestStatusbarKeepsItsPlace(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	r.Git("branch", "a-much-longer-branch-name")
 	g, d := start(t, r, 120, 32)
 	top := d.Screen()[0]
-	branchAt, repoAt := strings.Index(top, "Branch: "), strings.Index(top, "Repo: ")
-	if branchAt < 0 || repoAt < branchAt {
-		t.Fatalf("Branch is not before Repo:\n%s", top)
+	repoAt := strings.Index(top, "Repo: ")
+	if !strings.Contains(top, "Branch: main  Repo: ") {
+		t.Fatalf("Branch is not right before Repo:\n%s", top)
 	}
+	d.Do(func() tea.Cmd { g.busy = "Fetching…"; return nil })
+	if top := d.Screen()[0]; !strings.Contains(top, "Fetching…") || strings.Index(top, "Fetching…") > strings.Index(top, "Branch: ") {
+		t.Errorf("the work in progress is not first:\n%s", top)
+	}
+	d.Do(func() tea.Cmd { g.busy = ""; return nil })
 	styled := d.Styled()[0]
 	lavender := "38;2;180;190;254"
 	if strings.Count(styled, lavender) < 2 {
@@ -157,8 +164,8 @@ func TestStatusbarKeepsItsPlace(t *testing.T) {
 	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
 		t.Errorf("Repo moved:\n%s\n%s", top, top2)
 	}
-	if terminu.Width(top2[:strings.Index(top2, "Branch: ")]) != terminu.Width(top[:branchAt]) {
-		t.Errorf("Branch moved:\n%s\n%s", top, top2)
+	if !strings.Contains(top2, "Branch: a-much-longer-branc…  Repo: ") {
+		t.Errorf("the longer branch is not right before Repo:\n%s", top2)
 	}
 }
 
@@ -1587,8 +1594,8 @@ func markFile(d *tdptest.Driver, g *gittu, id string) {
 
 // TestMarkFiles: m marks the file under the cursor, its tick in the mark
 // column, the file's state in its row; again unmarks it; M marks them all,
-// and again does nothing, not the global Merge; Clear marks is in the Space
-// menu (the user; tdp panel.7, M4, M6).
+// and again unmarks them all, never the global Merge; Clear marks, in the
+// Space menu, unmarks some marked (the user; tdp panel.7, M4, M6).
 func TestMarkFiles(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
@@ -1611,12 +1618,16 @@ func TestMarkFiles(t *testing.T) {
 	}
 	d.Press("M")
 	hasNot(t, d, "MERGE")
+	if len(g.status.files.Marked()) != 0 {
+		t.Fatalf("M again did not unmark them all: %v", g.status.files.Marked())
+	}
+	markFile(d, g, inUnstaged+"README.md")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Clear marks") })
 	if len(g.status.files.Marked()) != 0 {
 		t.Fatal("Clear marks left some")
 	}
 	d.Press("!")
-	has(t, d, "Marked README.md", "Unmarked README.md", "Marked every file", "Cleared the marks")
+	has(t, d, "Marked README.md", "Unmarked README.md", "Marked every file", "Unmarked every file", "Cleared the marks")
 }
 
 // TestWorkOnTheMarked: the Space menu's operations on the marked files act

@@ -260,31 +260,32 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	}
 }
 
-// statusbar is the right of the screen chips (tdp screen.4): where HEAD is,
-// the repository (both Lavender: where you are), and the work in progress
-// (Green): what git is doing, else an operation stopped half way.
+// statusbar is the right of the screen chips (tdp screen.4), in the user's
+// order: the work in progress (Green): what git is doing, else an operation
+// stopped half way, its state's glyph first; where HEAD is; the repository
+// (both Lavender: where you are).
 //
-// The lib draws it on the right, so a longer text moves all of it: it is
-// always the w cells given, its fields from the left and blanks after them,
-// the branch's field as wide as the terminal allows, not as the name is (tdp
-// L2). The repository's name does not change while gittu runs; the operation
-// and what git does are the last fields.
+// The lib draws it on the right, so a longer text would move all of it: it
+// is always the w cells given (tdp L2). The repository's name, last, does not
+// change while gittu runs, so it stays put. The branch's field is as wide as
+// the terminal allows, not as the name is, its text on the right of it next
+// to the repository; the work in progress, first, takes the room left before
+// it, blanks before that.
 func (g *gittu) statusbar(w int) []terminu.Span {
 	quiet := terminu.Fg(terminu.Overlay0)
 	here := terminu.Fg(terminu.Lavender)
 	repo := g.repo.Name()
-	var spans []terminu.Span
-	used := 0
-	add := func(text string, st terminu.Style) {
-		if text != "" {
-			spans = append(spans, terminu.Span{Text: text, Style: st})
-			used += terminu.Width(text)
-		}
-	}
 	field := min(max((w-len("Branch: ")-len("  Repo: ")-terminu.Width(repo))/2, 8), 28)
 	name, t := "", ""
 	if g.snap != nil {
 		name, t = g.where(), track(g.snap.Ahead, g.snap.Behind, false)
+		// As wide as the widest it can show: every local branch with its
+		// track, and where HEAD is; checking another out moves nothing.
+		widest := terminu.Width(name) + trackWidth(t)
+		for _, b := range g.snap.Branches {
+			widest = max(widest, terminu.Width(b.Name)+trackWidth(track(b.Ahead, b.Behind, false)))
+		}
+		field = min(field, widest)
 	}
 	nameW := field
 	if t != "" {
@@ -294,19 +295,22 @@ func (g *gittu) statusbar(w int) []terminu.Span {
 		}
 	}
 	name = terminu.Truncate(name, nameW)
-	add("Branch: ", quiet)
-	add(name, here)
+	branch := []terminu.Span{{Text: "Branch: ", Style: quiet}, {Text: name, Style: here}}
+	branchW := len("Branch: ") + terminu.Width(name)
 	if t != "" {
-		add(" "+t, quiet)
+		branch = append(branch, terminu.Span{Text: " " + t, Style: quiet})
+		branchW += 1 + terminu.Width(t)
 	}
-	add(strings.Repeat(" ", max(len("Branch: ")+field-used, 0)), terminu.Style{})
-	add("  Repo: ", quiet)
-	add(repo, here)
-	// The work in progress is one field, the last (tdp L2, screen.4): what
+	tail := append(append([]terminu.Span{{Text: strings.Repeat(" ", max(len("Branch: ")+field-branchW, 0))}}, branch...),
+		terminu.Span{Text: "  Repo: ", Style: quiet}, terminu.Span{Text: repo, Style: here})
+	tailW := len("Branch: ") + field + len("  Repo: ") + terminu.Width(repo)
+	// The work in progress is one field, the first (tdp L2, screen.4): what
 	// git is doing while it runs, else an operation stopped half way.
+	var work []terminu.Span
+	room := w - tailW - 2
 	switch {
 	case g.busy != "":
-		add("  "+g.busy, terminu.Fg(terminu.Green))
+		work = []terminu.Span{{Text: terminu.Truncate(g.busy, max(room, 0)), Style: terminu.Fg(terminu.Green)}}
 	case g.snap != nil && g.snap.State.Op != "":
 		st := g.snap.State
 		// Its state's glyph first (the user): conflicts left, Peach as a
@@ -315,12 +319,22 @@ func (g *gittu) statusbar(w int) []terminu.Span {
 		if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
 			glyph, colour = glyphConflicts, terminu.Peach
 		}
-		add("  ", terminu.Style{})
-		add(glyph, terminu.Fg(colour))
-		add(" "+stateWord(st.Op)+": "+st.Other, terminu.Fg(terminu.Green))
+		if gw := terminu.Width(glyph) + 1; room > gw {
+			work = []terminu.Span{{Text: glyph, Style: terminu.Fg(colour)},
+				{Text: " " + terminu.Truncate(stateWord(st.Op)+": "+st.Other, room-gw), Style: terminu.Fg(terminu.Green)}}
+		}
 	}
-	add(strings.Repeat(" ", max(w-used, 0)), terminu.Style{})
-	return spans
+	workW := 0
+	for _, sp := range work {
+		workW += terminu.Width(sp.Text)
+	}
+	if workW > 0 {
+		work = append(work, terminu.Span{Text: "  "})
+		workW += 2
+	}
+	spans := []terminu.Span{{Text: strings.Repeat(" ", max(w-tailW-workW, 0))}}
+	spans = append(spans, work...)
+	return append(spans, tail...)
 }
 
 // where is the branch HEAD is on, or where it is detached.
@@ -351,6 +365,15 @@ func stateWord(op string) string {
 
 // track is a branch's commits ahead of and behind its upstream: ↑1 ↓2, only
 // what is not 0; "upstream gone" when it is no longer there (git's [gone]).
+// trackWidth is the cells a track takes after a branch's name, a blank
+// before it.
+func trackWidth(t string) int {
+	if t == "" {
+		return 0
+	}
+	return 1 + terminu.Width(t)
+}
+
 func track(ahead, behind int, gone bool) string {
 	if gone {
 		return "upstream gone"

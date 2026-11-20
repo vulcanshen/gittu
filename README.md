@@ -140,7 +140,7 @@ and on `[2]` leaves the mode.
 | A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
 | A conflicted file | Show it in `[2]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
-| The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all, Clear marks, Stage `[a]`ll, Unstage all |
+| The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all (again: unmark all), Clear marks, Stage `[a]`ll, Unstage all |
 
 Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if

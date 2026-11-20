@@ -1,14 +1,14 @@
 tasks:
   - id: 1
-    spec: 36
+    spec: 37
     implementation: |
       兩個畫面（tgo Screen）：History（Key H，打開時的畫面；[1] BRANCHES、[2] 的 CURRENT／ALL 分頁，task 5）與 Working tree（Key W；[1] CHANGES、[2] DIFF）；畫面 chip 與切換畫面由 tgo 畫、記 App Log（Switched to …）
       Working tree 兩個 panel、History 三個；Layout 1:2（[1] 是寬度的三分之一，60 欄時 20｜40），History 的 [3] FILES 在 [2] 下面、高度是右邊的三分之一（task 6）；最低尺寸用 tgo 的預設 60×32，沒有設 NarrowBelow
-      statusbar（tgo App.Status）：先 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），
-      有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；再 Repo: <repo 資料夾名>（Lavender）；merge、rebase、cherry-pick、revert 做到一半時接
-      <狀態 glyph> Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green；glyph 在還有衝突的檔時是 nf-md-alarm_light Peach，沒有時 nf-md-check_circle Green，空一格接字）；背景有 git 指令在跑時改寫 Pushing…、Merging… 之類（Green），兩個是同一欄、不同時出現；標籤 Overlay0
-      寬度固定：給 tgo 的 span 一律是 tgo 給的寬度 w（畫面的一半），左邊對齊、最後補空白；Branch 那一欄（名字加 ↑N ↓N）寬 clamp((w − 16 − repo 名的寬) / 2, 8, 28)，
-      放不下時名字從尾端截、加 …（太窄時只留名字），後面補空白；所以換到名字比較長的分支時，Branch 與 Repo 都不動
+      statusbar（tgo App.Status），順序是狀態、Branch、Repo：做到一半的 merge、rebase、cherry-pick、revert 時最前面是
+      <狀態 glyph> Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green；glyph 在還有衝突的檔時是 nf-md-alarm_light Peach，沒有時 nf-md-check_circle Green，空一格接字）；背景有 git 指令在跑時同一個位置改寫 Pushing…、Merging… 之類（Green），兩個不同時出現；
+      接著 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；最後 Repo: <repo 資料夾名>（Lavender）；標籤 Overlay0，組與組之間兩格
+      寬度固定：給 tgo 的 span 一律是 tgo 給的寬度 w（畫面的一半），前面補空白；Branch 那一欄寬 min(clamp((w − 16 − repo 名的寬) / 2, 8, 28), 本機每個分支的名字加 ↑N ↓N 與 HEAD 所在之中最寬的)，
+      字靠右（空白補在它前面）、放不下時名字從尾端截、加 …（太窄時只留名字）；進行中的工作用 Branch 那一欄左邊剩下的寬度，放不下從尾端截；所以換到另一個分支時，Repo 與 Branch 那一欄都不動
       q 與 Ctrl-C：tgo App.QuitFlow；沒有 git 指令在跑時直接離開（tea.Quit）；有在跑時開 confirm QUIT「Quit gittu?」，內容 git is still at work: <在做什麼>（Peach）；有 popup 開著時 tgo 先問
       git 指令都是 internal/git 呼叫使用者 PATH 上的 git：工作目錄是 repo 的頂層，環境加 GIT_TERMINAL_PROMPT=0、GIT_MERGE_AUTOEDIT=no、GIT_OPTIONAL_LOCKS=0，
       Setsid（沒有控制終端機，ssh、gpg 開不了 /dev/tty）；改 repo 的操作在背景跑（tea.Cmd），跑完重新讀整個 repo、換上畫面
@@ -278,7 +278,7 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 34
+    spec: 37
     implementation: |
       [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
@@ -289,7 +289,7 @@ tasks:
       Mark the marked resolved（沒有熱鍵；CONFLICTS；有檔還有衝突標記時 confirm MARK RESOLVED「Mark <N> files resolved?」，每個檔一行 <路徑>: conflict markers on lines <行號>（Peach），沒有就不問；
       git add -A -- <路徑>…；每個檔記 Marked <路徑> resolved；Success Marked <N> files resolved）
       標記的列照它的組（ID 的前綴）與 snapshot 找到檔；同一個檔兩列只算一次；開始做時 List.ClearMarks
-      [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的或全都標了時 Disabled，不 Hidden，M 不會落到 Merge；進到衝突區塊時 Hidden）、Clear marks（沒有熱鍵；List.ClearMarks；App Log Cleared the marks）
+      [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的時 Disabled，不 Hidden，M 不會落到 Merge；進到衝突區塊時 Hidden）；全都標了時換成同一個鍵的 [M] Unmark all（List.ClearMarks；App Log Unmarked every file）；Clear marks（沒有熱鍵；標了一部分時才有；List.ClearMarks；App Log Cleared the marks）
       item operation Remove — this file from the repository（沒有熱鍵；還在 index 裡的檔：不是沒追蹤、不是已經 stage 成刪除，不在衝突）：confirm REMOVE「Remove <路徑>|<N> files from the repository?」，
       內容 Deleted, and the next commit takes them out of the repository.，有沒 commit 的改動時加 Their changes not committed are lost: it can't be undone.（Peach）；git rm -q -f -- <路徑>…；Success Removed <路徑>|<N> files from the repository
       item operation Ignore — add this file to .gitignore（沒有熱鍵；不在衝突）：有還在 index 裡的檔時 confirm IGNORE「Add <路徑>|<N> files to .gitignore?」，內容 Tracked ones stop being tracked…（Peach），沒有就不問；
