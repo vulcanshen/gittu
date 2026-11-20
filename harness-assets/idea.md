@@ -156,6 +156,12 @@ user 先要「SETTING 分頁，現在有一個使用者設定，就是 commits p
 user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖）：「panel 2 在 zoom 的時候，是不是 GRAPH 區域可以動態放大」
 追問後選了：照 [2] 的寬度隨時調（終端機越寬、放大越多，線就畫越多；窄的時候至少還是 10 條；DESCRIPTION、AUTHOR、DATE 不會被擠窄）
 
+## checkout 前警告工作區的改動（2026-11-20）
+
+user 照原話：「我發現當 working tree 有東西的時候，切換（checkout）branch 應該要跳 confirm 警告」
+追問後：確定之後照 git 的做法 checkout（改動帶過去，git 拒絕時跳錯誤）；算 staged 與 unstaged 的改動，沒追蹤的檔不算；
+[1] 的本地分支、遠端分支、tag 與 [2] 的 commit 都要。
+
 ## 不寫別的工具（2026-11-19）
 
 user 照原話：「整個 repo，把其他工具的描述都移除，我只試用那些工具來描述給你聽而已，不是真的要照他們的樣子」

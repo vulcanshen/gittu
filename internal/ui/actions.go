@@ -90,7 +90,14 @@ func (h *historyScreen) branchActions() []terminu.Action {
 			Hidden: func() bool { k, _ := h.rowKind(); return k == "" || k == kindStash }, Do: h.showRef},
 		// A branch.
 		{Key: "c", Label: "Check out", Desc: "this branch", Scope: item,
-			Hidden: h.is(kindBranch), Disabled: h.onCurrent, Do: func() tea.Cmd {
+			Hidden: h.is(kindBranch), Disabled: h.onCurrent,
+			AskFor: func() *terminu.Ask {
+				if !g.hasChanges() {
+					return nil
+				}
+				return g.withChanges(&terminu.Ask{Title: "Check out", Subject: name(), Question: "Check out " + name() + "?", Verb: "check out"}, name())
+			},
+			Do: func() tea.Cmd {
 				n := name()
 				return g.run("Checking out…", "Checkout", func() error { return g.repo.Checkout(n, false) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Checked out "+n) })
@@ -125,11 +132,11 @@ func (h *historyScreen) branchActions() []terminu.Action {
 			AskFor: func() *terminu.Ask {
 				rb, _ := h.remote()
 				if h.hasLocal(rb.Branch) {
-					return &terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Branch + "?", Verb: "check out",
-						Details: []string{"There is a local branch " + rb.Branch + " already: that one is checked out."}}
+					return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Branch + "?", Verb: "check out",
+						Details: []string{"There is a local branch " + rb.Branch + " already: that one is checked out."}}, rb.Branch)
 				}
-				return &terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Name + " as " + rb.Branch + "?", Verb: "check out",
-					Details: []string{"A local branch " + rb.Branch + " is made, tracking " + rb.Name + "."}}
+				return g.withChanges(&terminu.Ask{Title: "Check out", Subject: rb.Name, Question: "Check out " + rb.Name + " as " + rb.Branch + "?", Verb: "check out",
+					Details: []string{"A local branch " + rb.Branch + " is made, tracking " + rb.Name + "."}}, rb.Branch)
 			},
 			Do: func() tea.Cmd {
 				rb, _ := h.remote()
@@ -159,8 +166,8 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		{Key: "c", Label: "Check out", Desc: "this tag, HEAD detached", Scope: item,
 			Hidden: h.is(kindTag), Disabled: off,
 			AskFor: func() *terminu.Ask {
-				return &terminu.Ask{Title: "Check out", Subject: name(), Question: "Check out " + name() + "?", Verb: "check out",
-					Details: []string{"HEAD is left detached: commits made there are on no branch."}, Warn: []int{0}}
+				return g.withChanges(&terminu.Ask{Title: "Check out", Subject: name(), Question: "Check out " + name() + "?", Verb: "check out",
+					Details: []string{"HEAD is left detached: commits made there are on no branch."}, Warn: []int{0}}, name())
 			},
 			Do: func() tea.Cmd {
 				n := name()
@@ -313,6 +320,19 @@ func (g *gittu) checkTag(name string) error {
 	return nil
 }
 
+// withChanges adds to a checkout's confirm a warning of the changes not
+// committed, staged or not, when there are some: git takes them along to
+// where it goes, or refuses when they would be overwritten (the user;
+// untracked files are left as they are, so they don't count).
+func (g *gittu) withChanges(a *terminu.Ask, to string) *terminu.Ask {
+	if !g.hasChanges() {
+		return a
+	}
+	a.Details = append(a.Details, "Changes not committed come along to "+to+"; git stops if they would be overwritten.")
+	a.Warn = append(a.Warn, len(a.Details)-1)
+	return a
+}
+
 func (g *gittu) currentName() string {
 	if g.snap != nil && g.snap.Head != "" {
 		return g.snap.Head
@@ -357,8 +377,8 @@ func (h *historyScreen) commitActions() []terminu.Action {
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
 			Hidden: onGraph, Disabled: off,
 			AskFor: func() *terminu.Ask {
-				return &terminu.Ask{Title: "Check out", Subject: short(), Question: "Check out " + short() + "?", Verb: "check out",
-					Details: []string{"HEAD is left detached: commits made there are on no branch."}, Warn: []int{0}}
+				return g.withChanges(&terminu.Ask{Title: "Check out", Subject: short(), Question: "Check out " + short() + "?", Verb: "check out",
+					Details: []string{"HEAD is left detached: commits made there are on no branch."}, Warn: []int{0}}, short())
 			},
 			Do: func() tea.Cmd {
 				c, _ := h.current()

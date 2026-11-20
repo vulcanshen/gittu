@@ -1,4 +1,4 @@
-id: 20
+id: 21
 from: v1.2.16
 to: v1.2.17
 tasks:
@@ -64,6 +64,8 @@ tasks:
       - "repo 還沒有 commit：空狀態 No commits yet / Press [W] to see the files to commit（tdp screen.8）；讀 log 失敗：tdp panel.15 的兩句（Red 的事實、Overlay0 的 Press [R] to read again）"
       - "/ 篩選（tdp panel.14）：找 commit 的標題、hash、作者"
       - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列跟著畫 Surface1 底；移動、N of M 算筆數，篩選也比對第二列（tdp main 3e0f427 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
+      - note: "[2] 寬的時候（放大到整個畫面）各欄照最寬的值、右半邊空著；使用者 2026-11-20 要 DESCRIPTION 吃掉剩下的寬度、AUTHOR 與 DATE 靠右。tdp panel.5「可以截短的欄分剩下的寬度」沒寫清楚是撐滿還是只在不夠時分，tgo 的 List 照後者；暫時照舊"
+        issue: 送給 tdp session（2026-11-20，轉 terminu-go）
   - id: 5
     spec: 19
     request: commits panel 有 Current 和 All 兩個分頁，預設是 Current；切換到哪一個就固定在那一個（只記到這次關掉為止）；兩個分頁都依照左方 panel 1 切換 branch 而切換內容（user 2026-11-20）
@@ -94,7 +96,7 @@ tasks:
       - "[2] 的 commit 上按 [C]ompare（比較鍵 app 可以自行決定，tdp panel.9；跟 kbu 一樣是 C）進入比較模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 C 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
       - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
   - id: 8
-    spec: 16
+    spec: 21
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；分支、遠端分支、tag、stash 能做的事都在 Space 選單
     tdp: [tdp note.8, tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp K3, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp F5, tdp toast.2, tdp note.6, tdp note.7, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.9, tdp panel.10, tdp note-102, tdp input.5, tdp screen.4, tdp panel.14, tdp M4]
     remark:
@@ -103,14 +105,14 @@ tasks:
         遠端分支（REMOTES 分頁） — Enter：Show（task 3）、[c]heck out（建一個追蹤它的本地分支；同名的本地分支已經有了就 checkout 那一個）、[M]erge、Re[b]ase、[D]elete（刪遠端的分支）；
         tag（TAGS 分頁） — Enter：Show（task 3）、[c]heck out（HEAD 會 detached）、[D]elete、Push（沒有熱鍵）；
         stash（STASHES 分頁） — Enter：Show（它存的改動對它的 base，照 tdp note.8 進到差異清單，跟 task 6 一樣）、[a]pply、P[o]p、[D]rop"
-      - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支不問，會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）"
+      - "checkout 是 [c]heck out（使用者 2026-11-19：Enter 不要 checkout、checkout 用 c），跟 [2] 的 commit 上同一個鍵。c 也是 global 的 [c]ommit：panel 的熱鍵優先（tdp M4），在 History 的兩個 panel 上 c 是 checkout，Commit 從 Global operation 那一列執行；Working tree 畫面上 c 照樣是 Commit；本地分支平常不問，會讓 HEAD detached 的（tag）與會建新分支的（遠端分支）先 confirm（tdp F6：哪些要問 app 可以自行決定）。工作區有沒 commit 的改動（staged 或 unstaged；沒追蹤的檔不會被動到，不算）時，每一種 checkout（本地分支、遠端分支、tag、[2] 的 commit）都先 confirm，多一句改動會帶過去、會被蓋掉時 git 會停下來（Peach，tdp confirm.2）；確定後照 git 的做法 checkout，git 拒絕時照 task 8 開 error popup（使用者 2026-11-20）"
       - "先 confirm 的：Merge、Rebase、Delete、Drop（tdp F6）；Apply、Pop 不問（不會丟東西，衝突照 task 14）。Delete 遠端分支與 Drop 的內容寫無法復原（Peach，tdp confirm.2）。刪本地分支用 git branch -d，沒合併過的被 git 擋下時再開一個 confirm 問要不要強制刪（git branch -D），警告那一句寫沒合併的 commit 會不見"
       - "Rename、建分支、建 tag 用 text input（tdp text）：名稱照 git check-ref-format 檢查，不合格寫在錯誤列（tdp F7）"
       - "熱鍵（tdp P5 領域熱鍵，不佔 core key 與移動的字母 tdp K12）：c check out、M merge、b rebase、r rename、D delete／drop、a apply、o pop；一樣的動詞盡量全 app 用同一個鍵（task 9、10 也是）。rename 用 r、checkout 用 c、[1] 的 rebase 用 b（Re[b]ase）都是使用者 2026-11-19 指定的。[2] 的 commit 上 b 是 [b]ranch here，那裡的 Rebase 沒有熱鍵（task 9，使用者 2026-11-19 不要誤觸）。b 也是 global 的 [b]ranch（在 HEAD 開分支）：panel 的熱鍵優先（tdp M4），在 [1] 上 b 是 rebase，開分支從 Global operation 那一列執行"
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp components.5、F5）；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、到 Working tree [W] 解（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），statusbar 寫正在做什麼（task 1）"
   - id: 9
-    spec: 14
+    spec: 21
     request: 對 commit 能做的事，都在分支圖的 Space 選單
     tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M6, tdp F6, tdp confirm, tdp text, tdp select, tdp T1, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp K12, tdp components.5, tdp F7, tdp panel.14, tdp K3, tdp M4, tdp F5]
     remark:

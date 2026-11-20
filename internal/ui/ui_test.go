@@ -586,6 +586,42 @@ func TestTrace(t *testing.T) {
 	on("Start the demo")
 }
 
+// TestCheckoutWarnsOfChanges: with changes not committed, every checkout
+// asks first, saying they come along (the user); untracked files alone
+// don't count.
+func TestCheckoutWarnsOfChanges(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("scratch.txt", "untracked\n")
+	g, d := start(t, r, 120, 32)
+	selectBranch(d, g, kindBranch+"topic")
+	d.Press("c") // only an untracked file: no question
+	done(t, g, d)
+	has(t, d, "Checked out topic")
+	r.Write("feature.txt", "changed\n") // the same on topic and main: it can come along
+	d.Press("R")
+	d.WaitFor(func() bool { return g.hasChanges() }, 5*time.Second)
+	d.Press("Esc")
+	selectBranch(d, g, kindBranch+"main")
+	d.Press("c")
+	has(t, d, "Check out main?", "Changes not committed come along to main")
+	d.Press("Enter")
+	done(t, g, d)
+	has(t, d, "Checked out main")
+	if got := r.Read("feature.txt"); got != "changed\n" {
+		t.Errorf("the change did not come along: %q", got)
+	}
+	selectBranch(d, g, kindTag+"v0.1.0")
+	d.Press("c")
+	has(t, d, "HEAD is left detached", "Changes not committed come along to v0.1.0")
+	d.Press("Esc")
+	d.Press("Tab")
+	selectCommit(t, d, g, "Say more")
+	d.Press("c")
+	has(t, d, "HEAD is left detached", "Changes not committed come along to")
+	d.Press("Esc")
+}
+
 // --- task 5: all branches or the current one ---
 
 // TestAllOrCurrentBranch: both draw every branch, the main line on the left

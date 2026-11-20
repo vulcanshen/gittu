@@ -97,27 +97,27 @@ tasks:
       原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉
     test: [TestCompareTwoCommits]
   - id: 8
-    spec: 16
+    spec: 21
     implementation: |
       [1] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
-      本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>，不問，Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
+      本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>；平常不問，工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），先 confirm「Check out <分支>?」，內容 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
       Re[b]ase（confirm REBASE「Rebase <目前> onto <分支>?」，內容 Its commits are made again on top of <分支>.；git rebase）、[r]ename（text input RENAME: <分支>，舊名是灰字提議，
       檢查 git check-ref-format --branch 與同名分支，錯誤列 Not a valid branch name／There is a branch <名> already；git branch -m）、[D]elete（confirm「Delete <分支>?」；git branch -d，
       沒合併時再開 confirm「Delete <分支> anyway?」，內容 <分支> is not merged: … are lost.（Peach），Enter 用 git branch -D）、Push（沒有熱鍵；git push <upstream 的 remote 或 origin> refs/heads/<分支>；沒有 remote 時停用）；
       merge、rebase、delete 在目前的分支上停用
-      遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x）、
+      遠端分支（REMOTES 那一頁）：[c]heck out（confirm：沒有同名的本地分支時「Check out origin/x as x?」，內容寫會建一個追蹤它的本地分支，git checkout -b x --track origin/x；有的話「Check out x?」，git checkout x；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach））、
       [M]erge、Re[b]ase（同上）、[D]elete（confirm「Delete x on origin?」，內容寫對每個人都刪掉、無法復原（Peach）；git push origin --delete x）
-      tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>；沒有 remote 時停用）
+      tag（TAGS 那一頁）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；git checkout --detach refs/tags/<tag>）、[D]elete（confirm「Delete the tag <tag>?」；git tag -d）、Push（沒有熱鍵；git push <remote> refs/tags/<tag>；沒有 remote 時停用）
       stash（STASHES 那一頁）：[Enter] Show（what it keeps, file by file：STASHES 先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180），再 tgo App.OpenDiff(branchP, DiffItem{Anchor: base of stash@{N}, Other: stash@{N}, Items})，Items 跟 task 6 一樣是 <stash>^1 對 <stash> 的檔案；App Log 記 Opened stash@{N}）、[a]pply（git stash apply）、P[o]p（git stash pop）、
       [D]rop（confirm「Drop stash@{N}?」，內容是它的訊息與無法復原（Peach）；git stash drop）
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
       merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
       其他失敗開 error popup <動作> FAILED，內容是git 說原因的那一行（第一個 fatal: 或 error: 開頭的，沒有就第一個不是 hint: 的），git 印的全文一列一筆記進 App Log（Error）（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180）
-    test: [TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
+    test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
   - id: 9
-    spec: 14
+    spec: 21
     implementation: |
-      [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；git checkout --detach <hash>）、
+      [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
       [t]ag（text input NEW TAG，git check-ref-format refs/tags/<名> 與同名 tag；git tag <名> <hash>；Success Tagged <短 hash> <名>；cursor 移到 TAGS 新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp main panel.14 的「app 自己的動作先清掉篩選」、panel-180））、
       [M]erge、Rebase（沒有熱鍵：使用者 2026-11-19 不要這種操作被誤觸（tdp M5：沒有熱鍵不加括號）；同 task 8，對象是那個 commit）、Cherry-pick（沒有熱鍵；confirm；git cherry-pick，merge commit 加 -m 1）、Revert（沒有熱鍵；confirm；git revert --no-edit，merge commit 加 -m 1）、
