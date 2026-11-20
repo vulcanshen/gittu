@@ -164,8 +164,26 @@ func TestStatusbarKeepsItsPlace(t *testing.T) {
 	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
 		t.Errorf("Repo moved:\n%s\n%s", top, top2)
 	}
-	if !strings.Contains(top2, "Branch: a-much-longer-branc…  Repo: ") {
-		t.Errorf("the longer branch is not right before Repo:\n%s", top2)
+	if !strings.Contains(top2, "Branch: a-much-longer-branch-name  Repo: ") { // the branch before the repository (the user)
+		t.Errorf("the longer branch is not whole, right before Repo:\n%s", top2)
+	}
+}
+
+// TestStatusbarNarrow: short of room, the user's order of what matters
+// keeps its room: the work in progress, then the branch, then the
+// repository, cut, then left out (tdp L3).
+func TestStatusbarNarrow(t *testing.T) {
+	r := gittest.Conflicted(t)
+	_, d := start(t, r, 60, 32)
+	top := d.Screen()[0]
+	if !strings.Contains(top, glyphConflicts+" Merging: feature") || strings.Contains(top, "Repo: ") {
+		t.Errorf("at 60 columns the merge is not kept before the repository:\n%s", top)
+	}
+	d.Resize(120, 32)
+	top = d.Screen()[0]
+	m, b, rp := strings.Index(top, "Merging: feature"), strings.Index(top, "Branch: main"), strings.Index(top, "Repo: ")
+	if m < 0 || b < m || rp < b {
+		t.Errorf("at 120 columns not the merge, the branch, the repository:\n%s", top)
 	}
 }
 

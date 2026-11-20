@@ -274,75 +274,95 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 // (both Lavender: where you are).
 //
 // The lib draws it on the right, so a longer text would move all of it: it
-// is always the w cells given (tdp L2). The repository's name, last, does not
-// change while gittu runs, so it stays put. The branch's field is as wide as
-// the terminal allows, not as the name is, its text on the right of it next
-// to the repository; the work in progress, first, takes the room left before
-// it, blanks before that.
+// is always the w cells given, blanks first (tdp L2). The branch's field is
+// as wide as the widest it can show, not as the name is, its text on the
+// right of it: checking another branch out moves nothing. Short of room
+// (tdp L3: cut, never wrapped), what matters most keeps its room, in the
+// user's order: the work in progress, then the branch, then the repository.
+// The repository's name is cut, then left out; then the branch's; the work
+// in progress last.
 func (g *gittu) statusbar(w int) []terminu.Span {
 	quiet := terminu.Fg(terminu.Overlay0)
 	here := terminu.Fg(terminu.Lavender)
-	repo := g.repo.Name()
-	field := min(max((w-len("Branch: ")-len("  Repo: ")-terminu.Width(repo))/2, 8), 28)
-	name, t := "", ""
-	if g.snap != nil {
-		name, t = g.where(), track(g.snap.Ahead, g.snap.Behind, false)
-		// As wide as the widest it can show: every local branch with its
-		// track, and where HEAD is; checking another out moves nothing.
-		widest := terminu.Width(name) + trackWidth(t)
-		for _, b := range g.snap.Branches {
-			widest = max(widest, terminu.Width(b.Name)+trackWidth(track(b.Ahead, b.Behind, false)))
+	green := terminu.Fg(terminu.Green)
+	const gap = 2
+	width := func(sp []terminu.Span) int {
+		n := 0
+		for _, x := range sp {
+			n += terminu.Width(x.Text)
 		}
-		field = min(field, widest)
+		return n
 	}
-	nameW := field
-	if t != "" {
-		nameW = field - 1 - terminu.Width(t)
-		if nameW < 4 { // no room for both: the name alone
-			t, nameW = "", field
-		}
-	}
-	name = terminu.Truncate(name, nameW)
-	branch := []terminu.Span{{Text: "Branch: ", Style: quiet}, {Text: name, Style: here}}
-	branchW := len("Branch: ") + terminu.Width(name)
-	if t != "" {
-		branch = append(branch, terminu.Span{Text: " " + t, Style: quiet})
-		branchW += 1 + terminu.Width(t)
-	}
-	tail := append(append([]terminu.Span{{Text: strings.Repeat(" ", max(len("Branch: ")+field-branchW, 0))}}, branch...),
-		terminu.Span{Text: "  Repo: ", Style: quiet}, terminu.Span{Text: repo, Style: here})
-	tailW := len("Branch: ") + field + len("  Repo: ") + terminu.Width(repo)
-	// The work in progress is one field, the first (tdp L2, screen.4): what
-	// git is doing while it runs, else an operation stopped half way.
+
+	// The work in progress: what git is doing while it runs, else an
+	// operation stopped half way, its state's glyph first (the user):
+	// conflicts left, Peach as a warning is (tdp screen.4); none, Green,
+	// ready to commit or go on.
 	var work []terminu.Span
-	room := w - tailW - 2
 	switch {
 	case g.busy != "":
-		work = []terminu.Span{{Text: terminu.Truncate(g.busy, max(room, 0)), Style: terminu.Fg(terminu.Green)}}
+		work = []terminu.Span{{Text: terminu.Truncate(g.busy, w), Style: green}}
 	case g.snap != nil && g.snap.State.Op != "":
 		st := g.snap.State
-		// Its state's glyph first (the user): conflicts left, Peach as a
-		// warning is (tdp screen.4); none, Green, ready to commit or go on.
 		glyph, colour := glyphReady, terminu.Green
 		if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
 			glyph, colour = glyphConflicts, terminu.Peach
 		}
-		if gw := terminu.Width(glyph) + 1; room > gw {
-			work = []terminu.Span{{Text: glyph, Style: terminu.Fg(colour)},
-				{Text: " " + terminu.Truncate(stateWord(st.Op)+": "+st.Other, room-gw), Style: terminu.Fg(terminu.Green)}}
+		work = []terminu.Span{{Text: glyph, Style: terminu.Fg(colour)},
+			{Text: " " + terminu.Truncate(stateWord(st.Op)+": "+st.Other, max(w-terminu.Width(glyph)-1, 1)), Style: green}}
+	}
+	room := w - width(work)
+	if len(work) > 0 {
+		room -= gap
+	}
+
+	// The branch: its field as wide as the widest it can show (every local
+	// branch with its track, and where HEAD is), the room left at the most;
+	// left out with no room for 4 cells of a name.
+	var branch []terminu.Span
+	if g.snap != nil && room >= len("Branch: ")+4 {
+		name, t := g.where(), track(g.snap.Ahead, g.snap.Behind, false)
+		widest := terminu.Width(name) + trackWidth(t)
+		for _, b := range g.snap.Branches {
+			widest = max(widest, terminu.Width(b.Name)+trackWidth(track(b.Ahead, b.Behind, false)))
 		}
+		field := min(widest, room-len("Branch: "))
+		nameW := field - trackWidth(t)
+		if nameW < 4 { // no room for both: the name alone
+			t, nameW = "", field
+		}
+		name = terminu.Truncate(name, nameW)
+		branch = []terminu.Span{{Text: strings.Repeat(" ", max(field-terminu.Width(name)-trackWidth(t), 0))},
+			{Text: "Branch: ", Style: quiet}, {Text: name, Style: here}}
+		if t != "" {
+			branch = append(branch, terminu.Span{Text: " " + t, Style: quiet})
+		}
+		room -= width(branch)
 	}
-	workW := 0
-	for _, sp := range work {
-		workW += terminu.Width(sp.Text)
+
+	// The repository: what is left, its name cut (4 cells at the least), or
+	// left out.
+	var repoPart []terminu.Span
+	lead := 0
+	if len(work) > 0 || len(branch) > 0 {
+		lead = gap
 	}
-	if workW > 0 {
-		work = append(work, terminu.Span{Text: "  "})
-		workW += 2
+	repo := g.repo.Name()
+	if r := room - lead - len("Repo: "); r >= min(4, terminu.Width(repo)) {
+		repoPart = []terminu.Span{{Text: strings.Repeat(" ", lead)}, {Text: "Repo: ", Style: quiet},
+			{Text: terminu.Truncate(repo, r), Style: here}}
+		room -= width(repoPart)
 	}
-	spans := []terminu.Span{{Text: strings.Repeat(" ", max(w-tailW-workW, 0))}}
+	if len(work) > 0 && len(branch) == 0 && len(repoPart) == 0 {
+		room += gap // nothing after it: no blanks between
+	} else if len(work) > 0 {
+		work = append(work, terminu.Span{Text: strings.Repeat(" ", gap)})
+	}
+
+	spans := []terminu.Span{{Text: strings.Repeat(" ", max(room, 0))}}
 	spans = append(spans, work...)
-	return append(spans, tail...)
+	spans = append(spans, branch...)
+	return append(spans, repoPart...)
 }
 
 // where is the branch HEAD is on, or where it is detached.

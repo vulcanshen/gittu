@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## statusbar 放不下時的優先順序（2026-11-20）
+
+實測發現 60 欄時 merge 的狀態整個不見，user 照原話：「優先級: 狀態 > 分支 > repo」
+
 ## 長路徑留著狀態字母（2026-11-20）
 
 實測發現長路徑連前面的狀態字母一起截掉（D、? 分不出來），列了 gittu 自己截路徑、請 tdp／terminu-go 支援沒有表頭的兩欄、維持現狀三種後，user 照原話：「1」（gittu 自己截路徑，字母留著）

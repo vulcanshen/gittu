@@ -1,12 +1,13 @@
-id: 44
+id: 45
 from: v1.2.19
 to: v1.2.20
 tasks:
   - id: 1
-    spec: 38
+    spec: 45
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6]
     remark:
+      - "statusbar 放不下時（tdp L3：截斷、不折行），照使用者的優先順序留空間（2026-11-20：「優先級: 狀態 > 分支 > repo」）：先截 repo 的名字（至少留 4 格），還不夠就拿掉 Repo；再截分支的名字（↑N ↓N 先讓），還不夠就拿掉 Branch；狀態最後才截。Branch 那一欄不再受終端機寬度的一半上限，寬度是最寬的分支與剩下的空間取小的；60 欄、merge 中是 󰞏 Merging: clash  Branch: main"
       - "merge、rebase、cherry-pick、revert 做到一半時，statusbar 那一欄前面加狀態的 glyph（使用者 2026-11-20：「merge conflict 發生中，status bar 應該要有一個狀態 icon 才對，顯示當前狀態」）：還有衝突的檔時 nf-md-alarm_light（Peach，跟 Warning toast 同一個 glyph；tdp screen.4：警告 Peach），衝突都解完、可以 commit 或 continue 時 nf-md-check_circle（Green，跟 Success toast 同一個；進行中的工作 Green）；兩個形狀不同，不只靠顏色（tdp L5）；glyph 與後面的字空一格（tdp components.2 的通則；statusbar 的內容是 app 的，tdp P5）"
       - |
         版面（打開時是 History 畫面；tdp screen.1、screen.3、screen.4）：
