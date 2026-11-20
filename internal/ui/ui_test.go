@@ -737,31 +737,69 @@ func TestFirstCommitFiles(t *testing.T) {
 
 // --- task 7: two commits compared ---
 
-// TestDiffTwoCommits is task 7 on tdp panel.9: C on a commit makes it the
-// anchor of the Diff mode, Enter on another goes into the files that differ,
-// the anchor the base; Esc goes back up to the mode, the anchor kept.
+// TestDiffTwoCommits is task 7 on tdp panel.9 "With a details panel"
+// (panel-185, panel-186): D on a commit makes it the anchor of the Diff mode,
+// [2] and [3] both in it, the focus staying on [2]; [3] follows the cursor
+// with the files that differ, the anchor the base; Enter sends the focus to
+// [3], Enter there compares a file; Esc goes back the way it came: the diff,
+// [3], [2] with the mode kept, out of the mode; Tab moves between the two,
+// [1] waits.
 func TestDiffTwoCommits(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 120, 32)
+	h := g.history
 	d.Press("Tab")
 	a := selectCommit(t, d, g, "Start the demo")
 	d.Press("Space")
 	has(t, d, "[D]iff")
 	d.Press("Esc", "D")
-	has(t, d, "Diff", "D|Enter:diff")
-	b := selectCommit(t, d, g, "Say even more")
-	d.Press("Enter")
+	has(t, d, "Diff", "D|Enter:diff", "Move to another commit to diff with "+git.Short(a.SHA))
+	if h.histP.InMode() == nil || h.filesP.InMode() == nil || g.a.Screen().Focused() != h.histP {
+		t.Fatal("D did not put [2] and [3] in the Diff mode, the focus on [2]")
+	}
+	b := g.snap.Commits[0] // gg: the top commit, [3] following
+	d.Press("g", "g")
 	has(t, d, git.Short(a.SHA)+" ↔ "+git.Short(b.SHA), "+ feature.txt", "~ README.md")
 	d.Press("Enter")
+	if g.a.Screen().Focused() != h.filesP {
+		t.Fatal("Enter on [2] did not send the focus to [3]")
+	}
+	has(t, d, "Esc:back")
+	d.Press("Enter")
 	has(t, d, "README.md @ "+git.Short(a.SHA)+" ↔ README.md @ "+git.Short(b.SHA))
-	d.Press("Esc", "Esc")
-	if g.history.histP.InMode() == nil {
-		t.Error("Esc out of the files did not go back to the Diff mode")
+	d.Press("Esc")
+	if g.a.Screen().Focused() != h.filesP {
+		t.Error("Esc on the diff did not go back to [3]")
 	}
 	d.Press("Esc")
-	if g.history.histP.InMode() != nil {
+	if g.a.Screen().Focused() != h.histP || h.histP.InMode() == nil || h.filesP.InMode() == nil {
+		t.Fatal("Esc on [3] did not go back to [2], the mode kept")
+	}
+	d.Press("Tab")
+	if g.a.Screen().Focused() != h.filesP {
+		t.Error("Tab in the mode did not go to [3]")
+	}
+	d.Press("1")
+	has(t, d, "Press [Esc] to leave Diff first")
+	d.Press("Esc", "Esc", "Esc") // the toast, [3] back to [2], out of the mode
+	if h.histP.InMode() != nil || h.filesP.InMode() != nil {
 		t.Error("Esc did not leave the Diff mode")
 	}
-	has(t, d, "GRAPH")
+	has(t, d, "GRAPH", git.Short(b.Parents[0])+" ↔ "+git.Short(b.SHA)) // [3] the commit's own files again
+}
+
+// TestDiffSameCommits: on a commit the same as the anchor (an empty commit
+// and its parent) [3] says there is no difference, no toast (tdp panel.9,
+// panel-185).
+func TestDiffSameCommits(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("commit", "-q", "--allow-empty", "-m", "Nothing")
+	g, d := start(t, r, 120, 32)
+	top, parent := g.snap.Commits[0], g.snap.Commits[1]
+	d.Press("Tab", "g", "g", "D", "j")
+	has(t, d, "No differences between "+git.Short(top.SHA)+" and "+git.Short(parent.SHA))
+	if top.Subject != "Nothing" || parent.SHA != top.Parents[0] {
+		t.Fatalf("the top two commits: %q, %s", top.Subject, git.Short(parent.SHA))
+	}
 }
 
 // --- task 8: [1]'s operations ---

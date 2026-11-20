@@ -1,4 +1,4 @@
-id: 28
+id: 29
 from: v1.2.18
 to: v1.2.19
 tasks:
@@ -91,16 +91,15 @@ tasks:
       - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
       - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
-    spec: 26
+    spec: 29
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel.14, tdp toast.2, tdp F7]
     remark:
-      - note: "使用者 2026-11-20 要 Diff 模式的結果放在 [3]（[2] 的明細）：[2] 按 D 時 [2]、[3] 一起進 Diff 模式（兩個框都 Yellow、都寫 Diff，focus 照 L5 用框線粗細分）；[2] 移動時 [3] 跟著列 anchor 與 cursor 那個 commit 之間的差異；Enter 把 focus 送到 [3]，[2] 留在模式；[3] 的 Esc 回到 [2]（照走進來的路退回），[2] 的 Esc 離開模式；模式裡 Tab、數字鍵在 [2]、[3] 之間換，[1] 暫停。跟 tdp v1.2.19 的 panel.9（進到清單裡）、K11（Tab 暫停、Esc 離開模式）不合；暫時照舊，進到 [2] 的清單。tdp main 71dd99a 收了（panel.9「有明細 panel 時」，app 自行選用；K11；panel-185、panel-186），另外寫明 cursor 在 anchor 或跟 anchor 一樣的 commit 上時 [3] 顯示空狀態（例：No differences between a and b），不跳 toast；terminu-go 做進 v1.2.21-beta.1，出了再照它改"
-        issue: 送給 tdp session（2026-11-20）；tdp main 71dd99a 收了，等 terminu-go v1.2.21-beta.1
+      - "使用者 2026-11-20 要 Diff 模式的結果放在 [3]（[2] 的明細），送給 tdp session：tdp main 71dd99a 收了（panel.9「有明細 panel 時」，app 自行選用；K11；panel-185、panel-186），terminu-go v1.2.21-beta.1 做了（DiffMode.InDetails）；照它做，不再進到 [2] 的清單"
       - "比較模式改名叫 Diff 模式（tdp v1.2.19 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [D]iff、hint D|Enter:diff，都由 tgo 畫；Diff 模式的鍵是 D（使用者 2026-11-20；原本是 C，panel.9：鍵 app 可以自行決定）；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
       - "tdp #20 定案（使用者選 A；panel.9「裝著許多項目的列」與 note.8）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
-      - "[2] 的 commit 上按 [D]iff（比較鍵 app 可以自行決定，tdp panel.9；使用者 2026-11-20 選 D，原本跟 kbu 一樣是 C）進入 Diff 模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 D 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"
-      - "比較模式與差異清單由 tgo 畫（CompareAction 的 Compare.Many、Compare.Items；terminu-go v1.2.18-beta.1 起）；比較模式不記 App Log（tdp note.7）"
+      - "[2] 的 commit 上按 [D]iff（比較鍵 app 可以自行決定，tdp panel.9；使用者 2026-11-20 選 D，原本跟 kbu 一樣是 C）進入 Diff 模式，那個 commit 是 anchor（Yellow）；差異放在 [3]（tdp main 的 panel.9「有明細 panel 時」，app 自行選用；使用者 2026-11-20 選這個）：[2]、[3] 一起在模式裡，兩個框都 Yellow、都寫 Diff，粗線在有 focus 的那個（L5），進入時 focus 留在 [2]；[3] 不用按鍵就跟著 [2] 的 cursor，列 anchor 與 cursor 那個 commit 之間有差異的檔案，位置列 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；cursor 在 anchor 上時 [3] 寫 Move to another commit to diff with <anchor>，在跟 anchor 一樣的 commit 上寫 No differences between <anchor> and <另一個>，不跳 toast（tdp main 的 panel-185）；[2] 上按 D 或 Enter，focus 移到 [3]；[3] 的檔案上 D 或 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 照來的路退回（K4）：比較 → [3] → [2]（模式還在、anchor 留著）→ 離開模式、拿掉 anchor，[3] 回到 cursor 那個 commit 自己的檔案；模式裡 Tab 與數字 2、3 在 [2]、[3] 之間換，按 1 跳 Info toast 說先 Esc 離開（K11、tdp main 的 panel-186）"
+      - "Diff 模式與 [3] 裡的差異由 tgo 畫（DiffModeAction 的 DiffMode.Many、Items；terminu-go v1.2.21-beta.1 起的 InDetails、Noun: commit）；模式裡 [3] 自己的內容藏起來，gittu 照樣從 [2] 的 OnMove 更新，離開模式就回來；Diff 模式不記 App Log（tdp note.7）"
   - id: 8
     spec: 28
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；分支、遠端分支、tag、stash 能做的事都在 Space 選單

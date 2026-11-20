@@ -94,15 +94,16 @@ tasks:
       [3] 的 panel operation z Unzoom（task 17）
     test: [TestCommitFilesAndDiff, TestFirstCommitFiles]
   - id: 7
-    spec: 26
+    spec: 29
     implementation: |
-      [2] 的 item operation [D]iff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: D, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction）：
-      進入 Diff 模式（tgo：模式名 Diff、hint D|Enter:diff，anchor 那一列 Yellow，j|k u|d gg|G 移動，D 或 Enter 比較，Esc 離開、拿掉 anchor，Tab 與數字鍵暫停）；
-      Items 跟 task 6 一樣（git diff --name-status -M <anchor> <另一個>），以 anchor 為基準：每一項 Anchor <路徑> @ <anchor>、Other <路徑> @ <另一個>；
-      tgo 畫差異清單（位置列 <anchor> ↔ <另一個>）、Enter 打開比較、Esc 一層一層退回，最後回到模式、anchor 留著；沒有差異時 Info toast
-      從比較模式進到差異清單前，[2] 的篩選由 tgo 先清掉（v1.2.19-beta.2，tdp v1.2.18 的 panel.14、panel-180：進到一項裡面）
-      原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉
-    test: [TestDiffTwoCommits]
+      [2] 的 item operation [D]iff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: D, InDetails: true, Noun: commit, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction，InDetails 從 v1.2.21-beta.1 起）：
+      進入 Diff 模式，[2] 與它的明細 [3]（histP.Details = filesP）一起在模式裡（tgo：兩個框都 Yellow、都寫 Diff，粗線在 focus 那個，focus 留在 [2]；anchor 那一列 Yellow；hint D|Enter:diff）；
+      [3] 跟著 [2] 的 cursor（tgo 畫）：Items 跟 task 6 一樣（git diff --name-status -M <anchor> <另一個>），以 anchor 為基準：每一項 Anchor <路徑> @ <anchor>、Other <路徑> @ <另一個>，位置列 <anchor> ↔ <另一個>；
+      cursor 在 anchor 上 [3] 是空狀態 Move to another commit to diff with <anchor>，在一樣的 commit 上 No differences between <anchor> and <另一個>，不跳 toast；
+      [2] 上 D 或 Enter：focus 到 [3]（footer Esc:back）；[3] 的檔案上 D 或 Enter 打開比較；Esc：比較 → [3] → [2]（模式與 anchor 留著）→ 離開模式，[3] 回到 gittu 自己的內容（showFiles 照樣從 OnMove 更新）；
+      模式裡 Tab、2、3 在 [2]、[3] 之間換，1 跳 Info toast Press [Esc] to leave Diff first；[1] 與其他鍵暫停
+      原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉；原本進到 [2] 的差異清單（panel.10）改成放在 [3]
+    test: [TestDiffTwoCommits, TestDiffSameCommits]
   - id: 8
     spec: 28
     implementation: |

@@ -125,9 +125,10 @@ upstream was deleted on the remote says `upstream gone`.
 
 `[3]` FILES lists the files the commit under `[2]`'s cursor changed against the commit before it, and changes as you
 move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
-on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit, then `Enter` on another,
-goes in to the files that differ between the two, the first one the base, each opening the same way; `Esc` goes back a
-level at a time.
+on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit starts the Diff mode with
+that commit as the base, `[2]` and `[3]` both in it: move to another commit and `[3]` lists the files that differ
+between the two. `Enter` takes you to `[3]`, where `Enter` opens a file the same way; `Esc` goes back the way you came,
+and on `[2]` leaves the mode.
 
 ### Working tree
 

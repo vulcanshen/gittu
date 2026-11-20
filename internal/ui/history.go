@@ -700,9 +700,11 @@ func (h *historyScreen) openFile() tea.Cmd {
 }
 
 // diffMode is [2]'s Diff mode (tdp panel.9): two commits hold many, so
-// diffing them goes into the files that differ, the anchor the base.
+// diffing them lists the files that differ, the anchor the base, in [3]
+// ("With a details panel", the user's pick): [3] follows [2]'s cursor in the
+// mode, D or Enter sends the focus there, Esc goes back the way it came.
 func (h *historyScreen) diffMode() terminu.Action {
-	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "D", // the user's
+	return h.g.a.DiffModeAction(h.histP, h.commits, terminu.DiffMode{Key: "D", InDetails: true, Noun: "commit", // the user's
 		Many: func(terminu.Row) bool { return true },
 		Name: func(r terminu.Row) string { return git.Short(r.ID) },
 		Items: func(anchor, other terminu.Row) ([]terminu.DiffItem, error) {
