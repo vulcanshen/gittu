@@ -47,6 +47,8 @@ type statusScreen struct {
 	// reread is the file [2] shows when its text changed on a read again,
 	// for the App Log to say (task 19).
 	reread string
+	// width is [1]'s, as laid out last: how much of a path its rows show.
+	width int
 	// toConflict puts [1]'s cursor on the first conflict at the next read: an
 	// operation stopped on conflicts.
 	toConflict bool
@@ -87,13 +89,13 @@ func newStatusScreen(g *gittu) *statusScreen {
 			Hidden: func() bool { return s.diff.Empty() || !s.text || !s.in(inConflict)() }, Do: s.openDiff},
 	}
 	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
-		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: oneToTwo}
+		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: s.layout}
 	return s
 }
 
 // show puts a read of the repository on the screen.
 func (s *statusScreen) show(snap *git.Snapshot) {
-	s.files.SetRows(fileRows(snap.Files))
+	s.files.SetRows(fileRows(snap.Files, s.pathWidth()))
 	// A mark on a row gone (a file staged, resolved…) goes with it.
 	if marked := s.files.Marked(); len(marked) > 0 {
 		here := map[string]bool{}
@@ -121,8 +123,45 @@ func (s *statusScreen) show(snap *git.Snapshot) {
 	s.showDiff(true)
 }
 
+// layout is oneToTwo; [1] wider or narrower, its rows' paths cut again.
+func (s *statusScreen) layout(w, h int) []terminu.Rect {
+	rects := oneToTwo(w, h)
+	if rw := rects[0].W; rw != s.width {
+		s.width = rw
+		if s.g.snap != nil {
+			s.files.SetRows(fileRows(s.g.snap.Files, s.pathWidth()))
+		}
+	}
+	return rects
+}
+
+// pathWidth is how many cells of a path [1]'s rows show: its width but the
+// frame, the margins, the mark column, the state's letter and a blank, the
+// cursor's arrow, and one to spare (0: not laid out yet, the path whole).
+func (s *statusScreen) pathWidth() int {
+	if s.width <= 0 {
+		return 0
+	}
+	return max(s.width-9, 4)
+}
+
+// cutFront shortens a path from its front to w cells, … first, so that
+// its end, the file's name, stays (0: whole).
+func cutFront(path string, w int) string {
+	if w <= 0 || terminu.Width(path) <= w {
+		return path
+	}
+	rs := []rune(path)
+	keep := len(rs)
+	for keep > 0 && terminu.Width(string(rs[keep-1:])) <= w-1 {
+		keep--
+	}
+	return "…" + string(rs[keep:])
+}
+
 // fileRows are [1]'s rows in three groups: a file staged in part is in two.
-func fileRows(files []git.File) []terminu.Row {
+// w is how many cells of a path they show.
+func fileRows(files []git.File, w int) []terminu.Row {
 	var conflicts, staged, unstaged []terminu.Row
 	for _, f := range files {
 		path := f.Path
@@ -131,17 +170,17 @@ func fileRows(files []git.File) []terminu.Row {
 		}
 		switch {
 		case f.Conflicted():
-			conflicts = append(conflicts, fileRow(inConflict, "Conflicts", f.Path, path, 'U'))
+			conflicts = append(conflicts, fileRow(inConflict, "Conflicts", f.Path, path, 'U', w))
 			continue
 		case f.Untracked():
-			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, '?'))
+			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, '?', w))
 			continue
 		}
 		if f.Staged() {
-			staged = append(staged, fileRow(inStaged, "Staged", f.Path, path, f.X))
+			staged = append(staged, fileRow(inStaged, "Staged", f.Path, path, f.X, w))
 		}
 		if f.Unstaged() {
-			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, f.Y))
+			unstaged = append(unstaged, fileRow(inUnstaged, "Unstaged", f.Path, f.Path, f.Y, w))
 		}
 	}
 	return slices.Concat(conflicts, staged, unstaged)
@@ -1163,9 +1202,12 @@ func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
 // column (tdp panel.7; tdp P5: the letters and colours are the app's).
 // fileRow is a file's row in a group: its state's letter in its colour, then
 // the path as shown.
-func fileRow(in, group, path, shown string, status byte) terminu.Row {
+func fileRow(in, group, path, shown string, status byte, w int) terminu.Row {
+	// The letter always shows: the path is cut from its front here, before the
+	// lib would cut the whole row, the letter first; the filter matches the
+	// whole path (Cells).
 	return terminu.Row{ID: in + path, Group: group, Cells: []string{string(status) + " " + shown},
-		Styled: [][]terminu.Span{{changeFlag(status), {Text: " " + shown}}}}
+		Styled: [][]terminu.Span{{changeFlag(status), {Text: " " + cutFront(shown, w)}}}}
 }
 
 func changeFlag(status byte) terminu.Span {

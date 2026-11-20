@@ -161,6 +161,10 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## 長路徑留著狀態字母（2026-11-20）
+
+實測發現長路徑連前面的狀態字母一起截掉（D、? 分不出來），列了 gittu 自己截路徑、請 tdp／terminu-go 支援沒有表頭的兩欄、維持現狀三種後，user 照原話：「1」（gittu 自己截路徑，字母留著）
+
 ## 使用者自訂的動作（2026-11-20，下一版）
 
 user 照原話（舉了另一個 git 工具當例子，照不提其他工具的約定不寫名字）：「我有想添加一個功能，就是……讓使用者客製化action, 我們用 ${{source}} 當成來源分支，${{target}} 當成目標分支，讓使用者自己開發自己的操作, 腳本要存起來, 這應該算 data, 不算 gittu 的 config, 應該有第三個 tab, CUSTOM 來放這些東西，但是我們應該可以先發版」

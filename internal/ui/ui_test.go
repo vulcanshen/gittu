@@ -1467,6 +1467,25 @@ func TestRefreshFailureKeepsContent(t *testing.T) {
 
 // --- task 11: the working tree's files ---
 
+// TestLongPathKeepsItsLetter: a path too long for [1] is cut from its front
+// by gittu, the state's letter kept before it, at any width; the filter
+// still matches the whole path (the user).
+func TestLongPathKeepsItsLetter(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	long := "a/very/long/path/to/some/deeply/nested/folder/notes-of-the-day.txt"
+	r.Commit(long, "x\n", "Add notes deep down")
+	r.Write(long, "y\n")
+	g, d := start(t, r, 60, 32)
+	d.Press("W")
+	has(t, d, "M …") // the letter, then the path cut from its front
+	d.Resize(130, 32)
+	has(t, d, "M …", "notes-of-the-day.txt")
+	if cells := g.status.files.Rows()[0].Cells[0]; !strings.HasSuffix(cells, "a/very/long/path/to/some/deeply/nested/folder/notes-of-the-day.txt") {
+		t.Errorf("the row text is not the whole path: %q", cells)
+	}
+}
+
 func TestFileGroups(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "staged\n")

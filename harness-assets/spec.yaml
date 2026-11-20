@@ -1,4 +1,4 @@
-id: 43
+id: 44
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -143,7 +143,7 @@ tasks:
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 25
+    spec: 44
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
     tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6]
     remark:
@@ -158,7 +158,7 @@ tasks:
         ┃ UNSTAGED             ┃│                                                     │
         ┃ ? notes.txt          ┃│                                                     │
         ┗━ Enter:stage ━━━━━━━━┛└─ Enter:compare ─────────────────────── 1-20 of 48 ─┘
-      - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。一欄、沒有表頭：改了什麼的字母寫在路徑前面（M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）），太長從前面截（tdp panel.5），所以很長的路徑會連字母一起截掉，分組還看得到（使用者 2026-11-20：拆成字母一欄、路徑一欄會多一列表頭 FILE，選回一欄）。標記欄留給標記的勾（task 21；tdp panel.7：可以標記的清單，標記欄只放勾，旗標寫在內容裡），2026-11-20 前字母畫在標記欄。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
+      - "[1] CHANGES 是一般清單分三組（tdp panel.11）：CONFLICTS、STAGED、UNSTAGED（沒追蹤的檔也在 UNSTAGED）；同一個檔 stage 了一部分時兩組各一列。一欄、沒有表頭：改了什麼的字母寫在路徑前面（M Peach、A Green、D Red、R Blue、? Overlay0（沒追蹤）、U Red（衝突）），太長時 gittu 自己把路徑從前面截到放得下（…接在字母後面），字母一定留著（使用者 2026-11-20 選的；原本交給 tgo 的 Path 從前面截整列，很長的路徑會連字母一起截掉）；篩選照樣比對完整的路徑（tgo Row.Cells 是完整的、Row.Styled 是截過的）；拆成字母一欄、路徑一欄會多一列表頭 FILE，使用者選一欄。標記欄留給標記的勾（task 21；tdp panel.7：可以標記的清單，標記欄只放勾，旗標寫在內容裡），2026-11-20 前字母畫在標記欄。位置列寫 All changes（畫面已經叫 Working tree，不再重複；進到衝突的檔裡時接上那一層，task 14）"
       - "[2] DIFF 是 [1] cursor 那個檔的明細（tdp panel.13，跟著 cursor 即時換）：label 寫 DIFF: <路徑>；畫的是那個檔的兩個版本（跟 Enter 打開的比較同兩邊），照 UNIFIED 的樣子（tdp v1.2.18 的 note.8「在 panel 裡」、note-103，使用者 2026-11-19 選 A；tgo Pager.SetDiff）：只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，不放 git diff 的 diff --git 與 @@；位置列寫 <舊的> ↔ <新的>；兩邊一樣時空狀態 No differences between the two / Press [1] to go to the files；二進位檔（前 8000 位元組有 NUL，跟 git 判的一樣）空狀態 Not a text file: no lines to compare / Press [1] to go to the files（tdp screen.8：一句事實、一句點名按鍵的提示）；沒追蹤的資料夾照 panel.9 列出裡面的檔、每個標 +（Green），Enter 進到那份清單，跟進到一個 commit 一樣（tdp v1.2.18 的 note.8、note-106，使用者 2026-11-19 在 tdp session 選 A；tgo Pager.SetDiffItems，v1.2.19-beta.2）；[1] 換到另一列時先退出 [2] 進去的清單（Panel.LeaveDiff）；讀不到時照 tdp panel.15：沒有舊內容寫兩句（Can't show the change: <說原因的那一行> / Press [R] to read it again），同一列重新讀時讀不到則舊的內容留著、Error toast；那一句與 git 的全文記進 App Log（tdp F5、components.5）；沒有 cursor 的 panel（tgo Pager），j|k 捲動"
       - "[2] DIFF 上的 Enter（[Enter] Compare，hint Enter:compare；tdp K3：沒有項目的 panel，Enter 對整個 panel 做最直觀的事）打開 tdp note.8 的比較（同一項的兩個版本，舊的當 anchor）：STAGED 的是 <路徑> @ HEAD ↔ <路徑> @ index，UNSTAGED 的是 <路徑> @ index ↔ <路徑>（工作區；沒追蹤的檔左邊是空的），衝突的檔是 <路徑> @ HEAD ↔ <路徑>（工作區、有衝突標記；比較的畫法同 task 6），進到衝突區塊時是 MINE · <標記> ↔ THEIRS · <標記>；二進位檔沒有比較（Enter 隱藏）。由 tgo 的 App.OpenDiff 畫，記 App Log：Compared <左> with <右>"
       - "沒有改動時是空狀態（tdp screen.8）：Nothing to commit / Press [H] to see the history"
