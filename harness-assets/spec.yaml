@@ -95,6 +95,8 @@ tasks:
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel.14, tdp toast.2, tdp F7]
     remark:
+      - note: "使用者 2026-11-20 要 Diff 模式的結果放在 [3]（[2] 的明細）：[2] 按 D 時 [2]、[3] 一起進 Diff 模式（兩個框都 Yellow、都寫 Diff，focus 照 L5 用框線粗細分）；[2] 移動時 [3] 跟著列 anchor 與 cursor 那個 commit 之間的差異；Enter 把 focus 送到 [3]，[2] 留在模式；[3] 的 Esc 回到 [2]（照走進來的路退回），[2] 的 Esc 離開模式；模式裡 Tab、數字鍵在 [2]、[3] 之間換，[1] 暫停。跟 tdp panel.9（進到清單裡）、K11（Tab 暫停、Esc 離開模式）不合；暫時照舊，進到 [2] 的清單"
+        issue: 送給 tdp session（2026-11-20，轉 terminu-go）
       - "比較模式改名叫 Diff 模式（tdp v1.2.19 的 panel.9、note.8，使用者在 tdp session 改的；terminu-go v1.2.20-beta.2 的 DiffMode、App.DiffModeAction）：框上的模式名 Diff、Space menu 的 [D]iff、hint D|Enter:diff，都由 tgo 畫；Diff 模式的鍵是 D（使用者 2026-11-20；原本是 C，panel.9：鍵 app 可以自行決定）；gittu 自己的字（[3] 與 Working tree [2] 上 Enter 那一列的 label、hint、README）跟著改成 Diff"
       - "tdp #20 定案（使用者選 A；panel.9「裝著許多項目的列」與 note.8）：比兩個 commit 走 tdp 的比較模式，不用標記。原本暫時用標記（tdp panel.7，[m]ark）加 panel operation [C]ompare，現在拿掉"
       - "[2] 的 commit 上按 [D]iff（比較鍵 app 可以自行決定，tdp panel.9；使用者 2026-11-20 選 D，原本跟 kbu 一樣是 C）進入 Diff 模式，那個 commit 是 anchor（Yellow）；移到另一個 commit 按 D 或 Enter，照 panel.10 進到一層兩邊有差異的檔案，位置列是 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；在檔案上 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 一層一層退回，最後回到模式、anchor 留著；兩邊沒有差異時 Info toast；模式的 Esc 離開、拿掉 anchor（tdp panel.9、K11）"

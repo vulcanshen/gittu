@@ -161,6 +161,13 @@ user 照原話（附了一張放大到整個畫面、線被截成 … 的截圖�
 user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 清單的 item 可以複選，然後可以一起進行操作，例如 resolve conflict use mine/theirs, discard, remove, add to ignore... 等等的」
 問了標記鍵、remove 與 ignore 的細節後：「我不懂你的問題是什麼，不就是 checkbox 勾選 -> space menu 操作嗎?」（細節由 app 決定）
 
+## Diff 模式的結果放在 [3]（2026-11-20）
+
+user 照原話：「關於剛剛那個兩個 commit 點 diff 的情況，我想要的是，當進入 diff mode 之後，panel 3 的內容就直接跟著 cursor 移動對兩個 commit 進行 diff, 顯示內容，也就是說 panel 3 的邏輯是，當只有一個 commit 被 focus 的時候，就顯示那一個 commit 的 detail 內容，當有兩個 commit 備 focus (diff mode) 的時候，就顯示那兩個 commit 點的 diff 內容, 這樣 panel 2 diff mode 按下 enter 的時候，就直接 focus 到 panel 3 就好，但這問題是，這時候 panel 3 應該要要有 diff mode 的狀態，然後 panel 2 應該也是保持 diff 2, 這還需要考慮」
+「那我們來履一下，當 panel 2 進入 diff mode 的時候，同時 panel 3 應該也要一起進入 diff mode 並且亮起來 然後當 panel 2 確定第二個 commit 點的時候按下 enter, focus 直接切換到 panel 3, 但是因為 panel 2 和 panel 3 都是亮著，那使用者怎麼知道當前 focus 在哪裡? 但如果不一起亮，又很難知道是連動的」（用 tdp L5 的框線粗細分 focus 後接受）
+「ok 既然這樣那就得在考慮操作，因為 esc 會離開 mode, 但是 panel 3 在 diff mode 之中的 esc, 應該是 focus 回 panel 2 才對，因為使用者操作的整個 breadcrumb 是這樣的，所以 esc 應該一樣的回去」
+「ok 送給 tdp session」
+
 ## Discard all 不要熱鍵（2026-11-20）
 
 照 tdp K13 把 Discard all 放到 X 之後，user 照原話：「Discard all 不要熱鍵」
