@@ -193,6 +193,12 @@ func (s *statusScreen) batchWith(label string, groups []string, ok func(git.File
 	return a
 }
 
+// withKey gives a an action key.
+func withKey(key string, a terminu.Action) terminu.Action {
+	a.Key = key
+	return a
+}
+
 // isMarked reports the row under [1]'s cursor marked.
 func (s *statusScreen) isMarked() bool {
 	r, ok := s.files.Current()
@@ -378,7 +384,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Hidden: func() bool { _, _, ok := s.file(); return !ok || s.isMarked() }, Do: s.toggleMark},
 		{Key: "m", Label: "Unmark", Desc: "this file", Scope: item, Hint: "unmark",
 			Hidden: func() bool { _, _, ok := s.file(); return !ok || !s.isMarked() }, Do: s.toggleMark},
-		{Key: "D", Label: "Discard", Desc: "this file's change", Scope: item,
+		{Key: "x", Label: "Discard", Desc: "this file's change", Scope: item, // x deletes (tdp K13)
 			Hidden: func() bool { _, gr, ok := s.file(); return !ok || gr == inConflict }, Disabled: off,
 			AskFor: func() *terminu.Ask {
 				f, gr, _ := s.file()
@@ -432,7 +438,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		}, func(fs []git.File) tea.Cmd {
 			return g.a.Toast(terminu.Success, plural(len(fs), "file", "files")+" resolved with theirs and staged")
 		}),
-		s.batch("Discard the marked", "Discarding…", "Discard", []string{inStaged, inUnstaged}, s.askDiscard, func(fs []git.File) error {
+		withKey("X", s.batch("Discard the marked", "Discarding…", "Discard", []string{inStaged, inUnstaged}, s.askDiscard, func(fs []git.File) error {
 			for _, f := range fs {
 				if err := g.repo.Discard(f, f.Staged()); err != nil {
 					return err
@@ -444,7 +450,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 				g.a.Log(terminu.Info, "Discarded the change to "+f.Path)
 			}
 			return g.a.Toast(terminu.Success, "Discarded the changes to "+plural(len(fs), "file", "files"))
-		}),
+		})), // X: the marked at once (tdp K13)
 		s.batchWith("Remove the marked", []string{inStaged, inUnstaged}, inIndex, s.askRemove, s.remove),
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
 		{Label: "Mark all", Desc: "every file listed", Scope: panel,

@@ -110,7 +110,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 			Do: func() tea.Cmd { return g.rebase(name()) }},
 		{Key: "r", Label: "Rename", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: off, Do: func() tea.Cmd { return h.rename(name()) }},
-		{Key: "D", Label: "Delete", Desc: "this branch", Scope: item,
+		{Key: "x", Label: "Delete", Desc: "this branch", Scope: item, // x deletes (tdp K13)
 			Hidden: h.is(kindBranch), Disabled: h.onCurrent,
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Delete", Subject: name(), Question: "Delete " + name() + "?", Verb: "delete"}
@@ -150,7 +150,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		{Key: "b", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(name()) },
 			Do: func() tea.Cmd { return g.rebase(name()) }},
-		{Key: "D", Label: "Delete", Desc: "this branch on its remote", Scope: item,
+		{Key: "x", Label: "Delete", Desc: "this branch on its remote", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				rb, _ := h.remote()
@@ -174,7 +174,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 				return g.run("Checking out…", "Checkout", func() error { return g.repo.Checkout("refs/tags/"+n, true) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Checked out "+n) })
 			}},
-		{Key: "D", Label: "Delete", Desc: "this tag here, not on a remote", Scope: item,
+		{Key: "x", Label: "Delete", Desc: "this tag here, not on a remote", Scope: item,
 			Hidden: h.is(kindTag), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Delete", Subject: name(), Question: "Delete the tag " + name() + "?", Verb: "delete"}
@@ -209,7 +209,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 			Hidden: h.is(kindStash), Disabled: off, Do: func() tea.Cmd { return h.applyStash(false) }},
 		{Key: "o", Label: "Pop", Desc: "apply it, then drop it", Scope: item,
 			Hidden: h.is(kindStash), Disabled: off, Do: func() tea.Cmd { return h.applyStash(true) }},
-		{Key: "D", Label: "Drop", Desc: "delete it", Scope: item,
+		{Key: "x", Label: "Drop", Desc: "delete it", Scope: item,
 			Hidden: h.is(kindStash), Disabled: off,
 			AskFor: func() *terminu.Ask {
 				st, _ := h.stash()
@@ -601,7 +601,7 @@ func (g *gittu) globalActions() []terminu.Action {
 		{Key: "S", Label: "Stash", Desc: "the uncommitted changes", Disabled: func() bool {
 			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // git stashes nothing before the first commit (tdp M6)
 		}, Do: g.stash},
-		{Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool {
+		{Key: "X", Label: "Discard all", Desc: "every change to the tracked files", Disabled: func() bool { // X: many at once (tdp K13)
 			return off() || !g.hasChanges() || g.snap.HeadSHA == "" // no commit to go back to (tdp M6)
 		},
 			Ask: &terminu.Ask{Title: "Discard all", Question: "Discard every change to the tracked files?", Verb: "discard",

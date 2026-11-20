@@ -845,7 +845,7 @@ func TestDeleteUnmergedAsksAgain(t *testing.T) {
 	r := gittest.Sample(t)
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindBranch+"topic")
-	d.Press("D")
+	d.Press("x")
 	has(t, d, "Delete topic?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -858,7 +858,7 @@ func TestDeleteUnmergedAsksAgain(t *testing.T) {
 func TestCurrentBranchOperationsOff(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 100, 32)
 	selectBranch(d, g, kindBranch+"main")
-	d.Press("D")
+	d.Press("x")
 	hasNot(t, d, "Delete main?")
 }
 
@@ -885,7 +885,7 @@ func TestDeleteRemoteBranch(t *testing.T) {
 	r.Git("push", "-q", "origin", "topic")
 	g, d := start(t, r, 100, 32)
 	selectBranch(d, g, kindRemote+"origin/topic")
-	d.Press("D")
+	d.Press("x")
 	has(t, d, "Delete topic on origin?", "can't be undone")
 	d.Press("Enter")
 	done(t, g, d)
@@ -905,7 +905,7 @@ func TestTagOperations(t *testing.T) {
 	done(t, g, d)
 	has(t, d, "Checked out v0.1.0", "detached at")
 	selectBranch(d, g, kindTag+"v0.1.0")
-	d.Press("D", "Enter")
+	d.Press("x", "Enter")
 	done(t, g, d)
 	has(t, d, "Deleted the tag v0.1.0")
 }
@@ -931,7 +931,7 @@ func TestStashOperations(t *testing.T) {
 	done(t, g, d)
 	d.WaitFor(func() bool { return len(g.snap.Stashes) == 1 }, 5*time.Second)
 	selectBranch(d, g, kindStash+"stash@{0}")
-	d.Press("D")
+	d.Press("x")
 	has(t, d, "Drop stash@{0}?")
 	d.Press("Enter")
 	done(t, g, d)
@@ -1656,17 +1656,39 @@ func TestRemoveAndIgnore(t *testing.T) {
 	}
 }
 
+// TestXDiscardsMany: X discards the marked files when some are marked, and
+// is Discard all otherwise; both ask first (tdp K13).
+func TestXDiscardsMany(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("README.md", "changed\n")
+	r.Write("feature.txt", "changed\n")
+	g, d := start(t, r, 100, 32)
+	d.Press("W")
+	markFile(d, g, inUnstaged+"README.md")
+	d.Press("X")
+	has(t, d, "Discard the changes to README.md?")
+	d.Press("Enter")
+	done(t, g, d)
+	if r.Read("feature.txt") != "changed\n" {
+		t.Error("X with a mark discarded a file not marked")
+	}
+	d.Press("X")
+	has(t, d, "Discard every change to the tracked files?")
+	d.Press("Esc")
+}
+
 func TestDiscardFile(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "D")
+	d.Press("W", "x")
 	has(t, d, "Discard the change to README.md?", "can't be undone")
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Discarded the change to README.md")
-	d.Press("D")
+	d.Press("x")
 	has(t, d, "Delete new.txt?")
 	d.Press("Enter")
 	done(t, g, d)

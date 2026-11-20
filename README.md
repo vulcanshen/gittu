@@ -108,10 +108,10 @@ the App Log, what gittu did and what went wrong.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[D]`elete, Push |
-| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[D]`elete it on the remote |
-| `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[D]`elete, Push |
-| `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[D]`rop |
+| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[x]` Delete, Push |
+| `[1]` REMOTES: a remote branch | Its commit in `[2]` | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
+| `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[x]` Delete, Push |
+| `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[x]` Drop |
 | `[2]` a commit | To its files in `[3]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
 | `[2]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
 | `[3]` FILES: a file | Its two versions | `[/]` filter |
@@ -133,11 +133,11 @@ level at a time.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| An unstaged file | Stage | `[m]`ark, `[D]`iscard, Remove, Ignore |
-| A staged file | Unstage | `[m]`ark, `[D]`iscard, Remove, Ignore |
+| An unstaged file | Stage | `[m]`ark, `[x]` Discard, Remove, Ignore |
+| A staged file | Unstage | `[m]`ark, `[x]` Discard, Remove, Ignore |
 | A conflicted file | Resolve its conflicts one by one | `[m]`ark, Use mine, use `[t]`heirs, for the whole file |
 | A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
-| The panel | | With files marked: stage, unstage, use mine, use theirs, discard, remove or ignore the marked; Mark all, Clear marks, Stage `[a]`ll, Unstage all |
+| The panel | | With files marked: stage, unstage, use mine, use theirs, `[X]` discard, remove or ignore the marked; Mark all, Clear marks, Stage `[a]`ll, Unstage all |
 
 Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if
@@ -151,7 +151,7 @@ there opens the comparison itself, UNIFIED or SPLIT.
 
 In every `Space` menu, `Global operation` lists what works on the whole repository: `[c]`ommit, Amend, `[p]`ull, Pull all (every remote
 fetched, then the current branch pulled), `[P]`ush,
-`[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
+`[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, `[X]` Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,
 `b` rebases, and Branch is in the global operations.
