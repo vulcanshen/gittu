@@ -1,4 +1,4 @@
-id: 41
+id: 42
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -187,14 +187,14 @@ tasks:
       - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp note.6、components.5、F5）。git 在背景跑，form 已經關了：寫好的訊息留著，下次按 [c]ommit 打開時在 form 裡"
       - "Description 的 textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
-    spec: 35
+    spec: 42
     request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
     tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5, tdp terminal, tdp terminal.4, tdp textarea.1, tdp T1-8]
     remark:
       - note: "tdp M5 把單一字母的熱鍵框在 label 裡第一次出現的那個字母上，Stage all 一定是 St[a]ge all、Mark resolved 一定是 Ma[r]k resolved；使用者要 app 能自己選框在哪一個（例 Stage [a]ll、Mark [r]esolved）：「這點請 tdp 開放 app 想要[]在哪就框在哪」。暫時把 label 改成鍵的字母開頭（[a]ll staged、[r]esolved）"
-        issue: 送給 tdp session（2026-11-20）；tdp main 3f82387 收了（M5-1），[r]esolved 要不要改成 Mark [r]esolved 等使用者決定
+        issue: 送給 tdp session（2026-11-20）；tdp main 3f82387 收了（M5-1），使用者選改成 Mark [r]esolved
       - "衝突的檔用使用者的 editor 解（使用者 2026-11-20：「按下 enter 打開 editor」「在 conflict 的 item 上按下 enter -> focus 到 panel 2(diff), 然後在按下 enter -> 開啟 editor」）：[1] 衝突的檔上 Enter（Show，hint Enter:show）把 focus 送到 [2]（tdp K3：清單上的 Enter 可以送 focus 到明細、panel.13）；[2] 顯示那個檔 HEAD 對工作區（帶著衝突標記），[2] 的 Enter 是 Edit（hint Enter:edit）：用 git 會開的 editor（git var GIT_EDITOR：GIT_EDITOR、core.editor、VISUAL、EDITOR、vi）在 tgo 的 terminal popup 打開 EDIT: <路徑>（tdp terminal、terminal.4：app 開一個程式做一件事的 PTY；textarea.1：一行就是一行的內容交給使用者的 $EDITOR）；editor 結束後回到原本的地方（T1-8），重新讀 repo（[2] 照 note.9 讀進來），檢查那個檔還有沒有衝突標記（<<<<<<< 或 >>>>>>> 開頭的行，半個區塊也算；======= 單獨一行不算，檔案本來可能就有）：還有時 Warning toast <路徑> still has conflict markers on lines <行號>，沒有時 Info toast <路徑> has no conflict markers left: press [r] to mark it resolved；editor 沒好好結束時照樣檢查，App Log 記一筆 Warning"
-      - "[r]esolved — mark it as resolved, and stage it（使用者 2026-11-20：「mark as [r]esolved (單一檔)」；label 原本是 Mark resolved，照 tdp M5 畫成 Ma[r]k resolved，使用者：「應該是 [r]esolved  mark as resolved」）：git add 那個檔，git 就當它解決了；[1] 的衝突檔與 [2] 顯示衝突檔時都有（editor 關掉後 focus 在 [2]，toast 叫使用者按 r）；還有衝突標記時先 confirm（MARK RESOLVED，列出哪幾行，Peach：會照原樣 stage、commit 會帶著它們），沒有就不問；Success Marked <路徑> resolved"
+      - "Mark [r]esolved — stage it: its conflicts are done（使用者 2026-11-20：「mark as [r]esolved (單一檔)」；後來「改成 Mark [r]esolved」，鍵框在 resolved 上，tdp main 3f82387 的 M5-1；label 原本是 Mark resolved，照 tdp M5 畫成 Ma[r]k resolved，使用者：「應該是 [r]esolved  mark as resolved」）：git add 那個檔，git 就當它解決了；[1] 的衝突檔與 [2] 顯示衝突檔時都有（editor 關掉後 focus 在 [2]，toast 叫使用者按 r）；還有衝突標記時先 confirm（MARK RESOLVED，列出哪幾行，Peach：會照原樣 stage、commit 會帶著它們），沒有就不問；Success Marked <路徑> resolved"
       - "原本 Enter 進去一塊一塊選用我的、用對方的、兩個都要（下面兩條）改成 Space menu 的 Resolve one by one，沒有熱鍵：使用者說原本的方式「很不行」，可是沒說拿掉，留著當另一種解法；檔案那一層的 Use mine、Use theirs for the whole file 也留著"
       - "不用 tdp K11 的 app 自己的模式（idea.md 原本猜可能要用）：衝突的區塊是使用者一個一個挑出來處理的東西，tdp K11 寫明這種東西就是清單，用清單做；兩邊同時看得到用明細（tdp panel.13）"
       - "Working tree 的 [1] CHANGES 在衝突的檔上從 Space menu 選 Resolve one by one（原本是 Enter），照 tdp panel.10 一層一層進去：[1] 換成這個檔的衝突區塊，一個區塊一列（Conflict 1 · lines 12–18），位置列 All changes › <路徑>；Esc 回到檔案清單，cursor 停在那個檔（tdp K4）"

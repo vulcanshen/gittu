@@ -936,10 +936,10 @@ func editorEnv() []string {
 	return out
 }
 
-// resolvedAction is [r]esolved, the conflicted file under [1]'s
+// resolvedAction is Mark [r]esolved, the conflicted file under [1]'s
 // cursor, on [1] and on [2] showing it (the user).
 func (s *statusScreen) resolvedAction(scope terminu.Scope) terminu.Action {
-	return terminu.Action{Key: "r", Label: "Resolved", Desc: "mark it as resolved, and stage it", Scope: scope, Hint: "resolved", // [r]esolved (the user)
+	return terminu.Action{Key: "r", Label: "Mark [r]esolved", Desc: "stage it: its conflicts are done", Scope: scope, Hint: "resolved", // the key at "resolved" (the user; tdp main M5-1)
 		Hidden: s.in(inConflict), Disabled: func() bool { return !s.g.idle() },
 		AskFor: func() *terminu.Ask { f, _, _ := s.file(); return s.askResolved([]git.File{f}) },
 		Do:     func() tea.Cmd { f, _, _ := s.file(); return s.markResolved([]git.File{f}) }}

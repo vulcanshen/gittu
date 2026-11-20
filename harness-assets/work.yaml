@@ -201,14 +201,14 @@ tasks:
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 35
+    spec: 42
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [2], to edit it there；hint Enter:show；ToDetails）：focus 到 [2]；[2] 顯示 HEAD 對工作區的檔（帶著標記）
       [2] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
       Command: sh -c '<editor> "$@"' sh <頂層>/<路徑>, Env 清掉外層終端機的名字（TERM_PROGRAM 等，同 sshu）})，App Log Info Editing <路徑>；拿不到 editor 時 error popup EDIT FAILED: <路徑>
       editor 結束（OnExit）：在背景重新讀 repo；讀那個檔找 <<<<<<< ／ >>>>>>> 標記的行（7 個字、後面接空白或行尾）：有 → Warning「<路徑> still has conflict markers on line(s) <行號>」（最多 8 個，其他寫 and <N> more）；
       沒有 → Info「<路徑> has no conflict markers left: press [r] to mark it resolved」；讀不到 → Error「Can't read <路徑>: <原因>」；editor 結束得不好時 App Log 記 Warning The editor of <路徑> ended with <原因>，照樣檢查
-      item operation（[1]）與 panel operation（[2]）[r]esolved — mark it as resolved, and stage it（Space menu 畫成 [r]esolved；hint r:resolved；衝突檔才有；git 在跑時停用）：還有標記時 confirm MARK RESOLVED「Mark <路徑> resolved?」，
+      item operation（[1]）與 panel operation（[2]）Mark [r]esolved — stage it: its conflicts are done（label 自己寫 [r]，tgo 照原樣畫；hint r:resolved；衝突檔才有；git 在跑時停用）：還有標記時 confirm MARK RESOLVED「Mark <路徑> resolved?」，
       內容 <路徑>: conflict markers on lines <行號> 與 They are staged as they are, and the commit takes them.（都是 Peach），沒有就不問；在背景 git add -A -- <路徑>；Success Marked <路徑> resolved；[1] 的 cursor 到 STAGED 的那個檔
       Resolve one by one（item operation，沒有熱鍵，原本的 Enter）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
       [1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 All changes › <路徑>，Panel.OnEsc 設好；
