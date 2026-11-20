@@ -45,7 +45,8 @@ tasks:
       「<名字> is not in the graph」「Press [Space] on [2] to show remote branches」（Show remote branches 沒有熱鍵，在 [2] 的 Space menu），其他時候「<名字> is not in the graph's 1000 newest commits」
       repo 沒有任何分支時：空狀態 No branches yet / Press [Space] to see what you can do here；還沒讀到過 repo 就讀失敗時兩個 panel 都是 Can't read <repo>: <說原因的那一行>（Red）/ Press [R] to read it again（tgo Panel.Fail），App Log 記 Error 的同一句與 git 印的全文；
       讀到過之後再失敗（[R]efresh、背景的重讀、操作後的重讀）：舊的內容留著，Error toast「Can't read <repo>: <說原因的那一行>」「Press [R] to read it again」，git 印的全文記進 App Log（背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）；說原因的那一行同 task 8）
-    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare]
+      換分頁（OnTab）時先離開進到的 stash 檔案清單（tgo Panel.LeaveDiff），[2] 跟著新分頁 cursor 那一列換，跟移動一樣（2026-11-20 實測發現切回去過的分頁 [2] 不跟）
+    test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterOnARemoteBranchHidden, TestFirstReadFails, TestReadTheSample, TestVersionCompare, TestTabFollowsToTheGraph]
   - id: 4
     spec: 23
     implementation: |
@@ -95,7 +96,8 @@ tasks:
       tgo App.OpenDiff(filesP, 那一項)：比較 popup（標題 DIFF 接 UNIFIED、SPLIT tab，第一列 <Anchor> ↔ <Other>，太長折行，寬度終端機寬 − 2），兩邊一樣時 Info toast「No differences between <Anchor> and <Other>」；
       git 失敗時 tgo 開 error popup
       [4] 的 panel operation z Unzoom（task 17）
-    test: [TestCommitDescription, TestCommitFilesAndDiff, TestFirstCommitFiles]
+      [4] 的 Esc（tgo Panel.OnEsc）把 focus 送回 [2]（tdp K4：照 [2] 上 Enter 來的路退回）
+    test: [TestCommitDescription, TestCommitFilesAndDiff, TestFirstCommitFiles, TestEscOnFilesBackToTheGraph]
   - id: 7
     spec: 39
     implementation: |
@@ -125,7 +127,8 @@ tasks:
       執行時 statusbar 寫 Checking out…、Merging… 之類；成功 Success toast（Merged x into main、Rebased main onto x、Renamed a to b、Deleted x、Applied stash@{0}……）；
       merge、rebase、apply、pop 停在衝突時（git 失敗而且有 unmerged 的檔）是 Warning toast「<Merge> stopped on conflicts in N files」「Resolve them in Working tree [W]」；
       其他失敗開 error popup <動作> FAILED，內容是git 說原因的那一行（第一個 fatal: 或 error: 開頭的，沒有就第一個不是 hint: 的），git 印的全文一列一筆記進 App Log（Error）（stderr，沒有就 stdout）；做完重新讀 repo（不管成功失敗）；改名、新分支後 cursor 移到新的那一列，移之前那一頁先清掉那個清單的篩選（List.ClearFilter；tdp v1.2.18 panel.14 的「app 自己的動作先清掉篩選」、panel-180）
-    test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts]
+      merge、rebase、cherry-pick、revert 做到一半時（State.Op 不是空的），[1] 與 [2] 的 Merge、Rebase、Cherry-pick、Revert 與全域的 Merge 停用（tdp M6：git 不接受）；停在衝突時（Warning toast），下一次讀 repo 後 Working tree [1] 的 cursor 放在第一個衝突的檔
+    test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts, TestNoMergeHalfway]
   - id: 9
     spec: 26
     implementation: |
@@ -183,7 +186,8 @@ tasks:
       Unstaged 的 git restore -- <路徑>、沒追蹤的刪掉檔案、Staged 的 git restore --staged --worktree --source=HEAD（新加的檔 git rm -f）；Success Discarded the change to <路徑>
       panel operation 熱鍵 a 切換：Stage [a]ll — every change, untracked files too（label 自己寫 [a]，tgo 照原樣畫；git add -A；App Log Staged every change；還有 Unstaged 時出現，什麼改動都沒有時停用）、全部都 stage 了換成 Unstage [a]ll — every staged change, keeping them（git reset -q，還沒有 commit 時 git rm --cached -r .；App Log Unstaged every change）；有 Staged 也有 Unstaged 時，Space menu 另外有沒有熱鍵的 Unstage all；進到衝突的檔裡時都 Hidden
       Stage、Unstage、Discard、Stage all、Unstage all 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
-    test: [TestStageUnstage, TestDiscardFile]
+      Enter 的 Stage、Unstage 做完，cursor 到同一組的下一個檔（最後一個時是上一個），連按 Enter 一路往下；改名的列 Unstage 時新舊兩個路徑一起退出 index（Unstage the marked 也是）；沒追蹤的檔 Discard 後的 toast 與 App Log 寫 Deleted <路徑>；Stage [a]ll 不碰衝突的檔（只 git add -A -- 還沒 stage 的檔），有跳過的時 Info toast Staged every change but the <N> conflict(s) / Press [r] on each once it is resolved：衝突的檔只由 Mark [r]esolved stage，它會先看有沒有衝突標記
+    test: [TestStageUnstage, TestDiscardFile, TestStageWalksDown, TestUnstageRenameWhole, TestStageAllLeavesTheConflicts]
   - id: 13
     spec: 36
     implementation: |
@@ -199,6 +203,7 @@ tasks:
       內容是上一個訊息的第一行與 It is on <upstream> already: pushing it again takes a force push.（Peach）；沒推上去時不問；接著同一張 form AMEND（按鈕 Amend）帶著上一個訊息打開，
       按 Amend 用 form 上的訊息 git commit --amend；Title 清空了送出同 COMMIT 擋（Title is required）；
       成功 Success「Committed <短 hash> <第一行>」（App Log 照記），失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：AMEND FAILED
+      按下 Commit／Amend 時關掉整疊 popup（tgo App.CloseAll；tdp T1：從 Global operation 打開的也一起關）；Amend 成功的 toast 是 Amended <短 hash> <第一行>
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
     spec: 42
@@ -252,6 +257,7 @@ tasks:
       [1]、[3] 與 [4] 在放大時也有 panel operation z Unzoom — back to both panels（沒放大時 Hidden）
       第二段時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [3]、[4]、[1] 時它佔滿；[1] 上 Enter（task 3）把 focus 送回 [2]，[2] 佔滿
       App Log 記 Info：Zoomed [2]、Zoomed [2] to the whole screen、Back to both panels
+      [1]、[3]、[4] 上的 Unzoom 跟 [2] 一樣在下框寫 z:unzoom
     test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep]
   - id: 18
     spec: 14
@@ -298,5 +304,6 @@ tasks:
       item operation Ignore — add this file to .gitignore（沒有熱鍵；不在衝突）：有還在 index 裡的檔時 confirm IGNORE「Add <路徑>|<N> files to .gitignore?」，內容 Tracked ones stop being tracked…（Peach），沒有就不問；
       先 git rm -q --cached -- <還在 index 裡的>，再把每個檔的一行 /<路徑>（* ? [ \ 前面加 \，尾端空白寫成 \ ）加到頂層 .gitignore 的最後（原本最後沒換行先補一個；已經有的那一行不再寫）；Success Added <路徑>|<N> files to .gitignore
       失敗時照 task 8：error popup <動作> FAILED（STAGE、UNSTAGE、RESOLVE、DISCARD、REMOVE、IGNORE）
-    test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestMarkTheMarkedResolved, TestIgnoreLine]
+      讀 repo 換上新的列時，標記在已經不在的列上的拿掉（例：檔案 stage 了、衝突解了），它回來時不再是標記的
+    test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows]
 

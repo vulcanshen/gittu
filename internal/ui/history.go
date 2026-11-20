@@ -81,7 +81,16 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		}
 	}
 	h.branchP = &terminu.Panel{Label: "Branches", Tabs: []string{"Remotes", "Tags", "Stashes"}, Body: h.tabs[0],
-		OnTab: func(tab int) tea.Cmd { h.branchP.Body = h.tabs[tab]; return nil }}
+		OnTab: func(tab int) tea.Cmd {
+			// Another tab: out of a stash's files gone into, and [2] follows the
+			// row under its cursor, as a move does.
+			h.branchP.LeaveDiff()
+			h.branchP.Body = h.tabs[tab]
+			if r, ok := h.tabs[tab].Current(); ok {
+				return h.branchMoved(r)
+			}
+			return nil
+		}}
 	h.branchP.Actions = append(h.branchActions(), terminu.Action{Key: "/", Label: "Filter", Desc: "narrow the list as you type",
 		Scope: panel, Do: func() tea.Cmd { h.cur().OpenFilter(); return nil }})
 	h.commits = &terminu.List{
@@ -105,7 +114,7 @@ func newHistoryScreen(g *gittu) *historyScreen {
 	h.desc = &terminu.Pager{EmptyFact: "No commits yet", EmptyHint: "Press [W] to see the files to commit"}
 	h.descP = &terminu.Panel{Label: "Description", Body: h.desc, Actions: []terminu.Action{
 		// [2] zoomed can be put back from here too (tdp screen.6), as from [1] and [4].
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
 			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }}}}
 	h.files = &terminu.List{
 		Columns:    []terminu.Column{{Title: "", Shrink: true, Path: true}},
@@ -114,7 +123,9 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		EmptyFact:  "No commits yet",
 		EmptyHint:  "Press [W] to see the files to commit",
 	}
-	h.filesP = &terminu.Panel{Label: "Files", Body: h.files}
+	h.filesP = &terminu.Panel{Label: "Files", Body: h.files,
+		// Esc goes back the way Enter on a commit came (tdp K4).
+		OnEsc: func() tea.Cmd { return h.g.a.Focus(h.histP) }}
 	h.filesP.Actions = append(h.fileActions(), h.files.Actions()...)
 	// Two tabs (the user): Current, the branch under [1]'s cursor on the left,
 	// and All, main on the left; Current first, the one chosen kept while

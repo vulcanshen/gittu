@@ -47,6 +47,9 @@ type statusScreen struct {
 	// reread is the file [2] shows when its text changed on a read again,
 	// for the App Log to say (task 19).
 	reread string
+	// toConflict puts [1]'s cursor on the first conflict at the next read: an
+	// operation stopped on conflicts.
+	toConflict bool
 	// failed is why [2] could not be read again, what was read before
 	// staying: an Error toast to show (tdp panel.15). failedWas is the last
 	// such reason, said once while it stays the same.
@@ -91,6 +94,23 @@ func newStatusScreen(g *gittu) *statusScreen {
 // show puts a read of the repository on the screen.
 func (s *statusScreen) show(snap *git.Snapshot) {
 	s.files.SetRows(fileRows(snap.Files))
+	// A mark on a row gone (a file staged, resolved…) goes with it.
+	if marked := s.files.Marked(); len(marked) > 0 {
+		here := map[string]bool{}
+		for _, r := range s.files.Rows() {
+			here[r.ID] = true
+		}
+		keep := slices.DeleteFunc(slices.Clone(marked), func(id string) bool { return !here[id] })
+		if len(keep) != len(marked) {
+			s.files.SetMarked(keep)
+		}
+	}
+	if s.toConflict {
+		s.toConflict = false
+		if i := slices.IndexFunc(snap.Files, git.File.Conflicted); i >= 0 {
+			s.files.Select(inConflict + snap.Files[i].Path)
+		}
+	}
 	if s.conflict != "" {
 		if !slices.ContainsFunc(snap.Files, func(f git.File) bool { return f.Path == s.conflict && f.Conflicted() }) {
 			s.goOut()
@@ -365,16 +385,17 @@ func (s *statusScreen) fileActions() []terminu.Action {
 	return []terminu.Action{
 		{Key: "Enter", Label: "Stage", Desc: "this file's change", Scope: item, Hint: "stage",
 			Hidden: s.in(inUnstaged), Disabled: off, Do: func() tea.Cmd {
-				p := path()
+				p, next := path(), s.nextInGroup()
 				return g.run("Staging…", "Stage", func() error { return g.repo.Stage(p) },
-					func() tea.Cmd { g.a.Log(terminu.Info, "Staged "+p); return nil })
+					func() tea.Cmd { s.files.Select(next); g.a.Log(terminu.Info, "Staged "+p); return nil })
 			}},
 		{Key: "Enter", Label: "Unstage", Desc: "this file's change, keeping it", Scope: item, Hint: "unstage",
 			Hidden: s.in(inStaged), Disabled: off, Do: func() tea.Cmd {
-				p := path()
+				f, _, _ := s.file()
+				next := s.nextInGroup()
 				unborn := g.snap.HeadSHA == ""
-				return g.run("Unstaging…", "Unstage", func() error { return g.repo.Unstage(unborn, p) },
-					func() tea.Cmd { g.a.Log(terminu.Info, "Unstaged "+p); return nil })
+				return g.run("Unstaging…", "Unstage", func() error { return g.repo.Unstage(unborn, bothPaths([]git.File{f})...) },
+					func() tea.Cmd { s.files.Select(next); g.a.Log(terminu.Info, "Unstaged "+f.Path); return nil })
 			}},
 		// A conflicted file: Enter goes to [2], Enter there edits it in the
 		// user's editor, r marks it resolved (the user).
@@ -415,7 +436,12 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			Do: func() tea.Cmd {
 				f, gr, _ := s.file()
 				return g.run("Discarding…", "Discard", func() error { return g.repo.Discard(f, gr == inStaged) },
-					func() tea.Cmd { return g.a.Toast(terminu.Success, "Discarded the change to "+f.Path) })
+					func() tea.Cmd {
+						if f.Untracked() {
+							return g.a.Toast(terminu.Success, "Deleted "+f.Path)
+						}
+						return g.a.Toast(terminu.Success, "Discarded the change to "+f.Path)
+					})
 			}},
 		// A conflicted block.
 		{Key: "Enter", Label: "Read", Desc: "it whole in the panel beside", Scope: item, Hint: "read",
@@ -436,7 +462,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			return nil
 		}),
 		s.batch("Unstage the marked", "Unstaging…", "Unstage", []string{inStaged}, nil, func(fs []git.File) error {
-			return g.repo.Unstage(g.snap.HeadSHA == "", paths(fs)...)
+			return g.repo.Unstage(g.snap.HeadSHA == "", bothPaths(fs)...)
 		}, func(fs []git.File) tea.Cmd {
 			for _, f := range fs {
 				g.a.Log(terminu.Info, "Unstaged "+f.Path)
@@ -462,7 +488,11 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			return nil
 		}, func(fs []git.File) tea.Cmd {
 			for _, f := range fs {
-				g.a.Log(terminu.Info, "Discarded the change to "+f.Path)
+				if f.Untracked() {
+					g.a.Log(terminu.Info, "Deleted "+f.Path)
+				} else {
+					g.a.Log(terminu.Info, "Discarded the change to "+f.Path)
+				}
 			}
 			return g.a.Toast(terminu.Success, "Discarded the changes to "+plural(len(fs), "file", "files"))
 		})), // X: the marked at once (tdp K13)
@@ -495,7 +525,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		// writes itself (tdp main M5-1: the app may pick the appearance; the
 		// lib leaves a label showing its key as it is). With some staged and
 		// some not, Unstage all is in the menu too, with no key.
-		{Key: "a", Label: "Stage [a]ll", Desc: "every change, untracked files too", Scope: panel,
+		{Key: "a", Label: "Stage [a]ll", Desc: "every change but the conflicts, untracked files too", Scope: panel,
 			Hidden:   func() bool { return inFiles() || !s.anyUnstaged() && s.anyStaged() },
 			Disabled: func() bool { return off() || !s.anyUnstaged() }, Do: s.stageAll},
 		{Key: "a", Label: "Unstage [a]ll", Desc: "every staged change, keeping them", Scope: panel,
@@ -513,10 +543,62 @@ func (s *statusScreen) anyUnstaged() bool {
 	return s.g.snap != nil && slices.ContainsFunc(s.g.snap.Files, git.File.Unstaged)
 }
 
-// stageAll stages every change, untracked files too.
+// stageAll stages every change, untracked files too, but the conflicts: a
+// conflicted file is staged by Mark [r]esolved, which looks for markers left
+// first, so that none is committed unseen.
 func (s *statusScreen) stageAll() tea.Cmd {
 	g := s.g
-	return g.run("Staging…", "Stage", g.repo.StageAll, func() tea.Cmd { g.a.Log(terminu.Info, "Staged every change"); return nil })
+	var ps []string
+	left := 0
+	for _, f := range g.snap.Files {
+		switch {
+		case f.Conflicted():
+			left++
+		case f.Unstaged():
+			ps = append(ps, f.Path)
+		}
+	}
+	return g.run("Staging…", "Stage", func() error { return g.repo.Stage(ps...) }, func() tea.Cmd {
+		if left == 0 {
+			g.a.Log(terminu.Info, "Staged every change")
+			return nil
+		}
+		return g.a.Toast(terminu.Info, "Staged every change but the "+plural(left, "conflict", "conflicts"),
+			"Press [r] on each once it is resolved")
+	})
+}
+
+// nextInGroup is the row after the one under [1]'s cursor in its group, or
+// the one before it when that is the last: where the cursor goes once the
+// file moves to another group, so that Enter walks down the list.
+func (s *statusScreen) nextInGroup() string {
+	cur, ok := s.files.Current()
+	if !ok {
+		return ""
+	}
+	rows := s.files.Rows()
+	i := slices.IndexFunc(rows, func(r terminu.Row) bool { return r.ID == cur.ID })
+	group := cur.ID[:2]
+	if i+1 < len(rows) && rows[i+1].ID[:2] == group {
+		return rows[i+1].ID
+	}
+	if i > 0 && rows[i-1].ID[:2] == group {
+		return rows[i-1].ID
+	}
+	return cur.ID
+}
+
+// bothPaths are the files' paths, a rename's old one too: unstaging it
+// takes both out of the index.
+func bothPaths(fs []git.File) []string {
+	var out []string
+	for _, f := range fs {
+		out = append(out, f.Path)
+		if f.Orig != "" {
+			out = append(out, f.Orig)
+		}
+	}
+	return out
 }
 
 // unstageAll unstages every staged change, keeping them in the working tree.
@@ -1024,7 +1106,7 @@ func (g *gittu) messageFor(title, ready string, amend bool) tea.Cmd {
 		Submit: func() (tea.Cmd, error) {
 			msg := joinMessage(subject, body)
 			g.draft = msg
-			return g.doCommit(msg, amend), nil
+			return tea.Batch(g.a.CloseAll(), g.doCommit(msg, amend)), nil // the menus it came from too (tdp T1)
 		}})
 }
 
@@ -1069,7 +1151,11 @@ func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
 			if g.snap != nil {
 				sha = git.Short(g.snap.HeadSHA)
 			}
-			return g.a.Toast(terminu.Success, "Committed "+sha+" "+firstLine(msg))
+			did := "Committed "
+			if amend {
+				did = "Amended "
+			}
+			return g.a.Toast(terminu.Success, did+sha+" "+firstLine(msg))
 		})
 }
 

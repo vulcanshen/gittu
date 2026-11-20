@@ -103,10 +103,10 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Checked out "+n) })
 			}},
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
-			Hidden: h.is(kindBranch), Disabled: h.onCurrent, AskFor: func() *terminu.Ask { return h.g.askMerge(name()) },
+			Hidden: h.is(kindBranch), Disabled: g.halfway(h.onCurrent), AskFor: func() *terminu.Ask { return h.g.askMerge(name()) },
 			Do: func() tea.Cmd { return g.merge(name()) }},
 		{Key: "b", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
-			Hidden: h.is(kindBranch), Disabled: h.onCurrent, AskFor: func() *terminu.Ask { return g.askRebase(name()) },
+			Hidden: h.is(kindBranch), Disabled: g.halfway(h.onCurrent), AskFor: func() *terminu.Ask { return g.askRebase(name()) },
 			Do: func() tea.Cmd { return g.rebase(name()) }},
 		{Key: "r", Label: "Rename", Desc: "this branch", Scope: item,
 			Hidden: h.is(kindBranch), Disabled: off, Do: func() tea.Cmd { return h.rename(name()) }},
@@ -145,10 +145,10 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Checked out "+rb.Branch) })
 			}},
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
-			Hidden: h.is(kindRemote), Disabled: off, AskFor: func() *terminu.Ask { return g.askMerge(name()) },
+			Hidden: h.is(kindRemote), Disabled: g.halfway(off), AskFor: func() *terminu.Ask { return g.askMerge(name()) },
 			Do: func() tea.Cmd { return g.merge(name()) }},
 		{Key: "b", Label: "Rebase", Desc: "the current branch onto it", Scope: item,
-			Hidden: h.is(kindRemote), Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(name()) },
+			Hidden: h.is(kindRemote), Disabled: g.halfway(off), AskFor: func() *terminu.Ask { return g.askRebase(name()) },
 			Do: func() tea.Cmd { return g.rebase(name()) }},
 		{Key: "x", Label: "Delete", Desc: "this branch on its remote", Scope: item,
 			Hidden: h.is(kindRemote), Disabled: off,
@@ -222,7 +222,7 @@ func (h *historyScreen) branchActions() []terminu.Action {
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Dropped "+st.Ref) })
 			}},
 		// The panel: [2] zoomed can be put back from here too (tdp screen.6).
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
 			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
 	}
 }
@@ -370,7 +370,7 @@ func (h *historyScreen) fileActions() []terminu.Action {
 			Hidden:   func() bool { _, ok := h.file(); return !ok },
 			Disabled: func() bool { it, _ := h.file(); return it.Text == nil }, // binary: no text to compare (tdp panel.9)
 			Do:       h.openFile},
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel,
+		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
 			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
 	}
 }
@@ -402,13 +402,13 @@ func (h *historyScreen) commitActions() []terminu.Action {
 		{Key: "t", Label: "Tag", Desc: "this commit", Scope: item,
 			Hidden: onGraph, Disabled: off, Do: func() tea.Cmd { c, _ := h.current(); return g.newTag(c.SHA) }},
 		{Key: "M", Label: "Merge", Desc: "it into the current branch", Scope: item,
-			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askMerge(short()) },
+			Hidden: onGraph, Disabled: g.halfway(off), AskFor: func() *terminu.Ask { return g.askMerge(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.merge(c.SHA) }},
 		{Label: "Rebase", Desc: "the current branch onto it", Scope: item, // no hotkey: not by a stray key
-			Hidden: onGraph, Disabled: off, AskFor: func() *terminu.Ask { return g.askRebase(short()) },
+			Hidden: onGraph, Disabled: g.halfway(off), AskFor: func() *terminu.Ask { return g.askRebase(short()) },
 			Do: func() tea.Cmd { c, _ := h.current(); return g.rebase(c.SHA) }},
 		{Label: "Cherry-pick", Desc: "it onto the current branch", Scope: item,
-			Hidden: onGraph, Disabled: off,
+			Hidden: onGraph, Disabled: g.halfway(off),
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Cherry-pick", Subject: short(), Question: "Cherry-pick " + short() + " onto " + g.currentName() + "?", Verb: "cherry-pick"}
 			},
@@ -419,7 +419,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 					conflicts: g.conflictsSaid("Cherry-pick")}, "Cherry-picking…", func() error { return g.repo.CherryPick(c) })
 			}},
 		{Label: "Revert", Desc: "it with a new commit", Scope: item,
-			Hidden: onGraph, Disabled: off,
+			Hidden: onGraph, Disabled: g.halfway(off),
 			AskFor: func() *terminu.Ask {
 				return &terminu.Ask{Title: "Revert", Subject: short(), Question: "Revert " + short() + "?", Verb: "revert",
 					Details: []string{"A new commit on " + g.currentName() + " undoes what it did."}}
@@ -594,7 +594,7 @@ func (g *gittu) globalActions() []terminu.Action {
 		{Key: "b", Label: "Branch", Desc: "a new one at HEAD, and check it out", Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return g.newBranch("") }},
 		{Key: "M", Label: "Merge", Desc: "a branch into the current one", Disabled: func() bool {
-			return off() || len(g.mergeable()) == 0 // no other branch (tdp M6)
+			return g.halfway(off)() || len(g.mergeable()) == 0 // no other branch (tdp M6)
 		}, Do: g.pickMerge},
 		{Key: "t", Label: "Tag", Desc: "HEAD", Disabled: func() bool { return off() || g.snap == nil || g.snap.HeadSHA == "" },
 			Do: func() tea.Cmd { return g.newTag("") }},

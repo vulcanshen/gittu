@@ -871,6 +871,10 @@ func TestMergeBranchConflicts(t *testing.T) {
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Merge stopped on conflicts in 1 file", "Resolve them in Working tree [W]", "Merging: other")
+	d.Press("W") // Working tree opens on the conflict
+	if cur, _ := g.status.files.Current(); cur.ID != inConflict+"x.txt" {
+		t.Errorf("Working tree opens on %q", cur.ID)
+	}
 }
 
 func TestMergeAndRebaseBranch(t *testing.T) {
@@ -1585,6 +1589,130 @@ func TestDiffComparesVersions(t *testing.T) {
 
 // --- task 12: stage, unstage, discard ---
 
+// TestTabFollowsToTheGraph: another tab of [1] puts [2] on its row, as a
+// move does; a stash's files gone into are left first.
+func TestTabFollowsToTheGraph(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	h := g.history
+	d.Press("l") // REMOTES
+	if !strings.Contains(h.commits.Location, "origin/main") {
+		t.Fatalf("REMOTES: [2] on %q", h.commits.Location)
+	}
+	d.Press("l") // TAGS
+	if !strings.Contains(h.commits.Location, "v0.1.0") {
+		t.Fatalf("TAGS: [2] on %q", h.commits.Location)
+	}
+	d.Press("h") // back to REMOTES: [2] follows it again
+	if !strings.Contains(h.commits.Location, "origin/main") {
+		t.Errorf("back on REMOTES: [2] still on %q", h.commits.Location)
+	}
+	d.Press("l", "l", "Enter") // a stash's files gone into, then another tab
+	has(t, d, "base of stash@{0} ↔ stash@{0}")
+	d.Press("h")
+	hasNot(t, d, "base of stash@{0} ↔ stash@{0}")
+	has(t, d, "v0.1.0")
+}
+
+func TestEscOnFilesBackToTheGraph(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	d.Press("Tab", "Enter")
+	if g.a.Screen().Focused() != g.history.filesP {
+		t.Fatal("Enter on a commit did not go to [4]")
+	}
+	d.Press("Esc") // back the way it came (tdp K4)
+	if g.a.Screen().Focused() != g.history.histP {
+		t.Error("Esc on [4] did not go back to [2]")
+	}
+}
+
+// TestStageAllLeavesTheConflicts: a stages the other changes, never a
+// conflicted file, whose markers Mark [r]esolved looks for first.
+func TestStageAllLeavesTheConflicts(t *testing.T) {
+	r := gittest.Conflicted(t)
+	r.Write("other.txt", "new\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("W", "a")
+	done(t, g, d)
+	has(t, d, "Staged every change but the 1 conflict")
+	if out := strings.TrimSpace(r.Git("diff", "--name-only", "--diff-filter=U")); out != "notes.txt" {
+		t.Errorf("unmerged after a: %q", out)
+	}
+	if out := strings.TrimSpace(r.Git("diff", "--cached", "--name-only", "--", "other.txt")); out != "other.txt" {
+		t.Errorf("other.txt not staged: %q", out)
+	}
+}
+
+// TestUnstageRenameWhole: Enter on a staged rename takes both its paths out
+// of the index.
+func TestUnstageRenameWhole(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Git("mv", "feature.txt", "renamed.txt")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inStaged + "renamed.txt"); return nil })
+	d.Press("Enter")
+	done(t, g, d)
+	if out := strings.TrimSpace(r.Git("diff", "--cached", "--name-only")); out != "" {
+		t.Errorf("still staged: %q", out)
+	}
+}
+
+// TestStageWalksDown: after Enter stages a file the cursor is on the next
+// one of its group, so Enter walks down the list.
+func TestStageWalksDown(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("a.txt", "a\n")
+	r.Write("b.txt", "b\n")
+	r.Write("c.txt", "c\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "b.txt"); return nil })
+	d.Press("Enter")
+	done(t, g, d)
+	if cur, _ := g.status.files.Current(); cur.ID != inUnstaged+"c.txt" {
+		t.Errorf("after staging b.txt the cursor is on %q", cur.ID)
+	}
+}
+
+// TestMarksGoWithTheirRows: a mark on a file that left the list is dropped.
+func TestMarksGoWithTheirRows(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("README.md", "changed\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("W")
+	markFile(d, g, inUnstaged+"README.md")
+	r.Git("add", "README.md")
+	d.Do(func() tea.Cmd { return g.read(true) })
+	done(t, g, d)
+	if m := g.status.files.Marked(); len(m) != 0 {
+		t.Errorf("marks of rows gone: %v", m)
+	}
+}
+
+// TestNoMergeHalfway: while a merge stops half way, Merge, Rebase,
+// Cherry-pick and Revert are off (tdp M6).
+func TestNoMergeHalfway(t *testing.T) {
+	r := gittest.Conflicted(t)
+	g, d := start(t, r, 120, 32)
+	has(t, d, "Merging: feature")
+	for _, a := range g.a.Global {
+		if a.Label == "Merge" && (a.Disabled == nil || !a.Disabled()) {
+			t.Error("the global Merge is on during a merge")
+		}
+	}
+	for _, a := range g.history.commitActions() {
+		switch a.Label {
+		case "Merge", "Rebase", "Cherry-pick", "Revert":
+			if a.Disabled == nil || !a.Disabled() {
+				t.Errorf("%s is on during a merge", a.Label)
+			}
+		}
+	}
+}
+
 func TestStageUnstage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
@@ -1699,7 +1827,7 @@ func TestWorkOnTheMarked(t *testing.T) {
 		t.Error("README.md, not marked, lost its change")
 	}
 	d.Press("!")
-	has(t, d, "Staged README.md", "Staged a.txt", "Unstaged a.txt", "Discarded the change to b.txt")
+	has(t, d, "Staged README.md", "Staged a.txt", "Unstaged a.txt", "Deleted b.txt") // untracked: deleted
 }
 
 // TestRemoveAndIgnore: Remove deletes a tracked file and stages its
@@ -1865,7 +1993,7 @@ func TestAmendKeepsMessage(t *testing.T) {
 	has(t, d, "AMEND", "Say even more", "Amend") // its message, ready
 	d.Press("Tab", "Enter")                      // unchanged: kept
 	done(t, g, d)
-	has(t, d, "Committed ")
+	has(t, d, "Amended ")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Say even more" {
 		t.Errorf("last commit %q", got)
 	}
@@ -1882,6 +2010,7 @@ func TestAmendChangesMessage(t *testing.T) {
 	r.Write("local.txt", "y\n")
 	r.Git("add", "local.txt")
 	g, d := start(t, r, 100, 32)
+	d.Press("Space") // a menu under it: it closes with the form (tdp T1)
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Amend") })
 	hasNot(t, d, "force push")
 	has(t, d, "AMEND", "A local commit")
@@ -1889,6 +2018,7 @@ func TestAmendChangesMessage(t *testing.T) {
 	d.Type(" reworded")
 	d.Press("Enter", "Tab", "Enter")
 	done(t, g, d)
+	hasNot(t, d, "PANEL OPERATION")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "A local commit reworded" {
 		t.Errorf("last commit %q", got)
 	}
@@ -2249,9 +2379,7 @@ func TestZoomTwoSteps(t *testing.T) {
 	if !d.Has("[3] DESCRIPTION") || d.Has("[2] CURRENT") || d.Has("[4] FILES") {
 		t.Fatalf("Tab on the whole screen does not show [3] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
-	if !slices.ContainsFunc(g.history.descP.Actions, func(a terminu.Action) bool { return a.Key == "z" && !a.Hidden() }) {
-		t.Error("[3] zoomed has no z to put the panels back")
-	}
+	has(t, d, "z:unzoom") // put back from [3] too
 	d.Press("Tab")
 	if !d.Has("[4] FILES") || d.Has("[2] CURRENT") || d.Has("[3] DESCRIPTION") {
 		t.Fatalf("Tab on the whole screen does not show [4] alone:\n%s", strings.Join(d.Screen(), "\n"))

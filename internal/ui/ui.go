@@ -252,9 +252,17 @@ func (g *gittu) show(snap *git.Snapshot, err error) {
 	g.status.show(snap)
 }
 
-// conflictsSaid is the toast of an operation that stopped on conflicts.
+// halfway is f, and off too while an operation stopped half way (a merge,
+// rebase, cherry-pick or revert): git takes no other till it ends (tdp M6).
+func (g *gittu) halfway(f func() bool) func() bool {
+	return func() bool { return f() || g.snap != nil && g.snap.State.Op != "" }
+}
+
+// conflictsSaid is the toast of an operation that stopped on conflicts;
+// Working tree [1] then opens on the first conflict.
 func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	return func(n int) tea.Cmd {
+		g.status.toConflict = true
 		return g.a.Toast(terminu.Warning, what+" stopped on conflicts in "+plural(n, "file", "files"),
 			"Resolve them in Working tree [W]")
 	}
