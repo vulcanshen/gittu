@@ -164,6 +164,7 @@ user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 
 ## a 切換全部 stage／unstage，寫成 [a]ll staged（2026-11-20）
 
 user 照原話：「st[a]ge all -> toggle stage [a]ll」；說了 tdp M5 把鍵框在 label 第一次出現的字母上、Stage all 一定畫成 St[a]ge all 之後，選第 1 種：label 改成 a 開頭的 [a]ll staged／[a]ll unstaged
+接著：「是說這一點回饋給 tdp 吧，這點請 tdp 開放 app 想要[]在哪就框在哪」
 
 ## Diff 模式裡 [3] 只跟著 cursor（2026-11-20）
 
