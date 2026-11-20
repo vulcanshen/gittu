@@ -1619,6 +1619,18 @@ func TestDiffNotText(t *testing.T) {
 	hasNot(t, d, "Enter:diff")
 }
 
+// TestNothingToCommitHints: with nothing changed, [2] sends you where [1]
+// does, not to [1]'s files: there are none (the user).
+func TestNothingToCommitHints(t *testing.T) {
+	_, d := start(t, gittest.Sample(t), 120, 32)
+	d.Press("W")
+	has(t, d, "Nothing to commit", "No file to show")
+	hasNot(t, d, "Press [1] to go to the files")
+	if n := strings.Count(strings.Join(d.Screen(), "\n"), "Press [H] to see the history"); n != 2 {
+		t.Errorf("Press [H] to see the history %d times, want 2 ([1] and [2])", n)
+	}
+}
+
 // TestDiffNewFile: an untracked file is not in the index, so its left side
 // is written empty, as a commit's new file (the user).
 func TestDiffNewFile(t *testing.T) {

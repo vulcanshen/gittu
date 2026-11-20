@@ -673,6 +673,9 @@ func (s *statusScreen) showDiff(again bool) {
 	}
 	s.diffP.Label, s.diffP.Name, s.diffP.Fail = label, name, nil
 	s.diff.EmptyFact, s.diff.EmptyHint = "No file to show", "Press [1] to go to the files"
+	if s.files.Empty() { // nothing changed: no file in [1] to go to either, so where [1] sends you (the user)
+		s.diff.EmptyHint = "Press [H] to see the history"
+	}
 	s.text = false
 	if inHunk { // a conflict: its two sides, each under its heading
 		s.diffP.Location, s.text = "", true

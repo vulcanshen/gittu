@@ -1,4 +1,4 @@
-id: 55
+id: 56
 from: v1.2.20
 to: v1.3.0
 tasks:
@@ -148,7 +148,7 @@ tasks:
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 55
+    spec: 56
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
     tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6]
     remark:
@@ -170,6 +170,7 @@ tasks:
       - "重新讀（task 19）時，[2] 的內容換了就重新放進去（tdp note.9 的重新讀進來；不算串流，失焦時變暗）"
       - "[2] DIFF 原本用 Pager 畫 git diff 的 patch；2026-11-19 回報給 tdp session 的缺口（panel 畫不出 note.8 的 UNIFIED），terminu-go v1.2.19-beta.1 加了 Pager.SetDiff，已經照它改"
       - "還沒追蹤的檔與資料夾，[2] 的位置列與清單裡每一項左邊寫 <路徑> @ empty（使用者 2026-11-20 選 1；原本寫 @ index，可是 index 裡沒有它），跟 History 裡 commit 新增的檔一樣寫 empty"
+      - "沒有改動時 [2] 的空狀態提示寫 Press [H] to see the history，跟 [1] 一樣（使用者 2026-11-20 選 1；原本寫 Press [1] to go to the files，可是 [1] 沒有檔可以去）；有檔時（二進位檔、沒有差異、空的資料夾）照舊叫你按 [1]"
   - id: 12
     spec: 54
     request: stage、unstage、捨棄改動都在 app 裡做

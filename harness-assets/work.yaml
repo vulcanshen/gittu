@@ -160,7 +160,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 55
+    spec: 56
     implementation: |
       Working tree 畫面：[1] CHANGES 是 tgo List（Marks，task 21；一欄、沒有表頭：<字母> <路徑>，字母用 Row.Styled 上色；路徑由 gittu 照 [1] 的寬度從前面截（寬度 − 9：框、邊距、標記欄、字母與空白、cursor 的箭頭、多留一格），…接在字母後面，Working tree 的 Layout 記下 [1] 的寬度，變了就重新做每一列；Row.Cells 是完整的 <字母> <路徑>，篩選照它比對；Shrink、Path 留著當保險），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -178,8 +178,8 @@ tasks:
       tgo App.OpenDiff(diffP, DiffItem{Anchor, Other, Text})：STAGED <舊路徑> @ HEAD ↔ <路徑> @ index（git show HEAD:<舊路徑>、git show :<路徑>）；
       UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔）；沒追蹤的檔 <路徑> @ empty ↔ <路徑>（index 裡沒有它，左邊是空的，跟 History 裡 commit 新增的檔一樣寫 empty）；衝突的檔 <路徑> @ HEAD ↔ <路徑>；
       衝突區塊那一層 MINE · <標記> ↔ THEIRS · <標記>（那一塊兩邊的行）；tgo 打開比較（UNIFIED、SPLIT）或兩邊一樣時 Info toast；App Log 記 Info：Compared <左> with <右>
-      沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [1] to go to the files
-    test: [TestLongPathKeepsItsLetter, TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFile, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
+      沒有改動時：[1] 空狀態 Nothing to commit / Press [H] to see the history；[2] No file to show / Press [H] to see the history（[1] 沒有檔可以去）
+    test: [TestLongPathKeepsItsLetter, TestFileGroups, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFile, TestNothingToCommitHints, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
     spec: 54
     implementation: |
