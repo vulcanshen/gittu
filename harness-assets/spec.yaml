@@ -1,4 +1,4 @@
-id: 50
+id: 51
 from: v1.2.19
 to: v1.2.20
 tasks:
@@ -189,7 +189,7 @@ tasks:
       - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp note.6、components.5、F5）。git 在背景跑，form 已經關了：寫好的訊息留著，下次按 [c]ommit 打開時在 form 裡"
       - "Description 的 textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
   - id: 14
-    spec: 48
+    spec: 51
     request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
     tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5, tdp terminal, tdp terminal.4, tdp textarea.1, tdp T1-8]
     remark:
@@ -205,6 +205,7 @@ tasks:
       - "檔案那一層也有 Use mine for the whole file、Use theirs for the whole file（git checkout --ours／--theirs 再 git add），跟衝突區塊那一層一樣的動詞；兩個都沒有熱鍵、從 Space menu 執行（使用者 2026-11-20：「Use mine 沒有熱鍵, Use theirs 也移除」；檔案那一層的 m 是標記，task 21），t 因此回到全域的 [t]ag；區塊那一層（不能標記）還是 m、t、b"
       - "merge、rebase、cherry-pick、revert 做到一半時（task 1 的 statusbar 寫著）：global operation [A]bort <merge／rebase／cherry-pick／revert>（confirm，警告這次做到一半的會不見）、Continue（rebase、cherry-pick、revert；還有衝突時停用）；merge 解完用 [c]ommit 結束（task 13）"
       - "記 App Log：Used mine in conflict 2 of README.md 之類，每一次選擇一筆"
+      - "Abort 的 confirm 內容寫 Everything goes back to how it was before the <op>; conflicts you have resolved are lost.（使用者 2026-11-20 選 1；原本的 What it did so far is undone, conflicts resolved too. 讀起來像衝突會被解掉）"
       - "整個檔的 Use mine／Use theirs（與 task 21 的 for the marked）在檔案衝突之後改過時先 confirm（使用者 2026-11-20：「有手動調整過的檔案……先跳出警告」、「如果gittu關閉重開，還會記得嗎?」→ 比修改時間，「好，照這樣做」）：git 先寫出衝突的檔、再寫它停下來時留的檔（MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD、REBASE_HEAD，2026-11-20 實測四種都是這個順序），所以檔比它新就是衝突之後存過（一塊一塊選過、用 editor 改過、在 gittu 外面改過都算，重開 gittu 也算）；沒有那種檔可比（stash 套用時的衝突）或讀不到檔時每次都問；沒改過不問。confirm USE MINE／USE THEIRS：「Use mine for <路徑>?」，內容 <路徑>: changed after the conflict（或 gittu can't tell whether it was changed after the conflict）與整個檔會換掉、衝突之後的改動會不見（都是 Peach，tdp confirm）；存檔沒改內容也算改過，會多問一次"
   - id: 15
     spec: 11

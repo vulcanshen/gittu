@@ -207,7 +207,7 @@ tasks:
       按下 Commit／Amend 時關掉整疊 popup（tgo App.CloseAll；tdp T1：從 Global operation 打開的也一起關）；Amend 成功的 toast 是 Amended <短 hash> <第一行>
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
   - id: 14
-    spec: 48
+    spec: 51
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [2], to edit it there；hint Enter:show；ToDetails）：focus 到 [2]；[2] 顯示 HEAD 對工作區的檔（帶著標記）
       [2] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
@@ -228,7 +228,7 @@ tasks:
       改過或看不出來時 confirm USE MINE／USE THEIRS「Use mine for <路徑>?」，內容 <路徑>: changed after the conflict（看不出來時 <路徑>: gittu can't tell whether it was changed after the conflict）
       與 The whole file becomes mine: any change made to it after the conflict is lost.（都是 Peach），沒改過不問
       做到一半的操作（.git 裡有 rebase-merge／rebase-apply、MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD）：global operation [A]bort <merge／rebase／cherry-pick／revert>
-      （只有那一種時看得到；confirm「Abort the <op>?」，內容寫做到一半的會還原（Peach）；git <op> --abort；Success Aborted the <op>）、
+      （只有那一種時看得到；confirm「Abort the <op>?」，內容 Everything goes back to how it was before the <op>; conflicts you have resolved are lost.（Peach）；git <op> --abort；Success Aborted the <op>）、
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
       失敗：改寫衝突的檔失敗開 error popup RESOLVE FAILED: <路徑>（原因，tgo 記進 App Log）；最後一個區塊解完的 git add、整個檔用一邊、Abort、Continue（不是停在衝突的）
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED

@@ -2329,7 +2329,7 @@ func TestAbortMerge(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
 	d.Press("A")
-	has(t, d, "Abort the merge?")
+	has(t, d, "Abort the merge?", "Everything goes back to how it was before the merge; conflicts you have")
 	d.Press("Enter")
 	done(t, g, d)
 	has(t, d, "Aborted the merge")

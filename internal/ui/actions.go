@@ -614,7 +614,7 @@ func (g *gittu) globalActions() []terminu.Action {
 	for _, op := range []string{"merge", "rebase", "cherry-pick", "revert"} {
 		acts = append(acts, terminu.Action{Key: "A", Label: "Abort " + op, Desc: "the " + op + " under way", Hidden: state(op), Disabled: off,
 			Ask: &terminu.Ask{Title: "Abort", Question: "Abort the " + op + "?", Verb: "abort",
-				Details: []string{"What it did so far is undone, conflicts resolved too."}, Warn: []int{0}},
+				Details: []string{"Everything goes back to how it was before the " + op + "; conflicts you have resolved are lost."}, Warn: []int{0}},
 			Do: func() tea.Cmd {
 				return g.run("Aborting…", "Abort", func() error { return g.repo.Abort(op) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Aborted the "+op) })

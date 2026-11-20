@@ -192,6 +192,10 @@ user 照原話：「我們先作 working tree 那邊的調整 1. 我要 changes 
 
 實測記下打 tag 成功的 toast 寫 Tagged 49ee96e v0.2.0，列了改成 Tagged 49ee96e as v0.2.0 與維持現狀之後，user 照原話：「1」
 
+## Abort 的確認寫清楚會回到哪裡（2026-11-20）
+
+實測記下 Abort 的 confirm 寫 What it did so far is undone, conflicts resolved too.（像是衝突會被解掉），列了改成 Everything goes back to how it was before the merge; conflicts you have resolved are lost. 與維持現狀之後，user 照原話：「1」
+
 ## 使用者自訂的動作（2026-11-20，下一版）
 
 user 照原話（舉了另一個 git 工具當例子，照不提其他工具的約定不寫名字）：「我有想添加一個功能，就是……讓使用者客製化action, 我們用 ${{source}} 當成來源分支，${{target}} 當成目標分支，讓使用者自己開發自己的操作, 腳本要存起來, 這應該算 data, 不算 gittu 的 config, 應該有第三個 tab, CUSTOM 來放這些東西，但是我們應該可以先發版」
