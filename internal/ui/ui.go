@@ -1,6 +1,6 @@
-// Package ui is gittu's screens: History (the branches beside the history
-// graph) and Working tree (the working tree's files and their changes),
-// every git operation in their Space menus.
+// Package ui is gittu's screen: the working tree's files and the branches on
+// the left, the diff or the history graph on the right, every git operation
+// in the Space menus.
 package ui
 
 import (
@@ -35,8 +35,8 @@ const (
 	glyphTag    = ""          // nf-fa-tag
 	glyphCommit = ""          // nf-dev-git_commit
 	glyphStash  = "\U000F01BC" // nf-md-database
-	// The statusbar's state of an operation stopped half way (the user): the
-	// glyphs of a Warning and a Success toast.
+	// The STATUS sign's state of an operation stopped half way (the user):
+	// the glyphs of a Warning and a Success toast.
 	glyphConflicts = "\U000F078F" // nf-md-alarm_light: conflicts left
 	glyphReady     = "\U000F05E0" // nf-md-check_circle: none left, ready to go on
 )
@@ -65,8 +65,8 @@ type gittu struct {
 	all bool
 	// remote reports the remote branches drawn in the graph too.
 	remote bool
-	// busy is what git is doing now, for the statusbar ("Pushing…"); "" when
-	// nothing runs. Operations that change the repository wait meanwhile.
+	// busy is what git is doing now, for the STATUS sign ("Pushing…"); ""
+	// when nothing runs. Operations that change the repository wait meanwhile.
 	busy string
 	// reading reports a read of the repository on its way.
 	reading bool
@@ -82,6 +82,9 @@ type gittu struct {
 
 	history *historyScreen
 	status  *statusScreen
+	// screen is gittu's one screen, sign its STATUS sign (screen.go).
+	screen *terminu.Screen
+	sign   *terminu.Panel
 }
 
 // New makes gittu on repo.
@@ -94,11 +97,9 @@ func newGittu(repo *git.Repo) *gittu {
 	g.a.MinHeight = 24
 	g.a.Splash = splash()
 	g.a.QuitFlow = g.quit
-	g.a.Status = g.statusbar
 	g.history = newHistoryScreen(g)
 	g.status = newStatusScreen(g)
-	g.a.AddScreen(g.history.screen)
-	g.a.AddScreen(g.status.screen)
+	g.newScreen()
 	g.a.Global = g.globalActions()
 	g.a.OnMsg = g.onMsg
 	g.a.Start = g.start
@@ -230,7 +231,7 @@ func (g *gittu) readOwn() tea.Cmd {
 	}
 }
 
-// run runs an operation in the background while the statusbar says doing,
+// run runs an operation in the background while the STATUS sign says doing,
 // then reads the repository and shows it. ok says how it went; title names
 // it in its error popup.
 func (g *gittu) run(doing, title string, op func() error, ok func() tea.Cmd) tea.Cmd {
@@ -279,21 +280,21 @@ func (g *gittu) halfway(f func() bool) func() bool {
 }
 
 // conflictsSaid is the toast of an operation that stopped on conflicts;
-// Working tree [1] then opens on the first conflict.
+// [1]'s cursor then goes to the first conflict.
 func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	return func(n int) tea.Cmd {
 		g.status.toConflict = true
 		return g.a.Toast(terminu.Warning, what+" stopped on conflicts in "+plural(n, "file", "files"),
-			"Resolve them in Working tree [W]")
+			"Press [1] to resolve them")
 	}
 }
 
-// statusbar is the right of the screen chips (tdp screen.4), in the user's
-// order: the work in progress (Green): what git is doing, else an operation
-// stopped half way, its state's glyph first; where HEAD is; the repository
-// (both Lavender: where you are).
+// statusLine is the STATUS sign's row (it was the statusbar, tdp screen.4),
+// in the user's order: the work in progress (Green): what git is doing, else
+// an operation stopped half way, its state's glyph first; where HEAD is; the
+// repository (both Lavender: where you are).
 //
-// The lib draws it on the right, so a longer text would move all of it: it
+// It stays on the right of the sign, so that nothing moves as it changes: it
 // is always the w cells given, blanks first (tdp L2). The branch's field is
 // as wide as the widest it can show, not as the name is, its text on the
 // right of it: checking another branch out moves nothing. Short of room
@@ -301,7 +302,7 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 // user's order: the work in progress, then the branch, then the repository.
 // The repository's name is cut, then left out; then the branch's; the work
 // in progress last.
-func (g *gittu) statusbar(w int) []terminu.Span {
+func (g *gittu) statusLine(w int) []terminu.Span {
 	quiet := terminu.Fg(terminu.Overlay0)
 	here := terminu.Fg(terminu.Lavender)
 	green := terminu.Fg(terminu.Green)
@@ -396,7 +397,7 @@ func (g *gittu) where() string {
 	return "no commits yet"
 }
 
-// stateWord is an operation stopped half way, as the statusbar says it.
+// stateWord is an operation stopped half way, as the STATUS sign says it.
 func stateWord(op string) string {
 	switch op {
 	case "merge":

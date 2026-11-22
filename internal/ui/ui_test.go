@@ -88,7 +88,7 @@ func selectCommit(t *testing.T, d *tdptest.Driver, g *gittu, subject string) git
 // screen, and 23 rows the size it needs (the user; tdp L1).
 func TestOpensAt80x24(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 80, 24)
-	has(t, d, "[1] BRANCHES", "[2] CURRENT", "[3] DESCRIPTION", "[4] FILES")
+	has(t, d, "[2] BRANCHES", "[3] CURRENT", "[4] DESCRIPTION", "[5] FILES")
 	hasNot(t, d, "needs a terminal")
 	d.Resize(80, 23)
 	has(t, d, "needs a terminal of at least 60×24")
@@ -98,22 +98,71 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[1] BRANCHES", "[2] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–4:panels q:quit")
-	// [1] a third of the width, [2] the rest (tdp L1).
-	top := d.Screen()[2]
-	at := strings.Index(top, "┌")
+	has(t, d, "[2] BRANCHES", "[3] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–5:panels q:quit")
+	// [1] and [2] a third of the width, the rest on the right (tdp L1).
+	top := d.Screen()[3]
+	at := strings.LastIndex(top[:max(strings.Index(top, "[3]"), 0)], "┌") // the capsule's end between
 	if at < 0 || terminu.Width(top[:at]) != 26 {
-		t.Errorf("[2] does not start at column 26:\n%s", top)
+		t.Errorf("[3] does not start at column 26:\n%s", top)
 	}
 }
 
 func TestFileStatusScreen(t *testing.T) {
 	r := gittest.Sample(t)
 	_, d := start(t, r, 120, 32)
-	d.Press("W")
-	has(t, d, "[1] CHANGES", "[2] DIFF", "All changes", "Nothing to commit", "Press [H] to see the history")
-	d.Press("H")
-	has(t, d, "[1] BRANCHES")
+	d.Press("1")
+	has(t, d, "[1] CHANGES", "[3] DIFF", "All changes", "Nothing to commit", "Press [2] to see the history")
+	d.Press("2")
+	has(t, d, "[2] BRANCHES")
+}
+
+// TestPanelsFollowTheLead is tdp L5-4: [3], [4] and [5] follow [1] or [2],
+// whichever last had the focus, the same every time; the focus moving into
+// them changes nothing; [5] keeps its number while hidden, its digit doing
+// nothing, and Tab passes it by (the user).
+func TestPanelsFollowTheLead(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	focused := func() *terminu.Panel { return g.a.Screen().Focused() }
+	has(t, d, "[3] CURRENT", "[4] DESCRIPTION", "[5] FILES", "Tab|1–5:panels")
+	d.Press("1")
+	has(t, d, "[3] DIFF", "[4] HISTORY", "Tab|1–5:panels")
+	hasNot(t, d, "[3] CURRENT", "[4] DESCRIPTION", "[5] FILES")
+	d.Press("5")
+	if focused() != g.status.filesP {
+		t.Error("5 moved the focus while [5] is hidden")
+	}
+	d.Press("3", "4") // into the followers: nothing changes
+	has(t, d, "[3] DIFF", "[4] HISTORY")
+	d.Press("Tab") // [5] hidden: round to [1]
+	if focused() != g.status.filesP {
+		t.Error("Tab from [4] did not pass the hidden [5] by")
+	}
+	d.Press("Tab")
+	if focused() != g.history.branchP {
+		t.Fatal("Tab from [1] is not on [2]")
+	}
+	has(t, d, "[3] CURRENT", "[4] DESCRIPTION", "[5] FILES")
+	hasNot(t, d, "[3] DIFF", "[4] HISTORY")
+	d.Press("1", "2") // the same every time
+	has(t, d, "[3] CURRENT", "[5] FILES")
+}
+
+// TestStatusSign: no screen chips and no statusbar row: where you are is on
+// the STATUS sign over [3], with no number, which Tab passes by (the user;
+// tdp screen.1, panel.17).
+func TestStatusSign(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	if top := d.Screen()[0]; !strings.Contains(top, "[1] CHANGES") || !strings.Contains(top, "STATUS") {
+		t.Errorf("the first row is not [1] beside the sign:\n%s", top)
+	}
+	if row := d.Screen()[1]; !strings.Contains(row, "Branch: main") || !strings.Contains(row, "Repo: ") {
+		t.Errorf("the sign does not say where you are:\n%s", row)
+	}
+	hasNot(t, d, "WORKING TREE", "] STATUS")
+	d.Press("Tab") // from [2]: the sign passed by
+	if g.a.Screen().Focused() != g.history.histP {
+		t.Error("Tab from [2] is not on [3]")
+	}
 }
 
 func TestStatusbarSaysTheMerge(t *testing.T) {
@@ -143,26 +192,26 @@ func TestStatusbarSaysTheMerge(t *testing.T) {
 	hasNot(t, d, glyphConflicts)
 }
 
-// TestStatusbarKeepsItsPlace is tdp L2 in the user's order: the work in
-// progress, Branch, Repo last, both values Lavender, two blanks between
-// them; switching to a branch with a longer name does not move Repo, nor the
-// screen's end of the statusbar.
+// TestStatusbarKeepsItsPlace is tdp L2 in the user's order, on the STATUS
+// sign's row: the work in progress, Branch, Repo last, both values Lavender,
+// two blanks between them; switching to a branch with a longer name does not
+// move Repo, nor the sign's end of the row.
 func TestStatusbarKeepsItsPlace(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	r.Git("branch", "a-much-longer-branch-name")
 	g, d := start(t, r, 120, 32)
-	top := d.Screen()[0]
+	top := d.Screen()[1]
 	repoAt := strings.Index(top, "Repo: ")
 	if !strings.Contains(top, "Branch: main  Repo: ") {
 		t.Fatalf("Branch is not right before Repo:\n%s", top)
 	}
 	d.Do(func() tea.Cmd { g.busy = "Fetching…"; return nil })
-	if top := d.Screen()[0]; !strings.Contains(top, "Fetching…") || strings.Index(top, "Fetching…") > strings.Index(top, "Branch: ") {
+	if top := d.Screen()[1]; !strings.Contains(top, "Fetching…") || strings.Index(top, "Fetching…") > strings.Index(top, "Branch: ") {
 		t.Errorf("the work in progress is not first:\n%s", top)
 	}
 	d.Do(func() tea.Cmd { g.busy = ""; return nil })
-	styled := d.Styled()[0]
+	styled := d.Styled()[1]
 	lavender := "38;2;180;190;254"
 	if strings.Count(styled, lavender) < 2 {
 		t.Errorf("the branch and the repository are not both Lavender:\n%q", styled)
@@ -170,7 +219,7 @@ func TestStatusbarKeepsItsPlace(t *testing.T) {
 	selectBranch(d, g, kindBranch+"a-much-longer-branch-name")
 	d.Press("c")
 	done(t, g, d)
-	top2 := d.Screen()[0]
+	top2 := d.Screen()[1]
 	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
 		t.Errorf("Repo moved:\n%s\n%s", top, top2)
 	}
@@ -185,12 +234,12 @@ func TestStatusbarKeepsItsPlace(t *testing.T) {
 func TestStatusbarNarrow(t *testing.T) {
 	r := gittest.Conflicted(t)
 	_, d := start(t, r, 60, 32)
-	top := d.Screen()[0]
+	top := d.Screen()[1]
 	if !strings.Contains(top, glyphConflicts+" Merging: feature") || strings.Contains(top, "Repo: ") {
 		t.Errorf("at 60 columns the merge is not kept before the repository:\n%s", top)
 	}
 	d.Resize(120, 32)
-	top = d.Screen()[0]
+	top = d.Screen()[1]
 	m, b, rp := strings.Index(top, "Merging: feature"), strings.Index(top, "Branch: main"), strings.Index(top, "Repo: ")
 	if m < 0 || b < m || rp < b {
 		t.Errorf("at 120 columns not the merge, the branch, the repository:\n%s", top)
@@ -252,7 +301,7 @@ func TestOwnPopupsEverySize(t *testing.T) {
 	}
 }
 
-// --- task 3: [1] BRANCHES ---
+// --- task 3: [2] BRANCHES ---
 
 func TestBranchTabs(t *testing.T) {
 	r := gittest.Sample(t)
@@ -357,7 +406,7 @@ func TestEnterShowsTheCommit(t *testing.T) {
 		{kindRemote + "origin/main", "origin/main"},
 		{kindTag + "v0.1.0", "v0.1.0^{commit}"},
 	} {
-		d.Press("1")
+		d.Press("2")
 		selectBranch(d, g, ref.id)
 		d.Press("Enter")
 		if g.a.Screen().Focused() != g.history.histP {
@@ -403,7 +452,7 @@ func TestEnterChecksOutARemoteBranch(t *testing.T) {
 		t.Errorf("[2] is on %s, want %s", cur.ID, want)
 	}
 	// Now topic goes with it: Enter shows it, as on a branch.
-	d.Press("1")
+	d.Press("2")
 	selectBranch(d, g, kindRemote+"origin/topic")
 	has(t, d, "Enter:show")
 }
@@ -450,7 +499,7 @@ func TestRemoteBranchesToggle(t *testing.T) {
 	has(t, d, "Showing remote branches", "Hiding remote branches")
 }
 
-// --- task 4: [2] COMMITS ---
+// --- task 4: [3] COMMITS ---
 
 func TestGraphRows(t *testing.T) {
 	r := gittest.Sample(t)
@@ -586,7 +635,7 @@ func TestActionsClearTheFilter(t *testing.T) {
 	commits := g.history.commits
 	filter := func(text string) {
 		t.Helper()
-		d.Press("2", "/")
+		d.Press("3", "/")
 		d.Type(text)
 		d.Press("Enter")
 		if !commits.Filtering() {
@@ -601,7 +650,7 @@ func TestActionsClearTheFilter(t *testing.T) {
 	}
 	// [1] lists feature, main, topic; the cursor starts on main.
 	filter("topic")
-	d.Press("1")
+	d.Press("2")
 	if !commits.Filtering() {
 		t.Error("the focus leaving [2] cleared its filter")
 	}
@@ -611,13 +660,13 @@ func TestActionsClearTheFilter(t *testing.T) {
 	}
 	on("feature")
 	filter("Say")
-	d.Press("1", "j") // to main, its commit not hidden: cleared all the same
+	d.Press("2", "j") // to main, its commit not hidden: cleared all the same
 	if commits.Filtering() {
 		t.Error("moving to main kept [2]'s filter")
 	}
 	on("main")
 	filter("Try")
-	d.Press("1", "Enter") // Enter on main
+	d.Press("2", "Enter") // Enter on main
 	if commits.Filtering() {
 		t.Error("Enter on main kept [2]'s filter")
 	}
@@ -732,16 +781,16 @@ func TestAllOrCurrentBranch(t *testing.T) {
 	if allMain >= allTopic {
 		t.Errorf("All: main's commit at %d is not left of topic's at %d", allMain, allTopic)
 	}
-	d.Press("1", "k") // [1] to main: All keeps main on the left
+	d.Press("2", "k") // [1] to main: All keeps main on the left
 	if nodeAt("Say even more") >= nodeAt("Try a topic") {
 		t.Error("All: main is not on the left")
 	}
-	d.Press("1", "j") // back to topic
-	d.Press("2", "h") // Current again: the tab chosen is kept
+	d.Press("2", "j") // back to topic
+	d.Press("3", "h") // Current again: the tab chosen is kept
 	if g.all {
 		t.Error("h did not go back to Current")
 	}
-	d.Press("1", "k") // [1] to main: Current follows it
+	d.Press("2", "k") // [1] to main: Current follows it
 	has(t, d, "main")
 	if nodeAt("Say even more") >= nodeAt("Try a topic") {
 		t.Errorf("Current did not follow [1] to main:\n%s", strings.Join(d.Screen(), "\n"))
@@ -771,7 +820,7 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	c := selectCommit(t, d, g, "Move, add and change")
 	parent := c.Parents[0]
 	d.Press("Tab")
-	has(t, d, "[3] DESCRIPTION", "Move, add and change", "[4] FILES", git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:files")
+	has(t, d, "[4] DESCRIPTION", "Move, add and change", "[5] FILES", git.Short(parent)+" ↔ "+git.Short(c.SHA), "+ added.txt", "~ README.md", "~ feature.txt → renamed.txt", "Enter:files")
 	d.Press("j") // [3] follows [2]'s cursor, the focus staying (tdp panel.13)
 	hasNot(t, d, "+ added.txt")
 	if g.a.Screen().Focused() != g.history.histP {
@@ -791,7 +840,7 @@ func TestCommitFilesAndDiff(t *testing.T) {
 	if cur, _ := g.history.commits.Current(); cur.ID != c.SHA {
 		t.Error("[2]'s cursor left the commit")
 	}
-	d.Press("1", "k") // [1] on feature: [2] on its commit, [3] its files
+	d.Press("2", "k") // [1] on feature: [2] on its commit, [3] its files
 	tip, before := strings.TrimSpace(r.Git("rev-parse", "feature")), strings.TrimSpace(r.Git("rev-parse", "feature^"))
 	has(t, d, git.Short(before)+" ↔ "+git.Short(tip))
 	d.Press("!")
@@ -808,7 +857,7 @@ func TestCommitDescription(t *testing.T) {
 	r.Git("commit", "-q", "-am", "Change the readme\n\nThe body says why, in a line far longer than the panel is wide.")
 	g, d := start(t, r, 120, 32)
 	d.Press("Tab", "g", "g")
-	has(t, d, "[3] DESCRIPTION", "Change the readme", "The body says why, in a line", "far longer than the panel is", "wide.")
+	has(t, d, "[4] DESCRIPTION", "Change the readme", "The body says why, in a line", "far longer than the panel is", "wide.")
 	d.Press("j")
 	hasNot(t, d, "The body says why")
 	has(t, d, g.snap.Commits[1].Subject)
@@ -867,12 +916,12 @@ func TestDiffTwoCommits(t *testing.T) {
 	if g.a.Screen().Focused() != h.filesP {
 		t.Error("Tab in the mode did not go to [4]")
 	}
-	d.Press("3") // [3], the message, waits as [1] does
+	d.Press("4") // [3], the message, waits as [1] does
 	has(t, d, "Press [Esc] to leave Diff first")
 	if g.a.Screen().Focused() != h.filesP {
 		t.Error("3 in the mode left [4]")
 	}
-	d.Press("Esc", "1")
+	d.Press("Esc", "2")
 	has(t, d, "Press [Esc] to leave Diff first")
 	d.Press("Esc", "Esc", "Esc") // the toast, [4] back to [2], out of the mode
 	if h.histP.InMode() != nil || h.filesP.InMode() != nil {
@@ -924,8 +973,8 @@ func TestMergeBranchConflicts(t *testing.T) {
 	has(t, d, "Merge other into main?")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Merge stopped on conflicts in 1 file", "Resolve them in Working tree [W]", "Merging: other")
-	d.Press("W") // Working tree opens on the conflict
+	has(t, d, "Merge stopped on conflicts in 1 file", "Press [1] to resolve them", "Merging: other")
+	d.Press("1") // Working tree opens on the conflict
 	if cur, _ := g.status.files.Current(); cur.ID != inConflict+"x.txt" {
 		t.Errorf("Working tree opens on %q", cur.ID)
 	}
@@ -1277,7 +1326,7 @@ func TestNewBranchAndTagAtHead(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "b")
+	d.Press("1", "b")
 	has(t, d, "A branch at HEAD, checked out")
 	d.Type("next")
 	d.Press("Enter")
@@ -1294,7 +1343,7 @@ func TestPickMerge(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "2", "M") // on [1] M is Mark all
+	d.Press("1", "3", "M") // on [1] M is Mark all
 	has(t, d, "MERGE: main", "topic", "origin/main")
 	d.Press("/")
 	d.Type("topic")
@@ -1404,7 +1453,7 @@ func TestRefreshLogsOnlyChanges(t *testing.T) {
 	refresh() // only what git ignores
 	r.Write("README.md", "outside\n")
 	refresh()
-	d.Press("W", "Enter") // stage README.md: gittu's own change
+	d.Press("1", "Enter") // stage README.md: gittu's own change
 	done(t, g, d)
 	refresh()
 	d.Press("!")
@@ -1533,7 +1582,7 @@ func TestLongPathKeepsItsLetter(t *testing.T) {
 	r.Commit(long, "x\n", "Add notes deep down")
 	r.Write(long, "y\n")
 	g, d := start(t, r, 60, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "M …") // the letter, then the path cut from its front
 	d.Resize(130, 32)
 	has(t, d, "M …", "notes-of-the-day.txt")
@@ -1549,7 +1598,7 @@ func TestFileGroups(t *testing.T) {
 	r.Write("README.md", "staged and more\n")
 	r.Write("new.txt", "new\n")
 	_, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "All changes", "STAGED", "UNSTAGED", "? new.txt")
 	screen := strings.Join(d.Screen(), "\n")
 	if strings.Count(screen, "README.md") < 2 {
@@ -1562,7 +1611,7 @@ func TestDiffFollowsCursor(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "brand new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "DIFF: README.md", "+changed")
 	d.Press("j")
 	has(t, d, "DIFF: new.txt", "+brand new")
@@ -1577,7 +1626,7 @@ func TestDiffFollowsCursor(t *testing.T) {
 	has(t, d, "+read again")
 }
 
-// TestDiffDrawnAsUnified is task 11 on tdp note.8 "In a panel": [2] DIFF
+// TestDiffDrawnAsUnified is task 11 on tdp note.8 "In a panel": [3] DIFF
 // draws the two versions as UNIFIED does, both line numbers and the
 // separators, never git's own output; the location row names the two.
 func TestDiffDrawnAsUnified(t *testing.T) {
@@ -1594,7 +1643,7 @@ func TestDiffDrawnAsUnified(t *testing.T) {
 	r.Commit("long.txt", was.String(), "Add a long file")
 	r.Write("long.txt", now.String())
 	g, d := start(t, r, 120, 40)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "long.txt"); return nil })
 	d.Press("j", "k")
 	has(t, d, "DIFF: long.txt", "long.txt @ index ↔ long.txt", "-line 5", "+changed 5", "-line 25", "+changed 25", "────")
@@ -1612,22 +1661,22 @@ func TestDiffNotText(t *testing.T) {
 	r.Write("newdir/one.txt", "1\n")
 	r.Write("newdir/two.txt", "2\n")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "blob.bin"); return nil })
 	d.Press("j", "k")
 	has(t, d, "DIFF: blob.bin", "Not a text file", "Press [1] to go to the files")
 	hasNot(t, d, "Enter:diff")
 }
 
-// TestNothingToCommitHints: with nothing changed, [2] sends you where [1]
-// does, not to [1]'s files: there are none (the user).
+// TestNothingToCommitHints: with nothing changed, [3] and [4] send you where
+// [1] does, not to [1]'s files: there are none (the user).
 func TestNothingToCommitHints(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 120, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "Nothing to commit", "No file to show")
 	hasNot(t, d, "Press [1] to go to the files")
-	if n := strings.Count(strings.Join(d.Screen(), "\n"), "Press [H] to see the history"); n != 2 {
-		t.Errorf("Press [H] to see the history %d times, want 2 ([1] and [2])", n)
+	if n := strings.Count(strings.Join(d.Screen(), "\n"), "Press [2] to see the history"); n != 3 {
+		t.Errorf("Press [2] to see the history %d times, want 3 ([1], [3] and [4])", n)
 	}
 }
 
@@ -1637,7 +1686,7 @@ func TestDiffNewFile(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("brand-new.txt", "hello\n")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "brand-new.txt"); return nil })
 	d.Press("j", "k")
 	has(t, d, "brand-new.txt @ empty ↔ brand-new.txt", "+hello")
@@ -1653,12 +1702,12 @@ func TestDiffNewFolder(t *testing.T) {
 	r.Write("newdir/two.txt", "2\n")
 	r.Write("newdir/blob.bin", "a\x00b")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "newdir/"); return nil })
 	d.Press("j", "k")
 	has(t, d, "DIFF: newdir/", "newdir/ @ empty ↔ newdir/", "+ newdir/one.txt", "+ newdir/two.txt", "+ newdir/blob.bin", "Enter:diff")
-	d.Press("Tab", "Enter") // into the list
-	d.Press("Enter")        // the first file: newdir/blob.bin, not text, has no comparison
+	d.Press("3", "Enter") // into the list
+	d.Press("Enter")      // the first file: newdir/blob.bin, not text, has no comparison
 	hasNot(t, d, "blob.bin @ empty ↔")
 	d.Press("j", "Enter")
 	has(t, d, "newdir/one.txt @ empty ↔ newdir/one.txt", "UNIFIED")
@@ -1671,7 +1720,7 @@ func TestDiffNewFolder(t *testing.T) {
 	}
 }
 
-// TestDiffComparesVersions is task 11 on tdp note.8: Enter on [2] DIFF compares
+// TestDiffComparesVersions is task 11 on tdp note.8: Enter on [3] DIFF compares
 // the file's two versions: the index against the working tree when unstaged,
 // HEAD against the index when staged.
 func TestDiffComparesVersions(t *testing.T) {
@@ -1679,12 +1728,40 @@ func TestDiffComparesVersions(t *testing.T) {
 	r.Git("stash", "drop", "-q")
 	r.Write("README.md", "changed\n")
 	_, d := start(t, r, 120, 32)
-	d.Press("W", "Tab")
+	d.Press("1", "3")
 	has(t, d, "Enter:diff")
 	d.Press("Enter")
 	has(t, d, "README.md @ index ↔ README.md", "UNIFIED", "+changed")
-	d.Press("Esc", "1", "Enter", "Tab", "Enter")
+	d.Press("Esc", "1", "Enter", "3", "Enter")
 	has(t, d, "README.md @ HEAD ↔ README.md @ index")
+}
+
+// TestFileHistory: while [1] leads, [4] is the history of the file under its
+// cursor, the newest first, following it; Enter compares the file in that
+// commit with the commit before (the user; tdp panel.13, note.8).
+func TestFileHistory(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	r.Write("README.md", "changed\n")
+	r.Write("new.txt", "new\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("1")
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "new.txt"); return nil })
+	d.Press("k")
+	has(t, d, "HISTORY: README.md", "Say even more", "Say more", "Start the demo")
+	d.Press("j")
+	has(t, d, "HISTORY: new.txt", "Not in any commit yet")
+	var said, first git.Commit
+	for _, c := range g.snap.Commits {
+		switch c.Subject {
+		case "Say more":
+			said = c
+		case "Start the demo":
+			first = c
+		}
+	}
+	d.Press("k", "4", "j", "Enter") // Say more
+	has(t, d, "README.md @ "+git.Short(first.SHA)+" ↔ README.md @ "+git.Short(said.SHA), "UNIFIED", "+More.")
 }
 
 // --- task 12: stage, unstage, discard ---
@@ -1731,7 +1808,7 @@ func TestStageAllLeavesTheConflicts(t *testing.T) {
 	r := gittest.Conflicted(t)
 	r.Write("other.txt", "new\n")
 	g, d := start(t, r, 120, 32)
-	d.Press("W", "a")
+	d.Press("1", "a")
 	done(t, g, d)
 	has(t, d, "Staged every change but the 1 conflict")
 	if out := strings.TrimSpace(r.Git("diff", "--name-only", "--diff-filter=U")); out != "notes.txt" {
@@ -1749,7 +1826,7 @@ func TestUnstageRenameWhole(t *testing.T) {
 	r.Git("stash", "drop", "-q")
 	r.Git("mv", "feature.txt", "renamed.txt")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inStaged + "renamed.txt"); return nil })
 	d.Press("Enter")
 	done(t, g, d)
@@ -1767,7 +1844,7 @@ func TestStageWalksDown(t *testing.T) {
 	r.Write("b.txt", "b\n")
 	r.Write("c.txt", "c\n")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "b.txt"); return nil })
 	d.Press("Enter")
 	done(t, g, d)
@@ -1782,7 +1859,7 @@ func TestMarksGoWithTheirRows(t *testing.T) {
 	r.Git("stash", "drop", "-q")
 	r.Write("README.md", "changed\n")
 	g, d := start(t, r, 120, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inUnstaged+"README.md")
 	r.Git("add", "README.md")
 	d.Do(func() tea.Cmd { return g.read(true) })
@@ -1817,7 +1894,7 @@ func TestStageUnstage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "Enter:stage")
 	d.Press("Enter")
 	done(t, g, d)
@@ -1862,7 +1939,7 @@ func TestMarkFiles(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "M README.md", "? new.txt", "m:mark")
 	markFile(d, g, inUnstaged+"README.md")
 	if got := g.status.files.Marked(); !slices.Equal(got, []string{inUnstaged + "README.md"}) {
@@ -1899,7 +1976,7 @@ func TestWorkOnTheMarked(t *testing.T) {
 	r.Write("a.txt", "a\n")
 	r.Write("b.txt", "b\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inUnstaged+"README.md")
 	markFile(d, g, inUnstaged+"a.txt")
 	d.Press("Space")
@@ -1946,7 +2023,7 @@ func TestRemoveAndIgnore(t *testing.T) {
 	r.Write("feature.txt", "changed\n")
 	r.Write("new*.txt", "new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "README.md"); return nil })
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Remove") })
 	has(t, d, "Remove README.md from the repository?", "changes not committed are lost")
@@ -1990,7 +2067,7 @@ func TestXDiscardsMany(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("feature.txt", "changed\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inUnstaged+"README.md")
 	d.Press("X")
 	has(t, d, "Discard the changes to README.md?")
@@ -2010,7 +2087,7 @@ func TestDiscardFile(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Write("new.txt", "new\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "x")
+	d.Press("1", "x")
 	hasNot(t, d, "Discard the change to README.md?")
 	d.Press("Space")
 	has(t, d, "Discard")
@@ -2041,7 +2118,7 @@ func TestCommitMessage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "c")
+	d.Press("1", "c")
 	has(t, d, "COMMIT", "Title", "not set", "Description", "none", "Commit", "Enter:edit Tab:actions Esc:cancel")
 	d.Press("Tab", "Enter") // no title: an error, the form kept (tdp form.16)
 	has(t, d, "Title is required")
@@ -2061,7 +2138,7 @@ func TestCommitMessage(t *testing.T) {
 
 func TestCommitOffWithNothingStaged(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 100, 32)
-	d.Press("W", "c")
+	d.Press("1", "c")
 	hasNot(t, d, "Tab:actions")
 }
 
@@ -2074,7 +2151,7 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "c", "Enter")
+	d.Press("1", "c", "Enter")
 	d.Type("Blocked")
 	d.Press("Enter", "Tab", "Enter")
 	done(t, g, d)
@@ -2136,7 +2213,7 @@ func TestAmendChangesMessage(t *testing.T) {
 func TestResolveHunks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "CONFLICTS", "U notes.txt", "Enter:show r:resolved")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Resolve one by one") }) // from the Space menu
 	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
@@ -2181,7 +2258,7 @@ func TestEditConflict(t *testing.T) {
 	}
 	t.Setenv("GIT_EDITOR", editor)
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	has(t, d, "U notes.txt", "Enter:show r:resolved")
 	d.Press("Enter")
 	if g.a.Screen().Focused() != g.status.diffP {
@@ -2220,7 +2297,7 @@ func TestEditorPausesRefresh(t *testing.T) {
 	}
 	t.Setenv("GIT_EDITOR", editor)
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "Enter", "Enter")
+	d.Press("1", "Enter", "Enter")
 	d.WaitFor(func() bool { _, err := os.Stat(swap); return err == nil }, 5*time.Second)
 	d.Advance(refreshEvery + time.Second)
 	if g.reading {
@@ -2245,7 +2322,7 @@ func TestEditorPausesRefresh(t *testing.T) {
 func TestMarkResolvedAsks(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("W", "Space")
+	d.Press("1", "Space")
 	has(t, d, "Mark [r]esolved")
 	hasNot(t, d, "Ma[r]k")
 	d.Press("Esc", "r")
@@ -2274,7 +2351,7 @@ func TestMarkTheMarkedResolved(t *testing.T) {
 	}
 	r.Write("a.txt", "a resolved\n")
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inConflict+"a.txt")
 	markFile(d, g, inConflict+"b.txt")
 	d.Press("Space")
@@ -2297,7 +2374,7 @@ func TestMarkTheMarkedResolved(t *testing.T) {
 func TestUseSideWholeFile(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Press("Space")
 	has(t, d, "Use mine", "Use theirs") // no keys (the user)
 	hasNot(t, d, "Use [m]ine", "Use [t]heirs")
@@ -2321,7 +2398,7 @@ func TestUseSideAsksWhenChanged(t *testing.T) {
 		t.Fatal(err)
 	}
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use theirs") })
 	has(t, d, "Use theirs for notes.txt?", "notes.txt: changed after the conflict",
 		"The whole file becomes theirs: any change made to it after the conflict is lost.")
@@ -2345,7 +2422,7 @@ func TestUseSideAsksAfterAStash(t *testing.T) {
 		t.Fatal("no conflict")
 	}
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inConflict+"a.txt")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine for the marked") })
 	has(t, d, "Use mine for a.txt?", "a.txt: gittu can't tell whether it was changed after the conflict")
@@ -2374,7 +2451,7 @@ func TestUseSideForTheMarked(t *testing.T) {
 		t.Fatal("no conflict")
 	}
 	g, d := start(t, r, 100, 32)
-	d.Press("W")
+	d.Press("1")
 	markFile(d, g, inConflict+"a.txt")
 	markFile(d, g, inConflict+"b.txt")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use theirs for the marked") })
@@ -2408,7 +2485,7 @@ func TestContinueRebase(t *testing.T) {
 	}
 	g, d := start(t, r, 160, 32)
 	has(t, d, "Rebasing onto: other")
-	d.Press("W")
+	d.Press("1")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Use mine") })
 	done(t, g, d)
 	d.Do(func() tea.Cmd { return runGlobal(t, g, "Continue rebase") })
@@ -2528,19 +2605,19 @@ func TestSplashOpens(t *testing.T) {
 	if d.Quit() {
 		t.Error("a key on the splash quit")
 	}
-	has(t, d, "[1] BRANCHES")
+	has(t, d, "[2] BRANCHES")
 }
 
 // --- task 17: zoom ---
 
-// leftWidth is [1]'s width on the screen: where [2]'s frame starts, 0 when
-// [1] is not drawn.
+// leftWidth is the left's width on the screen, [1] and [2]: where [3]'s
+// frame starts, under the sign; 0 when they are not drawn.
 func leftWidth(d *tdptest.Driver) int {
-	row := d.Screen()[2]
-	if strings.HasPrefix(row, "┏") && !strings.Contains(row, "┐") && !strings.Contains(row, "┓┌") && strings.Count(row, "┏") == 1 {
+	if row := d.Screen()[0]; strings.HasPrefix(row, "┏") && strings.Count(row, "┏") == 1 && !strings.ContainsAny(row, "┌┐") {
 		return 0 // one panel across the whole area
 	}
-	for _, corner := range []string{"┓┌", "┐┏"} {
+	row := d.Screen()[signHeight]
+	for _, corner := range []string{"│┌", "│┏", "┃┌", "┃┏"} {
 		if i := strings.Index(row, corner); i >= 0 {
 			return terminu.Width(row[:i]) + 1
 		}
@@ -2559,48 +2636,47 @@ func TestZoomTwoSteps(t *testing.T) {
 	}
 	has(t, d, "z:zoom")
 	d.Press("z")
-	if w := leftWidth(d); w != 0 || !d.Has("[2] CURRENT") || d.Has("[1] BRANCHES") {
+	if w := leftWidth(d); w != 0 || !d.Has("[3] CURRENT") || d.Has("[2] BRANCHES") {
 		t.Fatalf("second step: [1] still drawn (%d):\n%s", w, strings.Join(d.Screen(), "\n"))
 	}
 	has(t, d, "z:unzoom")
 	d.Press("Tab")
-	if !d.Has("[3] DESCRIPTION") || d.Has("[2] CURRENT") || d.Has("[4] FILES") {
+	if !d.Has("[4] DESCRIPTION") || d.Has("[3] CURRENT") || d.Has("[5] FILES") {
 		t.Fatalf("Tab on the whole screen does not show [3] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	has(t, d, "z:unzoom") // put back from [3] too
 	d.Press("Tab")
-	if !d.Has("[4] FILES") || d.Has("[2] CURRENT") || d.Has("[3] DESCRIPTION") {
+	if !d.Has("[5] FILES") || d.Has("[3] CURRENT") || d.Has("[4] DESCRIPTION") {
 		t.Fatalf("Tab on the whole screen does not show [4] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
-	d.Press("Tab")
-	if !d.Has("[1] BRANCHES") || d.Has("[2] CURRENT") || d.Has("[4] FILES") {
+	d.Press("Tab") // round to [1], which leads: [3] the diff
+	if !d.Has("[1] CHANGES") || d.Has("[2] BRANCHES") || d.Has("[3] DIFF") {
 		t.Fatalf("Tab on the whole screen does not show [1] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("z")
-	if w := leftWidth(d); w != 40 {
-		t.Fatalf("z on [1] did not put both panels back: [1] is %d wide", w)
+	if w := leftWidth(d); w != 40 || !d.Has("[3] DIFF") {
+		t.Fatalf("z on [1] did not put the panels back: the left is %d wide", w)
 	}
 	if g.history.zoom != 0 {
 		t.Errorf("zoom %d", g.history.zoom)
 	}
 	d.Press("!")
-	has(t, d, "Zoomed [2]", "Zoomed [2] to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [3]", "Zoomed [3] to the whole screen", "Back to both panels")
 }
 
-// TestDescriptionZooms: [3] DESCRIPTION, narrower than [4] FILES (2:3, the
+// TestDescriptionZooms: [4] DESCRIPTION, narrower than [5] FILES (2:3, the
 // user), zooms to the whole screen with z, and back.
 func TestDescriptionZooms(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 100, 32)
-	h := g.history
-	d.Press("3")
+	d.Press("4")
 	has(t, d, "z:zoom")
 	d.Press("z")
-	has(t, d, "[3] DESCRIPTION", "z:unzoom")
-	hasNot(t, d, "[2] CURRENT", "[4] FILES")
+	has(t, d, "[4] DESCRIPTION", "z:unzoom")
+	hasNot(t, d, "[3] CURRENT", "[5] FILES")
 	d.Press("z", "!")
-	has(t, d, "Zoomed [3] to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [4] to the whole screen", "Back to both panels")
 	d.Press("Esc")
-	if r := h.layout(100, 30); r[2].W != 26 || r[3].W != 41 {
+	if r := g.layout(100, 30); r[4].W != 26 || r[5].W != 41 {
 		t.Errorf("[3] %d wide, [4] %d: not 2:3 of 67", r[2].W, r[3].W)
 	}
 }
@@ -2619,7 +2695,7 @@ func TestFilesLocationFitsAt60(t *testing.T) {
 func TestZoomNarrowSkipsTheFirstStep(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 60, 32)
 	d.Press("Tab", "z")
-	if g.history.zoom != 2 || d.Has("[1] BRANCHES") {
+	if g.history.zoom != 2 || d.Has("[2] BRANCHES") {
 		t.Fatalf("at 60 columns z went to step %d:\n%s", g.history.zoom, strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("z")

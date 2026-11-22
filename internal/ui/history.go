@@ -22,16 +22,15 @@ const (
 // kinds are [1]'s tabs, in order: each a kind of row (tdp terms.4).
 var kinds = []string{kindBranch, kindRemote, kindTag, kindStash}
 
-// historyScreen is the screen gittu opens on (tdp terms.2): [1] the branches,
-// [2] the history graph beside them, and below it [3] the message and [4]
-// the files of the commit under [2]'s cursor.
+// historyScreen is the screen's history (screen.go): [2] the branches, and
+// while [2] leads, [3] the history graph, under it [4] the message and [5]
+// the files of the commit under [3]'s cursor.
 type historyScreen struct {
-	// width is [2]'s, as laid out last: how many of the graph's lines fit.
+	// width is [3]'s, as laid out last: how many of the graph's lines fit.
 	width int
-	// line is the [1] row the Current tab follows (its ID), "" for HEAD.
-	line   string
-	g      *gittu
-	screen *terminu.Screen
+	// line is the [2] row the Current tab follows (its ID), "" for HEAD.
+	line string
+	g    *gittu
 
 	branchP *terminu.Panel
 	// tabs are [1]'s lists, one a tab: the branches, the remote branches, the
@@ -54,13 +53,15 @@ type historyScreen struct {
 	// [3] are of, "" when there is none to show or one could not be read.
 	items   map[string]terminu.DiffItem
 	filesOf string
-	// zoom is how far [2] is zoomed (tdp screen.6): 0 not, 1 with [1] at its
-	// least width, 2 the focused panel on the whole panel area.
+	// zoom is how far the screen is zoomed (tdp screen.6): 0 not, 1 [3]
+	// wider, the left at its least width, 2 the focused panel on the whole
+	// panel area.
 	zoom int
 }
 
-// leftLeast is [1]'s width when [2] is zoomed with [1] still beside it: what
-// [1] has at 60 columns, branch names still readable (tdp L1).
+// leftLeast is the left's width when [3] is zoomed with [1] and [2] still
+// beside it: what they have at 60 columns, branch names still readable
+// (tdp L1).
 const leftLeast = 20
 
 func newHistoryScreen(g *gittu) *historyScreen {
@@ -107,26 +108,25 @@ func newHistoryScreen(g *gittu) *historyScreen {
 		Spread:     terminu.SpreadFill,
 		Filterable: true,
 		EmptyFact:  "No commits yet",
-		EmptyHint:  "Press [W] to see the files to commit",
+		EmptyHint:  "Press [1] to see the files to commit",
 		OnMove:     func(terminu.Row) tea.Cmd { h.showFiles(); return nil },
 	}
 	// Under [2], [3] its message on the left and [4] its files on the
 	// right (the user), both following its cursor (tdp panel.13).
-	h.desc = &terminu.Pager{EmptyFact: "No commits yet", EmptyHint: "Press [W] to see the files to commit"}
+	h.desc = &terminu.Pager{EmptyFact: "No commits yet", EmptyHint: "Press [1] to see the files to commit"}
 	h.descP = &terminu.Panel{Label: "Description", Body: h.desc, Actions: []terminu.Action{
 		// [3] is narrow, there to read: z puts it on the whole screen (the
 		// user; tdp screen.6).
 		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return h.zoom != 0 }, Do: func() tea.Cmd { return h.zoomTo(2) }},
-		// [2] zoomed can be put back from here too (tdp screen.6), as from [1] and [4].
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
-			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }}}}
+		// [3] zoomed can be put back from here too (tdp screen.6), as from every panel.
+		g.unzoom()}}
 	h.files = &terminu.List{
 		Columns:    []terminu.Column{{Title: "", Shrink: true, Path: true}},
 		Flags:      true,
 		Filterable: true,
 		EmptyFact:  "No commits yet",
-		EmptyHint:  "Press [W] to see the files to commit",
+		EmptyHint:  "Press [1] to see the files to commit",
 	}
 	h.filesP = &terminu.Panel{Label: "Files", Body: h.files,
 		// Esc goes back the way Enter on a commit came (tdp K4).
@@ -138,61 +138,24 @@ func newHistoryScreen(g *gittu) *historyScreen {
 	h.histP = &terminu.Panel{Label: "Current", Tabs: []string{"All"}, Body: h.commits, Details: h.filesP,
 		OnTab: func(tab int) tea.Cmd { return h.setAll(tab == 1) }}
 	h.histP.Actions = append(h.commitActions(), h.commits.Actions()...)
-	h.screen = &terminu.Screen{Name: "History", Key: "H", Desc: "the branches and the history graph",
-		Panels: []*terminu.Panel{h.branchP, h.histP, h.descP, h.filesP}, Layout: h.layout}
 	return h
 }
 
-// oneToTwo puts the panels side by side, the first a third of the width (tdp
-// L1: 20 and 40 at 60 columns).
-func oneToTwo(w, h int) []terminu.Rect { return beside(w/3, w, h) }
-
-// beside puts [1] left wide on the left, [2] the rest on the right.
-func beside(left, w, h int) []terminu.Rect {
-	return []terminu.Rect{{X: 0, Y: 0, W: left, H: h}, {X: left, Y: 0, W: w - left, H: h}}
-}
-
-// layout is History's panels as zoomed (tdp screen.6): side by side 1:2,
-// [1] at its least width, or the focused one alone on the whole area (the
-// others drawn nowhere). [3] and [4] are under [2], a third of its height,
-// 2:3: [4]'s paths take the room, [3] zooms to be read (the user).
-func (h *historyScreen) layout(w, ht int) []terminu.Rect {
-	var rects []terminu.Rect
-	switch h.zoom {
-	case 1:
-		rects = beside(min(leftLeast, w/3), w, ht)
-	case 2:
-		rects = make([]terminu.Rect, len(h.screen.Panels))
-		for i, p := range h.screen.Panels {
-			if p == h.screen.Focused() {
-				rects[i] = terminu.Rect{X: 0, Y: 0, W: w, H: ht}
-			}
-		}
-	default:
-		rects = oneToTwo(w, ht)
-	}
-	if h.zoom != 2 { // under [2], a third of its height: [3] and [4] side by side, 2:3
-		r := rects[1]
-		low := r.H / 3
-		rects[1].H = r.H - low
-		left := r.W * 2 / 5
-		rects = append(rects, terminu.Rect{X: r.X, Y: r.Y + r.H - low, W: left, H: low},
-			terminu.Rect{X: r.X + left, Y: r.Y + r.H - low, W: r.W - left, H: low})
-	}
-	// [3] wider or narrower: its message folded again (the frame and the
+// laidOut takes [3]'s and [4]'s widths as laid out (screen.go).
+func (h *historyScreen) laidOut(commitsW, descW int) {
+	// [4] wider or narrower: its message folded again (the frame and the
 	// margins, 4).
-	if dw := rects[2].W - 4; dw > 0 && dw != h.descW {
+	if dw := descW - 4; dw > 0 && dw != h.descW {
 		h.descW = dw
 		h.showMessage()
 	}
-	// [2] wider or narrower: the graph draws as many lines as now fit.
-	if rw := rects[1].W; rw != h.width {
-		h.width = rw
+	// [3] wider or narrower: the graph draws as many lines as now fit.
+	if commitsW != h.width {
+		h.width = commitsW
 		if h.g.snap != nil {
 			h.commits.SetRows(h.commitRows(h.g.snap))
 		}
 	}
-	return rects
 }
 
 // mostLines is how many of the graph's lines [2] has room for (the user):
@@ -214,23 +177,23 @@ func (h *historyScreen) mostLines(s *git.Snapshot) int {
 	return max(git.MaxLines, (left+1)/2)
 }
 
-// narrowZoom reports a terminal where [1] is at its least width already: the
-// zoom has no step with [1] beside [2].
+// narrowZoom reports a terminal where the left is at its least width
+// already: the zoom has no step with [1] and [2] beside [3].
 func (h *historyScreen) narrowZoom() bool {
 	w, _ := h.g.a.Size()
 	return w/3 <= leftLeast
 }
 
-// zoomTo zooms History to step z and says so in the App Log (tdp note.7).
+// zoomTo zooms the screen to step z and says so in the App Log (tdp note.7).
 func (h *historyScreen) zoomTo(z int) tea.Cmd {
 	h.zoom = z
 	switch z {
 	case 0:
 		h.g.a.Log(terminu.Info, "Back to both panels")
 	case 1:
-		h.g.a.Log(terminu.Info, "Zoomed [2]")
-	case 2: // the panel with the focus: [2] or [3]
-		n := slices.Index(h.screen.Panels, h.screen.Focused()) + 1
+		h.g.a.Log(terminu.Info, "Zoomed [3]")
+	case 2: // the panel with the focus: [3] or [4]
+		n := h.g.num(h.g.screen.Focused())
 		h.g.a.Log(terminu.Info, "Zoomed ["+strconv.Itoa(n)+"] to the whole screen")
 	}
 	return nil
@@ -676,7 +639,7 @@ func (h *historyScreen) commitItems(from, to, fromName, toName string) ([]termin
 func (h *historyScreen) showFiles() {
 	c, ok := h.current()
 	if !ok {
-		h.files.EmptyFact, h.files.EmptyHint = "No commits yet", "Press [W] to see the files to commit"
+		h.files.EmptyFact, h.files.EmptyHint = "No commits yet", "Press [1] to see the files to commit"
 		h.files.SetRows(nil)
 		h.files.Location, h.items, h.filesOf, h.filesP.Fail = "", nil, "", nil
 		h.message, h.descP.Fail = "", nil
@@ -707,7 +670,7 @@ func (h *historyScreen) showFiles() {
 		return
 	}
 	h.filesP.Fail = nil
-	h.files.EmptyFact, h.files.EmptyHint = "No files changed", "Press [2] to go to the commits"
+	h.files.EmptyFact, h.files.EmptyHint = "No files changed", "Press [3] to go to the commits"
 	h.items, h.filesOf = map[string]terminu.DiffItem{}, c.SHA
 	if h.descP.Fail != nil { // the message read again with the files
 		h.filesOf = ""

@@ -309,6 +309,13 @@ user 照原話：「整個 repo，把其他工具的描述都移除，我只試�
 - 紀錄、README、程式（說明文字、splash、Homebrew 的說明、註解）都只寫 gittu 自己，不拿別的 git 工具比；
   上面原話裡拿別的工具舉例的地方，改成只寫要的行為。已經 push 的 commit 訊息不改寫。
 
+## History 與 Working tree 合成一頁（2026-11-22）
+
+user 照原話：「1. 我想要把 working tree 和 history 的 tab 合併，把 working tree 的 changes panel 放到 history panel 1 的上方, 當 focus 在 changes 的時候，右邊 panel 2 會變成 diff, 然後 panel 3 換成 panel 2 cursor 的那個檔案的 history, panel 4 隱藏
+2. title header statusbar 和 history/working tree 的 tab 就可以移除了，我們在 panel 2 的上面建立一個只可以觀看的 panel, 裡面放 branch 和 repo
+---
+這樣就可以把兩頁合成一頁，並且釋放上方高度」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

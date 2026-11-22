@@ -346,6 +346,34 @@ func TestMarkers(t *testing.T) {
 }
 
 // TestChangedAfterConflict: a conflicted file saved after git stopped on the
+// TestFileLog: the commits from HEAD that changed a file, the newest first;
+// a binary file says so; a file in none has none.
+func TestFileLog(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Commit("blob.bin", "a\x00b", "Add a blob")
+	repo, _ := git.Open(r.Dir)
+	cs, err := repo.FileLog("README.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, c := range cs {
+		got = append(got, c.Subject)
+		if c.Binary || len(c.Parents) == 0 && c.Subject != "Start the demo" {
+			t.Errorf("%s: binary %v, parents %v", c.Subject, c.Binary, c.Parents)
+		}
+	}
+	if want := []string{"Say even more", "Say more", "Start the demo"}; !slices.Equal(got, want) {
+		t.Errorf("README.md: %q, want %q", got, want)
+	}
+	if bs, err := repo.FileLog("blob.bin"); err != nil || len(bs) != 1 || !bs[0].Binary {
+		t.Errorf("blob.bin: %+v, %v", bs, err)
+	}
+	if none, err := repo.FileLog("nothing.txt"); err != nil || len(none) != 0 {
+		t.Errorf("nothing.txt: %+v, %v", none, err)
+	}
+}
+
 // conflict was changed; one git wrote is not; with nothing to go by (a stash
 // applied) gittu can't tell.
 func TestChangedAfterConflict(t *testing.T) {

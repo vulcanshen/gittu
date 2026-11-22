@@ -21,11 +21,11 @@ const (
 	inUnstaged = "u:"
 )
 
-// statusScreen is Working tree: [1] the files with
-// a change, [2] the change of the one under the cursor (tdp panel.13).
+// statusScreen is the screen's working tree (screen.go): [1] the files with
+// a change, and while [1] leads, [3] the change of the one under its cursor
+// (tdp panel.13) and [4] that file's history.
 type statusScreen struct {
-	g      *gittu
-	screen *terminu.Screen
+	g *gittu
 
 	filesP *terminu.Panel
 	files  *terminu.List
@@ -52,10 +52,18 @@ type statusScreen struct {
 	// toConflict puts [1]'s cursor on the first conflict at the next read: an
 	// operation stopped on conflicts.
 	toConflict bool
-	// failed is why [2] could not be read again, what was read before
+	// failed is why [3] could not be read again, what was read before
 	// staying: an Error toast to show (tdp panel.15). failedWas is the last
 	// such reason, said once while it stays the same.
 	failed, failedWas string
+
+	// logP is [4] HISTORY, the commits that changed the file under [1]'s
+	// cursor (filelog.go); logOf is the path and HEAD it was read for, its
+	// commits by row ID.
+	logP    *terminu.Panel
+	logList *terminu.List
+	logOf   string
+	logged  map[string]git.FileCommit
 }
 
 func newStatusScreen(g *gittu) *statusScreen {
@@ -68,7 +76,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 		Marks:     true,
 		Location:  "All changes",
 		EmptyFact: "Nothing to commit",
-		EmptyHint: "Press [H] to see the history",
+		EmptyHint: "Press [2] to see the history",
 		OnMove:    func(terminu.Row) tea.Cmd { s.showDiff(false); return nil },
 	}
 	s.hunkList = &terminu.List{
@@ -78,7 +86,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.diff = &terminu.Pager{Follow: true, EmptyFact: "No file to show", EmptyHint: "Press [1] to go to the files"}
 	s.diffP = &terminu.Panel{Label: "Diff", Body: s.diff}
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
-	s.filesP.Actions = s.fileActions()
+	s.filesP.Actions = append(s.fileActions(), g.unzoom())
 	s.diffP.Actions = []terminu.Action{
 		// A conflicted file: Enter edits it, r marks it resolved (the user).
 		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
@@ -87,9 +95,9 @@ func newStatusScreen(g *gittu) *statusScreen {
 		s.resolvedAction(panel),
 		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "diff",
 			Hidden: func() bool { return s.diff.Empty() || !s.text || !s.in(inConflict)() }, Do: s.openDiff},
+		g.unzoom(),
 	}
-	s.screen = &terminu.Screen{Name: "Working tree", Key: "W", Desc: "the files to commit and their changes",
-		Panels: []*terminu.Panel{s.filesP, s.diffP}, Layout: s.layout}
+	s.newLog()
 	return s
 }
 
@@ -123,16 +131,15 @@ func (s *statusScreen) show(snap *git.Snapshot) {
 	s.showDiff(true)
 }
 
-// layout is oneToTwo; [1] wider or narrower, its rows' paths cut again.
-func (s *statusScreen) layout(w, h int) []terminu.Rect {
-	rects := oneToTwo(w, h)
-	if rw := rects[0].W; rw != s.width {
-		s.width = rw
+// laidOut takes [1]'s width as laid out (screen.go): wider or narrower, its
+// rows' paths cut again.
+func (s *statusScreen) laidOut(w int) {
+	if w != s.width {
+		s.width = w
 		if s.g.snap != nil {
 			s.files.SetRows(fileRows(s.g.snap.Files, s.pathWidth()))
 		}
 	}
-	return rects
 }
 
 // pathWidth is how many cells of a path [1]'s rows show: its width but the
@@ -438,7 +445,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}},
 		// A conflicted file: Enter goes to [2], Enter there edits it in the
 		// user's editor, r marks it resolved (the user).
-		{Key: "Enter", Label: "Show", Desc: "it in [2], to edit it there", Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: "it in [3], to edit it there", Scope: item, Hint: "show",
 			Hidden: s.in(inConflict), ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		s.resolvedAction(item),
 		{Label: "Resolve one by one", Desc: "pick mine, theirs or both for each conflict", Scope: item,
@@ -660,6 +667,7 @@ func (s *statusScreen) unstageAll() tea.Cmd {
 // versions drawn as UNIFIED (tdp note.8 "In a panel"), the location row
 // naming them; again, it is the same row read again (tdp note.9).
 func (s *statusScreen) showDiff(again bool) {
+	defer s.showLog() // [4] follows the same file
 	id, label, name := "", "Diff", ""
 	item, ok := s.item()
 	h, i, inHunk := s.hunk()
@@ -674,7 +682,7 @@ func (s *statusScreen) showDiff(again bool) {
 	s.diffP.Label, s.diffP.Name, s.diffP.Fail = label, name, nil
 	s.diff.EmptyFact, s.diff.EmptyHint = "No file to show", "Press [1] to go to the files"
 	if s.files.Empty() { // nothing changed: no file in [1] to go to either, so where [1] sends you (the user)
-		s.diff.EmptyHint = "Press [H] to see the history"
+		s.diff.EmptyHint = "Press [2] to see the history"
 	}
 	s.text = false
 	if inHunk { // a conflict: its two sides, each under its heading

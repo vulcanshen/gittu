@@ -4,7 +4,9 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Change is a file one commit changed against another.
@@ -125,4 +127,41 @@ func (r *Repo) UntrackedFiles(dir string) ([]string, error) {
 		return nil, err
 	}
 	return Lines(out), nil
+}
+
+// FileCommit is a commit that changed a file; Binary reports that git sees
+// the file there as binary, with no lines to compare.
+type FileCommit struct {
+	Commit
+	Binary bool
+}
+
+// FileLog is the commits from HEAD that changed path, the newest first, Limit
+// at the most. Renames are not followed: the history is of the path.
+func (r *Repo) FileLog(path string) ([]FileCommit, error) {
+	out, err := r.Run("log", "-n", strconv.Itoa(Limit), "--numstat",
+		"--format=%x1e%H%x1f%P%x1f%an%x1f%at%x1f%s", "HEAD", "--", path)
+	if err != nil {
+		return nil, err
+	}
+	var cs []FileCommit
+	for _, rec := range strings.Split(out, "\x1e") {
+		head, rest, _ := strings.Cut(rec, "\n")
+		f := strings.Split(head, "\x1f")
+		if len(f) < 5 {
+			continue
+		}
+		at, _ := strconv.ParseInt(f[3], 10, 64)
+		c := FileCommit{Commit: Commit{SHA: f[0], Author: f[2], Date: time.Unix(at, 0), Subject: f[4]}}
+		if f[1] != "" {
+			c.Parents = strings.Fields(f[1])
+		}
+		for _, l := range strings.Split(rest, "\n") {
+			if strings.HasPrefix(l, "-\t-\t") { // numstat writes - - for a binary file
+				c.Binary = true
+			}
+		}
+		cs = append(cs, c)
+	}
+	return cs, nil
 }

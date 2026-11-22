@@ -88,12 +88,12 @@ func (h *historyScreen) branchActions() []terminu.Action {
 		// A branch, a remote branch a local one goes with, a tag: Enter shows
 		// its commit in [2]. A remote branch no local one goes with: Enter
 		// checks it out as one, then shows it (the user).
-		{Key: "Enter", Label: "Show", Desc: "its commit in [2]", Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: "its commit in [3]", Scope: item, Hint: "show",
 			Hidden: func() bool {
 				k, _ := h.rowKind()
 				return k == "" || k == kindStash || k == kindRemote && !h.tracked()
 			}, Do: h.showRef},
-		{Key: "Enter", Label: "Check out", Desc: "as a local branch, and show it in [2]", Scope: item, Hint: "check out",
+		{Key: "Enter", Label: "Check out", Desc: "as a local branch, and show it in [3]", Scope: item, Hint: "check out",
 			Hidden: func() bool { k, _ := h.rowKind(); return k != kindRemote || h.tracked() }, Disabled: off,
 			AskFor: h.askCheckoutRemote, Do: func() tea.Cmd { return h.checkoutRemote(true) }},
 		// A branch.
@@ -215,9 +215,8 @@ func (h *historyScreen) branchActions() []terminu.Action {
 				return g.run("Dropping…", "Drop", func() error { return g.repo.StashDrop(st.Ref) },
 					func() tea.Cmd { return g.a.Toast(terminu.Success, "Dropped "+st.Ref) })
 			}},
-		// The panel: [2] zoomed can be put back from here too (tdp screen.6).
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
-			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
+		// The panel: [3] zoomed can be put back from here too (tdp screen.6).
+		h.g.unzoom(),
 	}
 }
 
@@ -399,8 +398,7 @@ func (h *historyScreen) fileActions() []terminu.Action {
 			Hidden:   func() bool { _, ok := h.file(); return !ok },
 			Disabled: func() bool { it, _ := h.file(); return it.Text == nil }, // binary: no text to compare (tdp panel.9)
 			Do:       h.openFile},
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
-			Hidden: func() bool { return h.zoom == 0 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
+		h.g.unzoom(),
 	}
 }
 
@@ -412,7 +410,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 	off := h.busyOr(nil)
 	short := func() string { c, _ := h.current(); return git.Short(c.SHA) }
 	return []terminu.Action{
-		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [4]", Scope: item, Hint: "files",
+		{Key: "Enter", Label: "Files", Desc: "this commit changed, in [5]", Scope: item, Hint: "files",
 			Hidden: onGraph, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		h.diffMode(),
 		{Key: "c", Label: "Check out", Desc: "this commit, HEAD detached", Scope: item,
@@ -479,7 +477,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 			Hidden: func() bool { return g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
 		{Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
 			Hidden: func() bool { return !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
-		{Key: "z", Label: "Zoom", Desc: "wider, [1] at its least", Scope: panel, Hint: "zoom",
+		{Key: "z", Label: "Zoom", Desc: "wider, [1] and [2] at their least", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},
 		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
 			Hidden: func() bool { return !(h.zoom == 1 || h.zoom == 0 && h.narrowZoom()) }, Do: func() tea.Cmd { return h.zoomTo(2) }},

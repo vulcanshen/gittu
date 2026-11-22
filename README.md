@@ -19,17 +19,17 @@ first.
 
 - **Branches beside the graph**: the branches, remote branches, tags and stashes on the left, the commits and their graph on
   the right; the cursor on a branch takes the graph to its commit, and `Enter` goes there.
-- **A graph you can read**: one row a commit, each line of history in its own colour, as many lines drawn as `[2]`
+- **A graph you can read**: one row a commit, each line of history in its own colour, as many lines drawn as `[3]`
   has room for, the branches and tags on their
-  commits; on the CURRENT tab the line of the branch under `[1]`'s cursor kept on the left, on the ALL tab main's,
+  commits; on the CURRENT tab the line of the branch under `[2]`'s cursor kept on the left, on the ALL tab main's,
   the remote branches only when you want them.
 - **Look before you act**: a commit's files marked `+` `-` `~`, right under the graph and following its cursor, then a
   file's two versions side by side; two commits compared the same way.
 - **Every operation from the `Space` menu**: check out, merge, rebase, cherry-pick, revert, reset, branch, tag, rename,
   delete, stash, fetch, pull, push — each with the question it needs before it runs.
-- **Working tree**: the conflicts, the staged and the unstaged files, the diff of the one under the cursor beside them;
-  stage, unstage, discard and commit.
-- **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[2]`, and `Enter` there opens it in the editor
+- **The files to commit**: the conflicts, the staged and the unstaged files, above the branches; on them, the right
+  shows the diff of the one under the cursor and the commits that changed it; stage, unstage, discard and commit.
+- **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[3]`, and `Enter` there opens it in the editor
   git uses; when you leave it, gittu says which lines still have conflict markers, and `r` marks it resolved (the
   marked ones from the `Space` menu). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
   revert.
@@ -106,58 +106,66 @@ gittu
 ```
 
 Move with `j`/`k`, press `Space` to see what you can do with the branch or commit under the cursor; the files of the
-commit under the cursor are below the graph. `Tab` goes to the next panel, `W` to the working tree, `H` back to the history. `?` lists every key, `q`
-quits.
+commit under the cursor are below the graph. `Tab` goes to the next panel, `1` to the files to commit (the right then
+shows their diff), `2` back to the branches and the graph. `?` lists every key, `q` quits.
 
 ## Usage
 
 The bottom line always shows `Space:menu ?:help !:log`: `Space` lists what you can do where you are, `?` the keys, `!`
 the App Log, what gittu did and what went wrong.
 
-### History
+On the left, `[1]` CHANGES, the files to commit, is above `[2]` BRANCHES. On the right, the STATUS sign says where
+HEAD is, the repository, and a merge or a push under way; under it, `[3]`, `[4]` and `[5]` show what goes with
+whichever of `[1]` and `[2]` you were on last. After `[2]`: the commits and their graph, then the message and the
+files of the commit under the cursor. After `[1]`: the diff of the file under its cursor, then the commits that
+changed it, `[5]` hidden. Going into `[3]`, `[4]` or `[5]` changes nothing.
+
+### The branches and the graph
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| `[1]` BRANCHES: a branch | Its commit in `[2]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[x]` Delete, Push |
-| `[1]` REMOTES: a remote branch | Its commit in `[2]`; with no local branch for it, checks it out as one first | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
-| `[1]` TAGS: a tag | Its commit in `[2]` | `[c]`heck out (HEAD detached), `[x]` Delete, Push |
-| `[1]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[x]` Drop |
-| `[2]` a commit | To its files in `[4]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
-| `[2]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
-| `[4]` FILES: a file | Its two versions | `[/]` filter |
+| `[2]` BRANCHES: a branch | Its commit in `[3]` | `[c]`heck out, `[M]erge` into the current branch, Re`[b]`ase the current branch onto it, `[r]`ename, `[x]` Delete, Push |
+| `[2]` REMOTES: a remote branch | Its commit in `[3]`; with no local branch for it, checks it out as one first | `[c]`heck out as a local branch tracking it, `[M]erge`, Re`[b]`ase, `[x]` Delete it on the remote |
+| `[2]` TAGS: a tag | Its commit in `[3]` | `[c]`heck out (HEAD detached), `[x]` Delete, Push |
+| `[2]` STASHES: a stash | Its files, as a commit's | `[a]`pply, P`[o]`p, `[x]` Drop |
+| `[3]` a commit | To its files in `[5]` | `[D]`iff with another commit, `[c]`heck out, `[b]`ranch here, `[t]`ag, `[M]`erge, Rebase, Cherry-pick, Revert, Reset to here, Cop`[y]` hash |
+| `[3]` the panel | | `[n]`ext / `[N]` Previous commit (CURRENT tab only: the commits the branch on the left reaches), Show / Hide remote branches, `[z]`oom, `[/]` filter |
+| `[5]` FILES: a file | Its two versions | `[/]` filter |
 
-`[1]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
-and tag. `[2]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
-branch or tag under `[1]`'s cursor, and follows it as you move; ALL keeps main's line (or master's) there. The remote
+`[2]` has four tabs, BRANCHES, REMOTES, TAGS and STASHES: `h` and `l` switch them. The graph draws every local branch
+and tag. `[3]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
+branch or tag under `[2]`'s cursor, and follows it as you move; ALL keeps main's line (or master's) there. The remote
 branches are hidden at first, but for those a local branch tracks or shares a name with: Show remote branches in
-`[2]`'s `Space` menu draws them all. `z` on `[2]` zooms it wider, with `[1]` at its least width, then to the
-whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
+`[3]`'s `Space` menu draws them all. `z` on `[3]` zooms it wider, with `[1]` and `[2]` at their least width, then to
+the whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
-`[3]` DESCRIPTION is the whole message of the commit under `[2]`'s cursor (`z` there puts it on the whole screen), and `[4]` FILES beside it lists the files it
+`[4]` DESCRIPTION is the whole message of the commit under `[3]`'s cursor (`z` there puts it on the whole screen), and `[5]` FILES beside it lists the files it
 changed against the commit before it; both change as you move: `+` added, `-` deleted, `~` changed (a rename is `~ old → new`). `Enter` on a commit takes you there, and `Enter`
 on a file opens its two versions side by side, UNIFIED or SPLIT (`h`/`l`). `D` on a commit starts the Diff mode with
-that commit as the base, `[2]` and `[4]` both in it: move to another commit and `[4]` lists the files that differ
-between the two. `Enter` takes you to `[4]`, where `Enter` opens a file the same way; `Esc` goes back the way you came,
-and on `[2]` leaves the mode.
+that commit as the base, `[3]` and `[5]` both in it: move to another commit and `[5]` lists the files that differ
+between the two. `Enter` takes you to `[5]`, where `Enter` opens a file the same way; `Esc` goes back the way you came,
+and on `[3]` leaves the mode.
 
-### Working tree
+### The files to commit
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
 | An unstaged file | Stage | `[m]`ark, Discard, Remove, Ignore |
 | A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
-| A conflicted file | Show it in `[2]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
-| A conflict | Read it whole in `[2]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
+| A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
+| A conflict | Read it whole in `[3]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all (again: unmark all), Clear marks, Stage `[a]`ll (again: unstage all) |
+| `[4]` HISTORY: a commit | The file's two versions in it | `[/]` filter |
 
 Mark files with `m` to work on them together: the `Space` menu then has what can be done to the marked ones, each on the
 files it fits. Remove deletes a file and stages its deletion; Ignore adds it to `.gitignore`, and stops tracking it if
 git did.
 
-`[1]` is CHANGES, `[2]` DIFF: what changed in the file under the cursor, drawn as a comparison is (only the parts that
+`[1]` is CHANGES, `[3]` DIFF: what changed in the file under the cursor, drawn as a comparison is (only the parts that
 differ, both line numbers): HEAD against the index when staged, the index against the working tree when not. `Enter`
-there opens the comparison itself, UNIFIED or SPLIT.
+there opens the comparison itself, UNIFIED or SPLIT. `[4]` HISTORY lists the commits that changed that file, the
+newest first (for a rename not committed yet, the old name's); `Enter` on one opens the file's two versions in it.
 
 ### For the whole repository
 
@@ -165,8 +173,8 @@ In every `Space` menu, `Global operation` lists what works on the whole reposito
 fetched, then the current branch pulled), `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
-does not use the same key for its own: on History, `c` checks out, and Commit is in the global operations; on `[1]`,
-`b` rebases, and Branch is in the global operations.
+does not use the same key for its own: on `[2]` and `[3]`, `c` checks out, and Commit is in the global operations; on
+`[2]`, `b` rebases, and Branch is in the global operations.
 
 gittu reads the repository again every 3 seconds, so what you change outside it shows, and the App Log (`!`) says
 what changed.
@@ -193,7 +201,8 @@ back as 4. A key gittu does not read (a typo) is left in the file, and the App L
 
 ## Limits
 
-- The history graph reads the newest 1000 commits.
+- The history graph reads the newest 1000 commits, and so does a file's history in `[4]`.
+- A file's history in `[4]` is of its path: it stops at the commit that renamed the file.
 - gittu cannot ask for a password or a passphrase: use an ssh agent or a credential helper.
 - A conflict shows mine and theirs, not the common ancestor.
 - No interactive rebase, submodules, worktrees or git-flow.
