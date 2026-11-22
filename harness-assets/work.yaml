@@ -1,27 +1,23 @@
 tasks:
   - id: 1
-    spec: 57
+    spec: 59
     implementation: |
-      一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 STATUS 說明牌、3 [3]、4 [4]、5 [5]；
-      跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {3, 4, 5}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
+      一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 [3]、3 [4]、4 [5]；
+      跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
       focus 換到帶頭的 panel（Tab、數字鍵、App.Focus）時 tgo 換上，移進 [3]、[4]、[5] 不換；號碼照位置，收起的 [5] 數字鍵不作用、Tab 跳過，footer 寫 Tab|1–5:panels；
       Panels 一開始寫 [1] 帶頭的樣子（tgo 的 AddScreen 先檢查 [1] 衝突檔的 Enter 找得到它的 Details [3] DIFF），AddScreen 之後 App.Focus([2])：打開時 focus 在 [2]、右邊是 COMMITS
-      Layout：左邊寬度的三分之一（60 欄時 20｜40），[1] 在上、[2] 在下，各一半高；右邊最上面是說明牌（高 3），下面 [3]，再下面是扣掉說明牌之後高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(5) 時 [4] 拿整個寬度；
+      Layout：左邊寬度的三分之一（60 欄時 20｜40），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
       最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
-      STATUS 說明牌：tgo Panel{Label: Status, Sign: SignLit}，Body 是 gittu 的 signBody：第一列是左右各空一格、中間 statusLine(寬度 − 2)（原本的 statusbar，span 照樣上色、外面來的字 Escape），其他列空白；
-      那一列（原本的 statusbar）順序是狀態、Branch、Repo：做到一半的 merge、rebase、cherry-pick、revert 時最前面是
-      <狀態 glyph> Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（Green；glyph 在還有衝突的檔時是 nf-md-alarm_light Peach，沒有時 nf-md-check_circle Green，空一格接字）；背景有 git 指令在跑時同一個位置改寫 Pushing…、Merging… 之類（Green），兩個不同時出現；
-      接著 Branch: <HEAD 的分支>（Lavender；detached 時 detached at <短 hash>，還沒有 commit 時 no commits yet），有 upstream 時接 ↑N ↓N（Overlay0，只寫不是 0 的）；最後 Repo: <repo 資料夾名>（Lavender）；標籤 Overlay0，組與組之間兩格
-      寬度固定：一律是說明牌裡的寬度 w，前面補空白（靠右，跟原本的 statusbar 一樣）；空間照狀態 > 分支 > repo 的順序給（使用者）：進行中的工作先拿，最多 w、從尾端截；
-      Branch 那一欄寬 min(本機每個分支的名字加 ↑N ↓N 與 HEAD 所在之中最寬的, 剩下的 − 8)，剩不到 8 + 4 格就不放；字靠右（空白補在它前面），放不下時 ↑N ↓N 先讓、名字從尾端截、加 …；
-      Repo 用最後剩下的，名字從尾端截（至少 4 格，名字更短時整個），放不下就不放；所以換到另一個分支時，Repo 與 Branch 那一欄都不動；60 欄、merge 中是 󰞏 Merging: clash  Branch: main
+      沒有 statusbar、沒有 STATUS 說明牌（2026-11-22 拿掉）：[1] 的位置列（List.Location、LocationGlyph，tgo 畫成 Lavender）每次 Layout 都重寫（statusScreen.located）：
+      git 指令在跑時是在做什麼（Pushing…、Merging… 之類，沒有 glyph）；不然做到一半的 merge、rebase、cherry-pick、revert 時是 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>，
+      glyph 在還有衝突的檔時是 nf-md-alarm_light、沒有時 nf-md-check_circle；都沒有時 All changes；進到衝突的檔裡時 hunk 清單的位置列是 <同一句> › <路徑>
       q 與 Ctrl-C：tgo App.QuitFlow；沒有 git 指令在跑時直接離開（tea.Quit）；有在跑時開 confirm QUIT「Quit gittu?」，內容 git is still at work: <在做什麼>（Peach）；有 popup 開著時 tgo 先問
       git 指令都是 internal/git 呼叫使用者 PATH 上的 git：工作目錄是 repo 的頂層，環境加 GIT_TERMINAL_PROMPT=0、GIT_MERGE_AUTOEDIT=no、GIT_OPTIONAL_LOCKS=0，
       Setsid（沒有控制終端機，ssh、gpg 開不了 /dev/tty）；改 repo 的操作在背景跑（tea.Cmd），跑完重新讀整個 repo、換上畫面
       L4 的畫面測試：tdptest 每一格畫面都量；tdptest.Check 在各種尺寸與 icon 寬度走第一次啟動；gittu 自己會開的 popup（diff viewer、new branch 的 text input、
       reset 的 select、checkout 的 confirm、commit 的 form、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
-    test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestPanelsFollowTheLead, TestStatusSign, TestStatusbarSaysTheMerge, TestStatusbarKeepsItsPlace, TestStatusbarNarrow, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
+    test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestPanelsFollowTheLead, TestNoStatusRow, TestLocationSaysTheMerge, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 54
     implementation: |
@@ -165,7 +161,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 57
+    spec: 59
     implementation: |
       [1] CHANGES（task 1 那個畫面的左上，帶頭的 panel）是 tgo List（Marks，task 21；一欄、沒有表頭：<字母> <路徑>，字母用 Row.Styled 上色；路徑由 gittu 照 [1] 的寬度從前面截（寬度 − 9：框、邊距、標記欄、字母與空白、cursor 的箭頭、多留一格），…接在字母後面，Layout 記下 [1] 的寬度（statusScreen.laidOut），變了就重新做每一列；Row.Cells 是完整的 <字母> <路徑>，篩選照它比對；Shrink、Path 留著當保險），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -246,7 +242,7 @@ tasks:
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
       失敗：改寫衝突的檔失敗開 error popup RESOLVE FAILED: <路徑>（原因，tgo 記進 App Log）；最後一個區塊解完的 git add、整個檔用一邊、Abort、Continue（不是停在衝突的）
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
-    test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestStatusbarSaysTheMerge]
+    test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestLocationSaysTheMerge]
   - id: 15
     spec: 54
     implementation: |
@@ -268,7 +264,7 @@ tasks:
     spec: 57
     implementation: |
       畫面的 tgo Screen.Layout（screen.go）照 zoom 的階段排（historyScreen.zoom）：0 照 task 1；1 是左邊（[1]、[2]）min(20, 寬度/3) 欄、右邊拿剩下的；
-      0 與 1 的說明牌、[3]、[4]、[5] 照 task 1 排；2 是有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel；說明牌也是）
+      0 與 1 的 [3]、[4]、[5] 照 task 1 排；2 是有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel；說明牌也是）
       [3] COMMITS 的 panel operation，同一個鍵 z 依階段用 Hidden 分開：沒放大時 Zoom — wider, [1] and [2] at their least（到第一段）；
       第一段時、或沒放大而終端機窄（寬度/3 ≤ 20，也就是不到 63 欄）時 Zoom — to the whole screen（到第二段）；第二段時 Unzoom — back to both panels（回到 1:2）；
       下框 hint 寫 z:zoom 或 z:unzoom

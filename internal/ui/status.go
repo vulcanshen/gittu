@@ -937,11 +937,23 @@ func (s *statusScreen) goIn(path string) tea.Cmd {
 		return s.g.a.ErrorAbout("Resolve failed", path, err.Error())
 	}
 	s.hunkList.Select("0")
-	s.hunkList.Location = "All changes › " + path
+	s.located()
 	s.filesP.Body = s.hunkList
 	s.filesP.OnEsc = func() tea.Cmd { s.goOut(); s.showDiff(false); return nil }
 	s.showDiff(false)
 	return nil
+}
+
+// located writes [1]'s location row: the state of the repository when there
+// is one, else All changes (the user: it only holds the place), then the
+// conflicted file gone into (tdp panel.10).
+func (s *statusScreen) located() {
+	glyph, where := s.g.state()
+	if where == "" {
+		where = "All changes"
+	}
+	s.files.LocationGlyph, s.files.Location = glyph, where
+	s.hunkList.LocationGlyph, s.hunkList.Location = glyph, where+" › "+s.conflict
 }
 
 // goOut goes back to the files, the cursor on the conflicted file (tdp K4).

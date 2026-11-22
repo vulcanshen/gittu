@@ -35,8 +35,8 @@ const (
 	glyphTag    = ""          // nf-fa-tag
 	glyphCommit = ""          // nf-dev-git_commit
 	glyphStash  = "\U000F01BC" // nf-md-database
-	// The STATUS sign's state of an operation stopped half way (the user):
-	// the glyphs of a Warning and a Success toast.
+	// The state of an operation stopped half way in [1]'s location row (the
+	// user): the glyphs of a Warning and a Success toast.
 	glyphConflicts = "\U000F078F" // nf-md-alarm_light: conflicts left
 	glyphReady     = "\U000F05E0" // nf-md-check_circle: none left, ready to go on
 )
@@ -65,7 +65,7 @@ type gittu struct {
 	all bool
 	// remote reports the remote branches drawn in the graph too.
 	remote bool
-	// busy is what git is doing now, for the STATUS sign ("Pushing…"); ""
+	// busy is what git is doing now, for [1]'s location row ("Pushing…"); ""
 	// when nothing runs. Operations that change the repository wait meanwhile.
 	busy string
 	// reading reports a read of the repository on its way.
@@ -82,9 +82,8 @@ type gittu struct {
 
 	history *historyScreen
 	status  *statusScreen
-	// screen is gittu's one screen, sign its STATUS sign (screen.go).
+	// screen is gittu's one screen (screen.go).
 	screen *terminu.Screen
-	sign   *terminu.Panel
 }
 
 // New makes gittu on repo.
@@ -231,7 +230,7 @@ func (g *gittu) readOwn() tea.Cmd {
 	}
 }
 
-// run runs an operation in the background while the STATUS sign says doing,
+// run runs an operation in the background while [1]'s location row says doing,
 // then reads the repository and shows it. ok says how it went; title names
 // it in its error popup.
 func (g *gittu) run(doing, title string, op func() error, ok func() tea.Cmd) tea.Cmd {
@@ -289,115 +288,27 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	}
 }
 
-// statusLine is the STATUS sign's row (it was the statusbar, tdp screen.4),
-// in the user's order: the work in progress (Green): what git is doing, else
-// an operation stopped half way, its state's glyph first; where HEAD is; the
-// repository (both Lavender: where you are).
-//
-// It stays on the right of the sign, so that nothing moves as it changes: it
-// is always the w cells given, blanks first (tdp L2). The branch's field is
-// as wide as the widest it can show, not as the name is, its text on the
-// right of it: checking another branch out moves nothing. Short of room
-// (tdp L3: cut, never wrapped), what matters most keeps its room, in the
-// user's order: the work in progress, then the branch, then the repository.
-// The repository's name is cut, then left out; then the branch's; the work
-// in progress last.
-func (g *gittu) statusLine(w int) []terminu.Span {
-	quiet := terminu.Fg(terminu.Overlay0)
-	here := terminu.Fg(terminu.Lavender)
-	green := terminu.Fg(terminu.Green)
-	const gap = 2
-	width := func(sp []terminu.Span) int {
-		n := 0
-		for _, x := range sp {
-			n += terminu.Width(x.Text)
-		}
-		return n
-	}
-
-	// The work in progress: what git is doing while it runs, else an
-	// operation stopped half way, its state's glyph first (the user):
-	// conflicts left, Peach as a warning is (tdp screen.4); none, Green,
-	// ready to commit or go on.
-	var work []terminu.Span
+// state is what [1]'s location row says in place of All changes, which
+// only holds the place (the user): what git is doing while it runs, else
+// an operation stopped half way (a merge, rebase, cherry-pick or revert)
+// and the other side, its state's glyph first: conflicts left, or none,
+// ready to commit or go on; "" for neither.
+func (g *gittu) state() (glyph, text string) {
 	switch {
 	case g.busy != "":
-		work = []terminu.Span{{Text: terminu.Truncate(g.busy, w), Style: green}}
+		return "", g.busy
 	case g.snap != nil && g.snap.State.Op != "":
 		st := g.snap.State
-		glyph, colour := glyphReady, terminu.Green
+		glyph = glyphReady
 		if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
-			glyph, colour = glyphConflicts, terminu.Peach
+			glyph = glyphConflicts
 		}
-		work = []terminu.Span{{Text: glyph, Style: terminu.Fg(colour)},
-			{Text: " " + terminu.Truncate(stateWord(st.Op)+": "+st.Other, max(w-terminu.Width(glyph)-1, 1)), Style: green}}
+		return glyph, stateWord(st.Op) + ": " + st.Other
 	}
-	room := w - width(work)
-	if len(work) > 0 {
-		room -= gap
-	}
-
-	// The branch: its field as wide as the widest it can show (every local
-	// branch with its track, and where HEAD is), the room left at the most;
-	// left out with no room for 4 cells of a name.
-	var branch []terminu.Span
-	if g.snap != nil && room >= len("Branch: ")+4 {
-		name, t := g.where(), track(g.snap.Ahead, g.snap.Behind, false)
-		widest := terminu.Width(name) + trackWidth(t)
-		for _, b := range g.snap.Branches {
-			widest = max(widest, terminu.Width(b.Name)+trackWidth(track(b.Ahead, b.Behind, false)))
-		}
-		field := min(widest, room-len("Branch: "))
-		nameW := field - trackWidth(t)
-		if nameW < 4 { // no room for both: the name alone
-			t, nameW = "", field
-		}
-		name = terminu.Truncate(name, nameW)
-		branch = []terminu.Span{{Text: strings.Repeat(" ", max(field-terminu.Width(name)-trackWidth(t), 0))},
-			{Text: "Branch: ", Style: quiet}, {Text: name, Style: here}}
-		if t != "" {
-			branch = append(branch, terminu.Span{Text: " " + t, Style: quiet})
-		}
-		room -= width(branch)
-	}
-
-	// The repository: what is left, its name cut (4 cells at the least), or
-	// left out.
-	var repoPart []terminu.Span
-	lead := 0
-	if len(work) > 0 || len(branch) > 0 {
-		lead = gap
-	}
-	repo := g.repo.Name()
-	if r := room - lead - len("Repo: "); r >= min(4, terminu.Width(repo)) {
-		repoPart = []terminu.Span{{Text: strings.Repeat(" ", lead)}, {Text: "Repo: ", Style: quiet},
-			{Text: terminu.Truncate(repo, r), Style: here}}
-		room -= width(repoPart)
-	}
-	if len(work) > 0 && len(branch) == 0 && len(repoPart) == 0 {
-		room += gap // nothing after it: no blanks between
-	} else if len(work) > 0 {
-		work = append(work, terminu.Span{Text: strings.Repeat(" ", gap)})
-	}
-
-	spans := []terminu.Span{{Text: strings.Repeat(" ", max(room, 0))}}
-	spans = append(spans, work...)
-	spans = append(spans, branch...)
-	return append(spans, repoPart...)
+	return "", ""
 }
 
-// where is the branch HEAD is on, or where it is detached.
-func (g *gittu) where() string {
-	switch {
-	case g.snap.Head != "":
-		return g.snap.Head
-	case g.snap.HeadSHA != "":
-		return "detached at " + git.Short(g.snap.HeadSHA)
-	}
-	return "no commits yet"
-}
-
-// stateWord is an operation stopped half way, as the STATUS sign says it.
+// stateWord is an operation stopped half way, as [1]'s location row says it.
 func stateWord(op string) string {
 	switch op {
 	case "merge":
@@ -414,15 +325,6 @@ func stateWord(op string) string {
 
 // track is a branch's commits ahead of and behind its upstream: ↑1 ↓2, only
 // what is not 0; "upstream gone" when it is no longer there (git's [gone]).
-// trackWidth is the cells a track takes after a branch's name, a blank
-// before it.
-func trackWidth(t string) int {
-	if t == "" {
-		return 0
-	}
-	return 1 + terminu.Width(t)
-}
-
 func track(ahead, behind int, gone bool) string {
 	if gone {
 		return "upstream gone"

@@ -104,8 +104,8 @@ gittu
 最下面一列一直寫著 `Space:menu ?:help !:log`：`Space` 列出在這裡能做的事，`?` 列出按鍵，`!` 打開 App Log，看 gittu 做了什麼、
 哪裡出錯。
 
-左邊上面是 `[1]` CHANGES，要 commit 的檔案，下面是 `[2]` BRANCHES。右邊最上面是 STATUS 說明牌，寫 HEAD 在哪、哪個 repo，還有
-做到一半的 merge、正在跑的 push；下面的 `[3]`、`[4]`、`[5]` 跟著 `[1]`、`[2]` 裡你最後待的那一個換：最後在 `[2]`，是 commit 與
+左邊上面是 `[1]` CHANGES，要 commit 的檔案，下面是 `[2]` BRANCHES；`[1]` 的第一列平常寫 All changes，merge、rebase、
+cherry-pick、revert 做到一半時寫它，git 在跑時寫在做什麼（Pushing…）。右邊的 `[3]`、`[4]`、`[5]` 跟著 `[1]`、`[2]` 裡你最後待的那一個換：最後在 `[2]`，是 commit 與
 分支圖，加上 cursor 那個 commit 的訊息與檔案；最後在 `[1]`，是 cursor 那個檔的差異，加上改過它的 commit，`[5]` 收起來。移到
 `[3]`、`[4]`、`[5]` 裡不會換。
 

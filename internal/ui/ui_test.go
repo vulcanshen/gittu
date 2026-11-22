@@ -98,12 +98,16 @@ func TestHistoryLayout(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("commit", "-q", "--allow-empty", "-m", "Ahead of origin")
 	_, d := start(t, r, 80, 32)
-	has(t, d, "[2] BRANCHES", "[3] CURRENT", "ALL", "Repo: ", "Branch: main ↑1", "Space:menu ?:help !:log Tab|1–5:panels q:quit")
+	has(t, d, "[2] BRANCHES", "● main ↑1", "[3] CURRENT", "ALL", "Space:menu ?:help !:log Tab|1–5:panels q:quit")
 	// [1] and [2] a third of the width, the rest on the right (tdp L1).
-	top := d.Screen()[3]
+	top := d.Screen()[0]
 	at := strings.LastIndex(top[:max(strings.Index(top, "[3]"), 0)], "┌") // the capsule's end between
 	if at < 0 || terminu.Width(top[:at]) != 26 {
 		t.Errorf("[3] does not start at column 26:\n%s", top)
+	}
+	// [1] above [2], 1:2 (the user): 31 rows, [2] from the 11th.
+	if i := slices.IndexFunc(d.Screen(), func(r string) bool { return strings.Contains(r, "[2] BRANCHES") }); i != 10 {
+		t.Errorf("[2] starts on row %d, want 10:\n%s", i, strings.Join(d.Screen(), "\n"))
 	}
 }
 
@@ -147,103 +151,47 @@ func TestPanelsFollowTheLead(t *testing.T) {
 	has(t, d, "[3] CURRENT", "[5] FILES")
 }
 
-// TestStatusSign: no screen chips and no statusbar row: where you are is on
-// the STATUS sign over [3], with no number, which Tab passes by (the user;
-// tdp screen.1, panel.17).
-func TestStatusSign(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 120, 32)
-	if top := d.Screen()[0]; !strings.Contains(top, "[1] CHANGES") || !strings.Contains(top, "STATUS") {
-		t.Errorf("the first row is not [1] beside the sign:\n%s", top)
+// TestNoStatusRow: no screen chips, no statusbar and no STATUS sign: [1]
+// and [3] start on the first row, and [1]'s location row says All changes
+// while nothing is under way (the user).
+func TestNoStatusRow(t *testing.T) {
+	_, d := start(t, gittest.Sample(t), 120, 32)
+	if top := d.Screen()[0]; !strings.Contains(top, "[1] CHANGES") || !strings.Contains(top, "[3] CURRENT") {
+		t.Errorf("the first row is not [1] beside [3]:\n%s", top)
 	}
-	if row := d.Screen()[1]; !strings.Contains(row, "Branch: main") || !strings.Contains(row, "Repo: ") {
-		t.Errorf("the sign does not say where you are:\n%s", row)
+	if row := d.Screen()[1]; !strings.Contains(row, "All changes") {
+		t.Errorf("[1]'s location row does not say All changes:\n%s", row)
 	}
-	hasNot(t, d, "WORKING TREE", "] STATUS")
-	d.Press("Tab") // from [2]: the sign passed by
-	if g.a.Screen().Focused() != g.history.histP {
-		t.Error("Tab from [2] is not on [3]")
-	}
+	hasNot(t, d, "WORKING TREE", "STATUS", "Repo: ", "Branch: ")
 }
 
-func TestStatusbarSaysTheMerge(t *testing.T) {
+// TestLocationSaysTheMerge: an operation stopped half way takes the place of
+// All changes in [1]'s location row, its state's glyph first: conflicts
+// left, then none; what git does takes it while it runs (the user).
+func TestLocationSaysTheMerge(t *testing.T) {
 	r := gittest.Conflicted(t)
 	g, d := start(t, r, 120, 32)
 	has(t, d, glyphConflicts+" Merging: feature")
-	// work in progress: Green (tdp screen.4); its state's glyph Peach while
-	// conflicts are left (the user)
-	styled := strings.Join(d.Styled(), "\n")
-	if !strings.Contains(styled, "38;2;166;227;161m Merging: feature") {
-		t.Error("Merging: feature is not Green")
+	hasNot(t, d, "All changes")
+	d.Press("1") // focused: not dimmed
+	if !strings.Contains(d.Styled()[1], "38;2;180;190;254m"+glyphConflicts+" Merging: feature") {
+		t.Errorf("the location row is not Lavender (tdp panel.10):\n%q", d.Styled()[1])
 	}
-	if !strings.Contains(styled, "38;2;250;179;135m"+glyphConflicts) {
-		t.Error("the conflicts glyph is not Peach")
-	}
-	// one last field (tdp L2): what git does takes its place while it runs
 	d.Do(func() tea.Cmd { g.busy = "Committing…"; return nil })
 	has(t, d, "Committing…")
 	hasNot(t, d, "Merging: feature")
 	d.Do(func() tea.Cmd { g.busy = ""; return nil })
 	has(t, d, "Merging: feature")
-	// No conflict left: the ready glyph, Green.
+	// Into the conflicted file: the file after the state.
+	d.Do(func() tea.Cmd { return g.status.goIn("notes.txt") })
+	has(t, d, "Merging: feature › notes.txt")
+	d.Press("Esc")
+	// No conflict left: the ready glyph.
 	r.Git("add", "notes.txt")
 	d.Do(func() tea.Cmd { return g.read(true) })
 	done(t, g, d)
 	has(t, d, glyphReady+" Merging: feature")
 	hasNot(t, d, glyphConflicts)
-}
-
-// TestStatusbarKeepsItsPlace is tdp L2 in the user's order, on the STATUS
-// sign's row: the work in progress, Branch, Repo last, both values Lavender,
-// two blanks between them; switching to a branch with a longer name does not
-// move Repo, nor the sign's end of the row.
-func TestStatusbarKeepsItsPlace(t *testing.T) {
-	r := gittest.Sample(t)
-	r.Git("stash", "drop", "-q")
-	r.Git("branch", "a-much-longer-branch-name")
-	g, d := start(t, r, 120, 32)
-	top := d.Screen()[1]
-	repoAt := strings.Index(top, "Repo: ")
-	if !strings.Contains(top, "Branch: main  Repo: ") {
-		t.Fatalf("Branch is not right before Repo:\n%s", top)
-	}
-	d.Do(func() tea.Cmd { g.busy = "Fetching…"; return nil })
-	if top := d.Screen()[1]; !strings.Contains(top, "Fetching…") || strings.Index(top, "Fetching…") > strings.Index(top, "Branch: ") {
-		t.Errorf("the work in progress is not first:\n%s", top)
-	}
-	d.Do(func() tea.Cmd { g.busy = ""; return nil })
-	styled := d.Styled()[1]
-	lavender := "38;2;180;190;254"
-	if strings.Count(styled, lavender) < 2 {
-		t.Errorf("the branch and the repository are not both Lavender:\n%q", styled)
-	}
-	selectBranch(d, g, kindBranch+"a-much-longer-branch-name")
-	d.Press("c")
-	done(t, g, d)
-	top2 := d.Screen()[1]
-	if terminu.Width(top2[:strings.Index(top2, "Repo: ")]) != terminu.Width(top[:repoAt]) {
-		t.Errorf("Repo moved:\n%s\n%s", top, top2)
-	}
-	if !strings.Contains(top2, "Branch: a-much-longer-branch-name  Repo: ") { // the branch before the repository (the user)
-		t.Errorf("the longer branch is not whole, right before Repo:\n%s", top2)
-	}
-}
-
-// TestStatusbarNarrow: short of room, the user's order of what matters
-// keeps its room: the work in progress, then the branch, then the
-// repository, cut, then left out (tdp L3).
-func TestStatusbarNarrow(t *testing.T) {
-	r := gittest.Conflicted(t)
-	_, d := start(t, r, 60, 32)
-	top := d.Screen()[1]
-	if !strings.Contains(top, glyphConflicts+" Merging: feature") || strings.Contains(top, "Repo: ") {
-		t.Errorf("at 60 columns the merge is not kept before the repository:\n%s", top)
-	}
-	d.Resize(120, 32)
-	top = d.Screen()[1]
-	m, b, rp := strings.Index(top, "Merging: feature"), strings.Index(top, "Branch: main"), strings.Index(top, "Repo: ")
-	if m < 0 || b < m || rp < b {
-		t.Errorf("at 120 columns not the merge, the branch, the repository:\n%s", top)
-	}
 }
 
 func TestQuitAtOnce(t *testing.T) {
@@ -954,7 +902,7 @@ func TestCheckoutBranch(t *testing.T) {
 	selectBranch(d, g, kindBranch+"feature")
 	d.Press("c")
 	done(t, g, d)
-	has(t, d, "Checked out feature", "Branch: feature")
+	has(t, d, "Checked out feature", "● feature")
 	if strings.TrimSpace(r.Git("branch", "--show-current")) != "feature" {
 		t.Error("not on feature")
 	}
@@ -967,7 +915,7 @@ func TestMergeBranchConflicts(t *testing.T) {
 	r.Commit("x.txt", "2\n", "Two")
 	r.Git("checkout", "-q", "main")
 	r.Commit("x.txt", "3\n", "Three")
-	g, d := start(t, r, 120, 32) // the statusbar room for Merging: other
+	g, d := start(t, r, 120, 32)
 	selectBranch(d, g, kindBranch+"other")
 	d.Press("M")
 	has(t, d, "Merge other into main?")
@@ -1088,7 +1036,7 @@ func TestTagOperations(t *testing.T) {
 	has(t, d, "Check out v0.1.0?", "HEAD is left detached")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Checked out v0.1.0", "detached at")
+	has(t, d, "Checked out v0.1.0", glyphBranch+" HEAD") // the graph names HEAD detached
 	selectBranch(d, g, kindTag+"v0.1.0")
 	d.Press("x", "Enter")
 	done(t, g, d)
@@ -1164,7 +1112,7 @@ func TestCommitOperations(t *testing.T) {
 	d.Type("fix")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "Made and checked out fix", "Branch: fix")
+	has(t, d, "Made and checked out fix", "● fix")
 	c = selectCommit(t, d, g, "Try a topic")
 	d.Press("Space")
 	has(t, d, "Cherry-pick", "Revert")
@@ -1185,7 +1133,10 @@ func TestCommitOperations(t *testing.T) {
 	has(t, d, "Check out "+git.Short(c.SHA)+"?")
 	d.Press("Enter")
 	done(t, g, d)
-	has(t, d, "detached at "+git.Short(c.SHA))
+	has(t, d, glyphBranch+" HEAD") // the graph names HEAD detached
+	if got := strings.TrimSpace(r.Git("rev-parse", "HEAD")); got != c.SHA {
+		t.Errorf("HEAD %s, want %s", got, c.SHA)
+	}
 }
 
 // runLabel runs the action of panel p with this label, as its menu row does.
@@ -2216,7 +2167,7 @@ func TestResolveHunks(t *testing.T) {
 	d.Press("1")
 	has(t, d, "CONFLICTS", "U notes.txt", "Enter:show r:resolved")
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Resolve one by one") }) // from the Space menu
-	has(t, d, "All changes › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
+	has(t, d, "feature › notes.txt", "Conflict 1", "Conflict 2", "MINE · HEAD (main)", "THEIRS · feature", "B from main", "B from feature",
 		"Enter:read m:mine")
 	d.Press("Enter")
 	if g.a.Screen().Focused() != g.status.diffP {
@@ -2611,13 +2562,13 @@ func TestSplashOpens(t *testing.T) {
 // --- task 17: zoom ---
 
 // leftWidth is the left's width on the screen, [1] and [2]: where [3]'s
-// frame starts, under the sign; 0 when they are not drawn.
+// frame starts; 0 when they are not drawn.
 func leftWidth(d *tdptest.Driver) int {
-	if row := d.Screen()[0]; strings.HasPrefix(row, "┏") && strings.Count(row, "┏") == 1 && !strings.ContainsAny(row, "┌┐") {
+	row := d.Screen()[0]
+	if strings.HasPrefix(row, "┏") && strings.Count(row, "┏") == 1 && !strings.ContainsAny(row, "┌┐") {
 		return 0 // one panel across the whole area
 	}
-	row := d.Screen()[signHeight]
-	for _, corner := range []string{"│┌", "│┏", "┃┌", "┃┏"} {
+	for _, corner := range []string{"┐┌", "┐┏", "┓┌", "┓┏"} {
 		if i := strings.Index(row, corner); i >= 0 {
 			return terminu.Width(row[:i]) + 1
 		}
@@ -2676,7 +2627,7 @@ func TestDescriptionZooms(t *testing.T) {
 	d.Press("z", "!")
 	has(t, d, "Zoomed [4] to the whole screen", "Back to both panels")
 	d.Press("Esc")
-	if r := g.layout(100, 30); r[4].W != 26 || r[5].W != 41 {
+	if r := g.layout(100, 30); r[placeLeft].W != 26 || r[placeRight].W != 41 {
 		t.Errorf("[3] %d wide, [4] %d: not 2:3 of 67", r[2].W, r[3].W)
 	}
 }

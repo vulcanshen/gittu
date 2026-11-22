@@ -114,9 +114,9 @@ shows their diff), `2` back to the branches and the graph. `?` lists every key, 
 The bottom line always shows `Space:menu ?:help !:log`: `Space` lists what you can do where you are, `?` the keys, `!`
 the App Log, what gittu did and what went wrong.
 
-On the left, `[1]` CHANGES, the files to commit, is above `[2]` BRANCHES. On the right, the STATUS sign says where
-HEAD is, the repository, and a merge or a push under way; under it, `[3]`, `[4]` and `[5]` show what goes with
-whichever of `[1]` and `[2]` you were on last. After `[2]`: the commits and their graph, then the message and the
+On the left, `[1]` CHANGES, the files to commit, is above `[2]` BRANCHES; the first row of `[1]` says All changes,
+or a merge, rebase, cherry-pick or revert under way, or what git is doing (Pushing…). On the right, `[3]`, `[4]` and
+`[5]` show what goes with whichever of `[1]` and `[2]` you were on last. After `[2]`: the commits and their graph, then the message and the
 files of the commit under the cursor. After `[1]`: the diff of the file under its cursor, then the commits that
 changed it, `[5]` hidden. Going into `[3]`, `[4]` or `[5]` changes nothing.
 
