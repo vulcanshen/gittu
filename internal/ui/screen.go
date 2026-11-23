@@ -29,11 +29,8 @@ const (
 // gittu opens on the branches beside the history graph (task 1).
 func (g *gittu) newScreen() {
 	h, s := g.history, g.status
-	// TODO(tgo): the places as [1] has them, the first panel with the focus:
-	// AddScreen checks that [1]'s Enter finds its details, [3] the diff,
-	// among them before it shows any lead (sent to the tdp session).
 	g.screen = &terminu.Screen{Name: "gittu", Layout: g.layout,
-		Panels:    []*terminu.Panel{s.filesP, h.branchP, s.diffP, s.logP, h.filesP},
+		Panels:    []*terminu.Panel{s.filesP, h.branchP, h.histP, h.descP, h.filesP},
 		Following: []int{placeMain, placeLeft, placeRight},
 		Leads: []terminu.Lead{
 			{Panel: h.branchP, Shows: []*terminu.Panel{h.histP, h.descP, h.filesP}},

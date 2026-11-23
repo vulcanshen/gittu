@@ -1,11 +1,11 @@
-id: 59
-from: v1.2.20
-to: v1.3.0
+id: 60
+from: v1.3.0
+to: v1.3.1
 tasks:
   - id: 1
-    spec: 59
+    spec: 60
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
-    tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6, tdp L5, tdp panel.10]
+    tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6, tdp L5, tdp L5-4, tdp panel.10]
     remark:
       - "拿掉 STATUS 說明牌（使用者 2026-11-22：「這樣 status 那個 panel 可以整個移除」；它在 [3] 上面只放原本 statusbar 那一列，剛合成一個畫面時加的）：Branch 在 [2] 的 ●（目前的分支）與 ↑N ↓N 看得到，repo 的名字不再顯示；做到一半的操作與正在跑的 git 指令寫在 [1] CHANGES 的位置列，取代 All changes（使用者：「放到 changes 那個 All changes 的那一個 row, 當有狀況的時候，就不需要顯示 All changes, All changes 只是個佔位文字」）；原本 statusbar 放不下時的優先順序（2026-11-20：「優先級: 狀態 > 分支 > repo」）跟著拿掉"
       - "merge、rebase、cherry-pick、revert 做到一半時，[1] 的位置列寫 <狀態 glyph> Merging: <對方>（Rebasing onto:、Cherry-picking:、Reverting:），進到衝突的檔裡時接 › <路徑>；git 指令在跑時寫在做什麼（Pushing…），兩個不同時出現（2026-11-22 前在 statusbar）。狀態的 glyph（使用者 2026-11-20：「merge conflict 發生中，status bar 應該要有一個狀態 icon 才對，顯示當前狀態」）：還有衝突的檔時 nf-md-alarm_light（跟 Warning toast 同一個 glyph），衝突都解完、可以 commit 或 continue 時 nf-md-check_circle（跟 Success toast 同一個）；放在位置列開頭的 icon（tdp panel.10：前面可以放一個 icon，跟那一列同色），整列 Lavender（tdp panel.10），原本 statusbar 上的 Peach、Green 沒有了；兩個 glyph 形狀不同，不靠顏色也分得出（tdp L5）"
@@ -30,8 +30,8 @@ tasks:
       - "左邊（[1] CHANGES 在上、[2] BRANCHES 在下，高度 1:2：使用者 2026-11-22「左側的 panel 1 和 panel 2 高度比例為 1:2」，原本各一半；24 列時 [1] 7 列、[2] 16 列）與右邊照 1:2 分寬：60 欄時是 20｜40，分支名稱與分支圖都還讀得到（tdp L1 的為什麼）；最低尺寸 60×24（使用者 2026-11-20：80×24 的終端機也要能開；tdp L1：最低尺寸 app 可以調低、不能高於 60×32；24 列時 [3] 約 16 列、[4]、[5] 各 7 列），60 欄以上兩個 panel 一律並排，所以沒有窄寬（tdp screen.5 的門檻 app 自行決定，不能高於 60）"
       - "q、Ctrl-C：沒有 git 指令在跑時直接離開（tdp K9：離開流程 app 可以自行決定）；有 git 指令在跑（push、merge……）時先問（離開會把它中斷）；有 popup 開著時照 tdp K9 先問（tgo 做）"
       - "怎麼操作 git：呼叫使用者裝的 git 指令，不用 Go 的 git 函式庫（tdp P5：要呼叫哪些外部指令是功能邏輯）。理由：使用者的 git 設定（hooks、credential helper、ssh、gpg 簽章、pull.rebase）照樣生效；merge 與解衝突跟使用者在終端機打的 git 一模一樣；Go 的函式庫（go-git）沒有完整的 merge。git 指令都不給它終端機（自己的 session），所以不會在畫面上問密碼；要密碼時照錯誤處理（task 10）"
-      - {note: "使用者 2026-11-22 要把 History 與 Working tree 合成一個畫面：CHANGES 放在 BRANCHES 上方；focus 在 CHANGES 時，右邊的 [2] 換成 cursor 那個檔的 diff、[3] 換成那個檔的歷史、[4] 收起，focus 回到 BRANCHES 時換回來；chip 列與 statusbar 拿掉，[2] 上面放一塊說明牌寫 branch 與 repo。跟著 focus 換內容、收起 panel 撞到 tdp L5（切換 focus 不能讓任何內容位移）與 L5-2；收起的 panel 的號碼 K1 也沒寫。合成一個畫面、拿掉 chip 列與 statusbar、說明牌照 tdp screen.1、screen.4、panel.17", issue: "送給 tdp session（2026-11-22）；tdp main debfb1b 收了（L5 的例外「跟著帶頭 panel 換的 panel」、L5-4；使用者選 A）：幾塊 panel 可以跟著幾塊帶頭的 panel 裡最後拿到 focus 的那一塊，換內容、收起一塊、讓旁邊的變寬，同一塊帶頭的每次都一樣，focus 移進跟著換的不換；號碼照位置，收起的那塊數字鍵不作用。tgo 要加 API（focus 換了的 hook 或 panel 組），tdp session 在問 terminu-go，出 beta 會送來；之前照 B（按 Enter 才換）；B 在 gittu 用不了（CHANGES 的 Enter 是 stage），跟 tdp session 說了。terminu-go v1.3.1-beta.2 加了 Screen.Following、Screen.Leads（gittu 2026-11-22 升上去照它做；tgo 的 AddScreen 先檢查 Enter 的 Details 才換上帶頭的 panel，所以 Panels 一開始寫 [1] 帶頭的樣子）。review 時 reviewer 要用 Read 讀 tdp main 的 principle/rules-zh_TW.md L5 與 checklist/items-zh_TW.md L5-4（還沒發版）"}
-      - {note: "terminu-go v1.3.1-beta.2 的 AddScreen 檢查 Enter 的 ToDetails 時只看當下的 Panels，還沒照 Leads 換上帶頭的 panel：[1] CHANGES 衝突檔的 Enter（Show，focus 到 Details [3] DIFF）在 Panels 一開始寫 [2] 帶頭的樣子時會 panic。暫時 Panels 一開始寫 [1] 帶頭的樣子，AddScreen 之後 App.Focus([2])", issue: "送給 tdp session 轉 terminu-go（2026-11-22）；terminu-go main 1855dff 收了（還沒 tag，跟 v1.3.1 正式版一起出）：Details 在那個 panel 有 focus 時一定在畫面上就算數，帶頭的 panel 算它自己的 Shows；AddScreen 也檢查只出現在 Shows 裡的 panel 的動作。gittu 在 1855dff 上試過：不繞也過、Shows 裡的 panel 沒有被擋；升到 v1.3.1 時拿掉 App.Focus([2]) 的繞法"}
+      - {note: "使用者 2026-11-22 要把 History 與 Working tree 合成一個畫面：CHANGES 放在 BRANCHES 上方；focus 在 CHANGES 時，右邊的 [2] 換成 cursor 那個檔的 diff、[3] 換成那個檔的歷史、[4] 收起，focus 回到 BRANCHES 時換回來；chip 列與 statusbar 拿掉，[2] 上面放一塊說明牌寫 branch 與 repo。跟著 focus 換內容、收起 panel 撞到 tdp L5（切換 focus 不能讓任何內容位移）與 L5-2；收起的 panel 的號碼 K1 也沒寫。合成一個畫面、拿掉 chip 列與 statusbar、說明牌照 tdp screen.1、screen.4、panel.17", issue: "送給 tdp session（2026-11-22）；tdp main debfb1b 收了（L5 的例外「跟著帶頭 panel 換的 panel」、L5-4；使用者選 A）：幾塊 panel 可以跟著幾塊帶頭的 panel 裡最後拿到 focus 的那一塊，換內容、收起一塊、讓旁邊的變寬，同一塊帶頭的每次都一樣，focus 移進跟著換的不換；號碼照位置，收起的那塊數字鍵不作用。tgo 要加 API（focus 換了的 hook 或 panel 組），tdp session 在問 terminu-go，出 beta 會送來；之前照 B（按 Enter 才換）；B 在 gittu 用不了（CHANGES 的 Enter 是 stage），跟 tdp session 說了。terminu-go v1.3.1-beta.2 加了 Screen.Following、Screen.Leads（gittu 2026-11-22 升上去照它做；tgo 的 AddScreen 先檢查 Enter 的 Details 才換上帶頭的 panel，所以 Panels 一開始寫 [1] 帶頭的樣子）。tdp v1.3.1 發版（L5、L5-4），terminu-go v1.3.1 正式版，2026-11-22 升上去"}
+      - {note: "terminu-go v1.3.1-beta.2 的 AddScreen 檢查 Enter 的 ToDetails 時只看當下的 Panels，還沒照 Leads 換上帶頭的 panel：[1] CHANGES 衝突檔的 Enter（Show，focus 到 Details [3] DIFF）在 Panels 一開始寫 [2] 帶頭的樣子時會 panic。暫時 Panels 一開始寫 [1] 帶頭的樣子，AddScreen 之後 App.Focus([2])", issue: "送給 tdp session 轉 terminu-go（2026-11-22）；terminu-go main 1855dff 收了（還沒 tag，跟 v1.3.1 正式版一起出）：Details 在那個 panel 有 focus 時一定在畫面上就算數，帶頭的 panel 算它自己的 Shows；AddScreen 也檢查只出現在 Shows 裡的 panel 的動作。gittu 在 1855dff 上試過：不繞也過、Shows 裡的 panel 沒有被擋；terminu-go v1.3.1 發版，2026-11-22 升上去，Panels 改回 [2] 帶頭的樣子；App.Focus([2]) 留著：那是打開時 focus 在 [2]，不是繞法"}
   - id: 2
     spec: 54
     request: 在終端機工作的人，在 repo 裡打 gittu 就打開那個 repo；還有 gittu version 與 gittu help
@@ -58,7 +58,7 @@ tasks:
       - "2026-11-20 起 [2] 不再進到 commit 的檔案（task 6 改放在 [3]）；比較模式（task 7）進到的清單裡 Tab、數字鍵不作用，[1] 動不了，所以不用再退回分支圖（原本用 tgo Panel.LeaveDiff，2026-11-19 回報給 tdp session 的缺口，terminu-go v1.2.18 加的）"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
   - id: 4
-    spec: 57
+    spec: 60
     request: 右邊是分支圖，在終端機裡把分支線畫得清楚又好看，大 repo 裡也要夠快；commit 點不要只是單調的圓點
     tdp: [tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.14, tdp panel.15, tdp screen.8, tdp components.5, tdp P4, tdp P5, tdp L2, tdp components.2, tdp F5]
     remark:
@@ -71,9 +71,9 @@ tasks:
       - "主線固定在最左邊（task 5）：主線 commit（All 是 main 或 master，Current 是 HEAD）沿著第一個 parent 往下的那一串，一律畫在第一條線；其他線不佔它，在主線 commit 出現之前那一欄留空"
       - "repo 還沒有 commit：空狀態 No commits yet / Press [1] to see the files to commit（tdp screen.8）；讀 log 失敗：tdp panel.15 的兩句（Red 的事實、Overlay0 的 Press [R] to read again）"
       - "/ 篩選（tdp panel.14）：找 commit 的標題、hash、作者"
-      - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列跟著畫 Surface1 底；移動、N of M 算筆數，篩選也比對第二列（tdp v1.2.18 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
+      - "有 ref 的 commit 佔兩列（使用者 2026-11-19：ref 放在 DESCRIPTION 前面會讓描述不夠放）：第一列是 commit，DESCRIPTION 只寫標題；第二列只放它的 ref，分支圖的線穿過第二列；cursor 只停在第一列，第二列保留自己的字色，底色從 cursor 的區塊色淡兩次開始、往右漸層到終端機的底色（tdp v1.3.1 的 panel.5，tgo 畫；之前是 Surface1 底，v1.3.1-beta.1 試過直線加底線）；移動、N of M 算筆數，篩選也比對第二列（tdp v1.2.18 的 panel.5、panel-181 到 panel-183，使用者在 tdp session 定成一筆可以佔好幾列；tgo v1.2.19-beta.4 的 Row.Below）"
       - "[2] 比各欄最寬的值加起來還寬時（放大到整個畫面、寬的終端機），多的寬度全給 DESCRIPTION（List.Spread = SpreadFill、DESCRIPTION 的 Column.Fill），AUTHOR 與 DATE 貼右邊（tdp v1.2.19 的 panel.5「多出來的寬度」、panel-184：四種給 app 選；使用者 2026-11-20 在 gittu 上看過四種後選 Fill）；分支圖多畫的線先算（task 4 上面那條），剩下的才給 DESCRIPTION；寬度不夠時照 panel.5 縮"
-      - {note: "占兩列的 commit（第二列放 ref），cursor 只在第一列、第二列左緣一條直線加最後一列底線（tdp main ac90e9e 的 panel.5，tgo v1.3.1-beta.1 起）；使用者 2026-11-22：「我覺得那的多行顯示的 cursor ui 很糟糕」「先回報，這需要在討論，我也還沒想怎樣作比較好」。gittu 暫時不動（tgo 畫的）", issue: "送給 tdp session（2026-11-22）；使用者在 tdp session 重新定了（tdp main c4fd84d）：拿掉直線與底線，cursor 還是只在第一列，其他列保留自己的字色，底色從區塊色淡兩次（cursor #2f313c、Yellow 的 anchor #3c3733）開始，往右整個內寬漸層到終端機自己的底色（OSC 11 問來的），一開始掉得快、結尾看不出邊界。tgo 畫，gittu 不用改，跟 v1.3.1 正式版一起出"}
+      - {note: "占兩列的 commit（第二列放 ref），cursor 只在第一列、第二列左緣一條直線加最後一列底線（tdp main ac90e9e 的 panel.5，tgo v1.3.1-beta.1 起）；使用者 2026-11-22：「我覺得那的多行顯示的 cursor ui 很糟糕」「先回報，這需要在討論，我也還沒想怎樣作比較好」。gittu 不用改（tgo 畫的）", issue: "送給 tdp session（2026-11-22）；使用者在 tdp session 重新定了（tdp main c4fd84d，tdp v1.3.1 發版，terminu-go v1.3.1 畫，2026-11-22 升上去）：拿掉直線與底線，cursor 還是只在第一列，其他列保留自己的字色，底色從區塊色淡兩次（cursor #2f313c、Yellow 的 anchor #3c3733）開始，往右整個內寬漸層到終端機自己的底色（OSC 11 問來的），一開始掉得快、結尾看不出邊界。tgo 畫，gittu 不用改，跟 v1.3.1 正式版一起出"}
   - id: 5
     spec: 19
     request: commits panel 有 Current 和 All 兩個分頁，預設是 Current；切換到哪一個就固定在那一個（只記到這次關掉為止）；兩個分頁都依照左方 panel 1 切換 branch 而切換內容（user 2026-11-20）
@@ -97,7 +97,7 @@ tasks:
       - "[3] 是 gittu 自己的 tgo List（一欄路徑、標記欄畫 + Green、- Red、~ Peach，跟 tgo 的差異清單同一套顏色，tdp panel.9）；比較 popup 由 tgo 畫（App.OpenDiff 給一項的 Text），gittu 只給兩邊的名字與內容（tdp E8）"
       - "比較兩個 commit（task 7）的檔案清單還是照 tgo 的比較模式進到 [2] 裡；要不要也改放 [3]，等使用者決定"
   - id: 7
-    spec: 39
+    spec: 60
     request: 比較兩個 commit：選兩個 commit，列出有變動的檔案；在檔案上按 Enter，看它前後的差異；按 Esc 一層一層退回
     tdp: [tdp panel.9, tdp note.8, tdp panel.10, tdp K11, tdp K4, tdp M6, tdp note.7, tdp P5, tdp M5, tdp panel-176, tdp panel-177, tdp panel-178, tdp panel-179, tdp panel-185, tdp panel-186, tdp panel-187, tdp K13, tdp K13-1, tdp panel.14, tdp toast.2, tdp F7]
     remark:
@@ -108,7 +108,7 @@ tasks:
       - "[2] 的 commit 上按 [D]iff（tdp K13、K13-1：Diff 模式的鍵是 D；使用者 2026-11-20 選 D 時 tdp 還寫鍵 app 可以自行決定，原本跟 kbu 一樣是 C）進入 Diff 模式，那個 commit 是 anchor（Yellow）；差異放在 [3]（tdp panel.9「有明細 panel 時」，app 自行選用；使用者 2026-11-20 選這個）：[2]、[3] 一起在模式裡，兩個框都 Yellow、都寫 Diff，粗線在有 focus 的那個（L5），進入時 focus 留在 [2]；[3] 不用按鍵就跟著 [2] 的 cursor，列 anchor 與 cursor 那個 commit 之間有差異的檔案，位置列 <anchor 的短 hash> ↔ <另一個的短 hash>，以 anchor 為基準標 + - ~（一份平的路徑清單，改名是一列 ~ <舊> → <新>）；cursor 在 anchor 上時 [3] 寫 Move to another commit to diff with <anchor>，在跟 anchor 一樣的 commit 上寫 No differences between <anchor> and <另一個>，不跳 toast（tdp panel-185）；gittu 的每個 commit 都能比（沒有 Can），讀不到時（git 失敗）[3] 是 panel.15 的 Red 錯誤狀態，不開錯誤視窗（tdp panel-187，tgo 畫）；[2] 上按 D 或 Enter，focus 移到 [3]；[3] 的檔案上 D 或 Enter 打開 note.8 的比較，畫法同 task 6（標題 DIFF，第一列 <路徑> @ <anchor> ↔ <路徑> @ <另一個>）；Esc 照來的路退回（K4）：比較 → [3] → [2]（模式還在、anchor 留著）→ 離開模式、拿掉 anchor，[3] 回到 cursor 那個 commit 自己的檔案；模式裡 Tab 與數字 2、3 在 [2]、[3] 之間換，按 1 跳 Info toast 說先 Esc 離開（K11、tdp panel-186）"
       - "Diff 模式與 [3] 裡的差異由 tgo 畫（DiffModeAction 的 DiffMode.Many、Items；terminu-go v1.2.21-beta.1 起的 InDetails、Noun: commit）；模式裡 [3] 自己的內容藏起來，gittu 照樣從 [2] 的 OnMove 更新，離開模式就回來；Diff 模式不記 App Log（tdp note.7）"
       - "模式裡 [2]、[3] 下框的 hint 是模式的鍵 D|Enter:diff，不是 [2] 自己的 Enter:files z:zoom（tdp K11：模式的鍵寫在 footer 與下框 hint）；原本 tgo 的 Panel.hint() 沒看模式，gittu 2026-11-20 發現，tdp session 轉 terminu-go，v1.2.21-beta.3 修了，gittu 不用改"
-      - {note: "Diff 模式的 anchor 是占兩列的 commit（下面一列放 ref，tdp panel.5 的占好幾列的項目）時，tgo 只把第一列畫成 Yellow 底，下面那一列沒有底色；cursor 的其他列照 panel.5 跟著亮。tdp panel.9 只寫 anchor 那一列，其他列沒寫。使用者 2026-11-20 要跟 cursor 一樣整個項目都蓋到；gittu 暫時不動（底色由 tgo 畫）", issue: "送給 tdp session（2026-11-20）；tdp main ac90e9e 收了（panel.5、panel.9、panel-196，使用者擴大成每個占好幾列的項目）：cursor 只在第一列，其他列保留自己的底色，左緣一條 Subtext1 的直線、最後一列整個內寬底線，不再用 Surface1；anchor 一樣的記號用 Yellow，cursor 停在 anchor 上時第一列畫 cursor、其他列留著 Yellow 的記號。tgo 下一版畫，gittu 不用改，等它發版再升；terminu-go v1.3.1-beta.1 畫了（2026-11-20 升上去）"}
+      - {note: "Diff 模式的 anchor 是占兩列的 commit（下面一列放 ref，tdp panel.5 的占好幾列的項目）時，tgo 只把第一列畫成 Yellow 底，下面那一列沒有底色；cursor 的其他列照 panel.5 跟著亮。tdp panel.9 只寫 anchor 那一列，其他列沒寫。使用者 2026-11-20 要跟 cursor 一樣整個項目都蓋到；gittu 暫時不動（底色由 tgo 畫）", issue: "送給 tdp session（2026-11-20）；tdp main ac90e9e 收了（panel.5、panel.9、panel-196，使用者擴大成每個占好幾列的項目）：cursor 只在第一列，其他列保留自己的底色，左緣一條 Subtext1 的直線、最後一列整個內寬底線，不再用 Surface1；anchor 一樣的記號用 Yellow，cursor 停在 anchor 上時第一列畫 cursor、其他列留著 Yellow 的記號。tgo 下一版畫，gittu 不用改，等它發版再升；terminu-go v1.3.1-beta.1 畫了（2026-11-20 升上去）；tdp v1.3.1 改成漸層（tdp main c4fd84d，使用者看了直線與底線覺得糟）：anchor 的其他列底色從 Yellow 淡兩次（#3c3733）開始、往右漸層到終端機的底色，terminu-go v1.3.1 畫"}
   - id: 8
     spec: 57
     request: 一般的 git 操作都在 app 裡完成，全部從 Space 選單執行；分支、遠端分支、tag、stash 能做的事都在 Space 選單
@@ -149,9 +149,9 @@ tasks:
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
   - id: 11
-    spec: 59
+    spec: 60
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
-    tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6, tdp L5]
+    tdp: [tdp note.8, tdp terms.2, tdp panel.5, tdp panel.7, tdp panel.10, tdp panel.11, tdp panel.13, tdp screen.8, tdp K3, tdp components.5, tdp P5, tdp note.9, tdp T2, tdp panel.9, tdp M5, tdp note-101, tdp note.7, tdp panel.15, tdp F5, tdp panel.1, tdp toast.2, tdp T1, tdp F7, tdp M6, tdp L5, tdp L5-4]
     remark:
       - |
         [1] 帶頭時的右邊（task 1 的一個畫面，使用者 2026-11-22）：

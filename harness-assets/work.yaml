@@ -1,11 +1,11 @@
 tasks:
   - id: 1
-    spec: 59
+    spec: 60
     implementation: |
       一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 [3]、3 [4]、4 [5]；
       跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
       focus 換到帶頭的 panel（Tab、數字鍵、App.Focus）時 tgo 換上，移進 [3]、[4]、[5] 不換；號碼照位置，收起的 [5] 數字鍵不作用、Tab 跳過，footer 寫 Tab|1–5:panels；
-      Panels 一開始寫 [1] 帶頭的樣子（tgo 的 AddScreen 先檢查 [1] 衝突檔的 Enter 找得到它的 Details [3] DIFF），AddScreen 之後 App.Focus([2])：打開時 focus 在 [2]、右邊是 COMMITS
+      Panels 寫 [2] 帶頭的樣子（tgo v1.3.1 的 AddScreen 把每個帶頭 panel 的 Shows 也算進 Enter 的 Details：[1] 衝突檔的 Enter 找得到 [3] DIFF），AddScreen 之後 App.Focus([2])：打開時 focus 在 [2]、右邊是 COMMITS
       Layout：左邊寬度的三分之一（60 欄時 20｜40），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
       最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
       沒有 statusbar、沒有 STATUS 說明牌（2026-11-22 拿掉）：[1] 的位置列（List.Location、LocationGlyph，tgo 畫成 Lavender）每次 Layout 都重寫（statusScreen.located）：
@@ -52,7 +52,7 @@ tasks:
       換分頁（OnTab）時先離開進到的 stash 檔案清單（tgo Panel.LeaveDiff），[2] 跟著新分頁 cursor 那一列換，跟移動一樣（2026-11-20 實測發現切回去過的分頁 [2] 不跟）
     test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterChecksOutARemoteBranch, TestFirstReadFails, TestReadTheSample, TestVersionCompare, TestTabFollowsToTheGraph]
   - id: 4
-    spec: 57
+    spec: 60
     implementation: |
       [2] COMMITS 是 tgo List，Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
@@ -62,7 +62,7 @@ tasks:
       DESCRIPTION 只寫標題；有 ref 指著的 commit 佔兩列（tgo Row.Below）：第二列 GRAPH 那一格是往下的線（git.Through：有往下筆畫的 │ ╮ ╭ ┬ ┼ ├ ┤，
       與有 parent 的 commit 點，畫成同一條線顏色的 │，其他空白），DESCRIPTION 那一格是 ref：分支是 nf-dev-git_branch（U+E725）加名字，本地分支 Green、遠端分支 Mauve；
       tag 是 nf-md-tag（U+F04F9）加名字，Peach；ref 之間空一格；HEAD 所在的分支粗體；detached 時 HEAD 寫在最前面；遠端分支隱藏時不寫遠端分支的 ref
-      cursor 只畫在第一列，第二列跟著畫 Surface1 底（tgo）；j|k gg|G 一次移一筆、N of M 算筆數；篩選也比對第二列，打分支或 tag 的名字找得到它的 commit
+      cursor 只畫在第一列，第二列保留字色、底色從 cursor 的區塊色淡兩次往右漸層到終端機的底色（tgo v1.3.1，tdp v1.3.1 的 panel.5）；j|k gg|G 一次移一筆、N of M 算筆數；篩選也比對第二列，打分支或 tag 的名字找得到它的 commit
       主線（git.Graph 的 main：All 是 main 或 master 的 commit，Current 是 HEAD，task 5）：它與它的第一個 parent 一路往下一律在第一欄，其他線不佔第一欄（主線出現之前那一欄空白）；
       主線 commit 出現時，其他等著它的欄合進第一欄
       位置列（List.Location）：All branches 或 Current branch，遠端分支畫出來時接 · with remote branches；進到 commit 裡時接上那一層（task 6）
@@ -103,7 +103,7 @@ tasks:
       [4] 的 Esc（tgo Panel.OnEsc）把 focus 送回 [2]（tdp K4：照 [2] 上 Enter 來的路退回）
     test: [TestCommitDescription, TestCommitFilesAndDiff, TestFirstCommitFiles, TestEscOnFilesBackToTheGraph]
   - id: 7
-    spec: 39
+    spec: 60
     implementation: |
       [2] 的 item operation [D]iff（tgo App.DiffModeAction(histP, commits, DiffMode{Key: D, InDetails: true, Noun: commit, Many: 每一列都是, Name: 短 hash, Items})；terminu-go v1.2.20-beta.2 前叫 CompareAction，InDetails 從 v1.2.21-beta.1 起）：
       進入 Diff 模式，[2] 與它的明細 [4]（histP.Details = filesP）一起在模式裡（tgo：兩個框都 Yellow、都寫 Diff，粗線在 focus 那個，focus 留在 [2]；anchor 那一列 Yellow；hint D|Enter:diff）；
@@ -161,7 +161,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 59
+    spec: 60
     implementation: |
       [1] CHANGES（task 1 那個畫面的左上，帶頭的 panel）是 tgo List（Marks，task 21；一欄、沒有表頭：<字母> <路徑>，字母用 Row.Styled 上色；路徑由 gittu 照 [1] 的寬度從前面截（寬度 − 9：框、邊距、標記欄、字母與空白、cursor 的箭頭、多留一格），…接在字母後面，Layout 記下 [1] 的寬度（statusScreen.laidOut），變了就重新做每一列；Row.Cells 是完整的 <字母> <路徑>，篩選照它比對；Shrink、Path 留著當保險），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
