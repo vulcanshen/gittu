@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -118,6 +120,7 @@ func (s *statusScreen) show(snap *git.Snapshot) {
 	if s.toConflict {
 		s.toConflict = false
 		if i := slices.IndexFunc(snap.Files, git.File.Conflicted); i >= 0 {
+			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
 			s.files.Select(inConflict + snap.Files[i].Path)
 		}
 	}
@@ -759,9 +762,9 @@ func (s *statusScreen) showDiff(again bool) {
 // hunkLines are a conflicted block as [2] shows it: mine above theirs, each
 // under its heading (tdp P5: their colours are the app's).
 func (s *statusScreen) hunkLines(h git.Hunk) []string {
-	lines := []string{terminu.Fg(teal).Bolded().Render(terminu.Escape(s.mineName(h)))}
+	lines := []string{terminu.Fg(teal).Render(terminu.Escape(s.mineName(h)))}
 	lines = append(lines, h.Mine...)
-	lines = append(lines, "", terminu.Fg(mauve).Bolded().Render(terminu.Escape("THEIRS · "+h.TheirsLabel)))
+	lines = append(lines, "", terminu.Fg(mauve).Render(terminu.Escape("THEIRS · "+h.TheirsLabel)))
 	return append(lines, h.Theirs...)
 }
 
@@ -937,6 +940,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 
 // goIn shows a conflicted file's blocks in [1] (tdp panel.10).
 func (s *statusScreen) goIn(path string) tea.Cmd {
+	s.files.ClearFilter() // going into a row (tdp panel.14, panel.10)
 	s.conflict = path
 	if err := s.readHunks(); err != nil {
 		s.conflict = ""
@@ -1014,6 +1018,7 @@ func (s *statusScreen) resolve(choice git.Choice) tea.Cmd {
 	return g.run("Staging…", "Stage", func() error { return g.repo.Stage(path) },
 		func() tea.Cmd {
 			s.goOut()
+			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
 			s.files.Select(inStaged + path)
 			s.showDiff(false)
 			return g.a.Toast(terminu.Success, path+" resolved and staged")
@@ -1029,6 +1034,7 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 	}
 	return g.run("Resolving…", "Resolve", func() error { return g.repo.UseSide(theirs, path) },
 		func() tea.Cmd {
+			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
 			s.files.Select(inStaged + path)
 			return g.a.Toast(terminu.Success, path+" resolved with "+word+" and staged")
 		})
@@ -1177,6 +1183,7 @@ func (s *statusScreen) markResolved(fs []git.File) tea.Cmd {
 				g.a.Log(terminu.Info, "Marked "+f.Path+" resolved")
 			}
 		} else {
+			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
 			s.files.Select(inStaged + fs[0].Path)
 		}
 		return g.a.Toast(terminu.Success, "Marked "+named(fs)+" resolved")
@@ -1184,11 +1191,10 @@ func (s *statusScreen) markResolved(fs []git.File) tea.Cmd {
 }
 
 // commit commits the staged changes with a message the user writes in the
-// commit form: during a merge it opens with the message git prepared, after
-// a hook stopped one with that message.
+// commit form: during a merge it opens with the message git prepared.
 func (g *gittu) commit() tea.Cmd {
-	ready := g.draft
-	if g.snap.State.Op == "merge" && ready == "" {
+	ready := ""
+	if g.snap.State.Op == "merge" {
 		ready = g.repo.MergeMessage()
 	}
 	return g.messageFor("Commit", ready, false)
@@ -1221,12 +1227,27 @@ func (g *gittu) messageFor(title, ready string, amend bool) tea.Cmd {
 			return terminu.Textarea{Title: "Description", Glyph: glyphCommit, Old: body,
 				Done: func(v string) tea.Cmd { body = v; return nil }}
 		}}
+	repo, remote := g.repo, g.remote
 	return g.a.Form(&terminu.Form{Title: title, Glyph: glyphCommit, Name: "the commit message",
 		Fields: []*terminu.FormField{titleF, descF}, Button: title,
-		Submit: func() (tea.Cmd, error) {
+		// The form stays while git commits, hooks and all: the loading icon
+		// after its title, Enter on the button doing nothing (tdp form.7).
+		// A commit git stops opens its error over the form, the message
+		// still in it to commit again (tdp form.16); git's whole text goes
+		// in the App Log (tdp F5). It runs off the update loop: the App Log
+		// takes entries from any goroutine.
+		SubmitLong: func(context.Context) (tea.Cmd, error) {
+			g.committing.Store(true) // no reading again meanwhile
+			defer g.committing.Store(false)
 			msg := joinMessage(subject, body)
-			g.draft = msg
-			return tea.Batch(g.a.CloseAll(), g.doCommit(msg, amend)), nil // the menus it came from too (tdp T1)
+			if err := repo.Commit(msg, amend); err != nil {
+				lines := gitLines(err)
+				g.logAll(lines)
+				return nil, errors.New(reason(lines))
+			}
+			m := doneMsg{title: title, ok: g.committed(msg, amend)}
+			m.snap, m.rerr = repo.Read(remote)
+			return func() tea.Msg { return m }, nil
 		}})
 }
 
@@ -1257,26 +1278,20 @@ func firstLineMore(text string) string {
 	return first
 }
 
-// doCommit runs git commit; the message is kept until it goes through, to
-// write again after a hook stopped it.
-func (g *gittu) doCommit(msg string, amend bool) tea.Cmd {
-	verb := "Commit"
-	if amend {
-		verb = "Amend"
+// committed is what a commit gone through says, the popups the form came
+// from closed too (tdp T1).
+func (g *gittu) committed(msg string, amend bool) func() tea.Cmd {
+	return func() tea.Cmd {
+		sha := ""
+		if g.snap != nil {
+			sha = git.Short(g.snap.HeadSHA)
+		}
+		did := "Committed "
+		if amend {
+			did = "Amended "
+		}
+		return tea.Batch(g.a.CloseAll(), g.a.Toast(terminu.Success, did+sha+" "+firstLine(msg)))
 	}
-	return g.run("Committing…", verb, func() error { return g.repo.Commit(msg, amend) },
-		func() tea.Cmd {
-			g.draft = ""
-			sha := ""
-			if g.snap != nil {
-				sha = git.Short(g.snap.HeadSHA)
-			}
-			did := "Committed "
-			if amend {
-				did = "Amended "
-			}
-			return g.a.Toast(terminu.Success, did+sha+" "+firstLine(msg))
-		})
 }
 
 // changeFlag is a working tree change's letter in its colour, in [1]'s flag

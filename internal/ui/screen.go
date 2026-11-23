@@ -105,6 +105,6 @@ func (g *gittu) zoom() terminu.Action {
 // unzoom is the panel operation that puts the zoomed screen back, on every
 // panel the focus can be on while zoomed (tdp screen.6).
 func (g *gittu) unzoom() terminu.Action {
-	return terminu.Action{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
+	return terminu.Action{Key: "z", Label: "Unzoom", Desc: "back to all the panels", Scope: panel, Hint: "unzoom",
 		Hidden: func() bool { return !g.history.zoomed }, Do: func() tea.Cmd { return g.history.zoomTo(false) }}
 }

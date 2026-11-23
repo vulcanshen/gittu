@@ -191,8 +191,8 @@ what changed.
 
 - **A push or a pull asks for a password**: gittu cannot ask for one, so git fails and says so. Use an ssh agent, or a
   credential helper for https.
-- **A commit hook stops a commit**: its output is in the error; the message you wrote comes back the next time you
-  press `[c]`.
+- **A commit hook stops a commit**: the error over the commit form says why, and the App Log (`!`) has the hook's whole
+  output; close the error and the message is still in the form, to commit again.
 
 ## Settings and data
 

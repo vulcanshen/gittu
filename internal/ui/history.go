@@ -178,7 +178,7 @@ func (h *historyScreen) mostLines(s *git.Snapshot) int {
 func (h *historyScreen) zoomTo(on bool) tea.Cmd {
 	h.zoomed = on
 	if !on {
-		h.g.a.Log(terminu.Info, "Back to both panels")
+		h.g.a.Log(terminu.Info, "Back to all the panels")
 		return nil
 	}
 	n := h.g.num(h.g.screen.Focused()) // [3] or [4]
@@ -379,32 +379,31 @@ func graphSpans(cells []git.Cell) (string, []terminu.Span) {
 type ref struct {
 	name string
 	kind string // kindBranch, kindRemote, kindTag
-	head bool
 }
 
 func refsByCommit(s *git.Snapshot) map[string][]ref {
 	m := map[string][]ref{}
 	for _, b := range s.Branches {
-		m[b.SHA] = append(m[b.SHA], ref{b.Name, kindBranch, b.Current})
+		m[b.SHA] = append(m[b.SHA], ref{b.Name, kindBranch})
 	}
 	if s.Head == "" && s.HeadSHA != "" {
-		m[s.HeadSHA] = append([]ref{{"HEAD", kindBranch, true}}, m[s.HeadSHA]...)
+		m[s.HeadSHA] = append([]ref{{"HEAD", kindBranch}}, m[s.HeadSHA]...)
 	}
 	for _, rb := range s.Remotes {
 		if s.Remote || s.Tracked(rb) {
-			m[rb.SHA] = append(m[rb.SHA], ref{rb.Name, kindRemote, false})
+			m[rb.SHA] = append(m[rb.SHA], ref{rb.Name, kindRemote})
 		}
 	}
 	for _, t := range s.Tags {
-		m[t.SHA] = append(m[t.SHA], ref{t.Name, kindTag, false})
+		m[t.SHA] = append(m[t.SHA], ref{t.Name, kindTag})
 	}
 	return m
 }
 
 // refsText is a commit's refs, for the row under it: a branch glyph before
 // a local branch (Green) and a remote one (Mauve), a tag glyph before a tag
-// (Peach), the branch HEAD is on bold (tdp P5). Not a capsule: that is tdp's
-// for a name (tdp P4).
+// (Peach) (tdp P5; no bold: tdp color.1 keeps it for the cursor and the
+// titles). Not a capsule: that is tdp's for a name (tdp P4).
 func refsText(refs []ref) (string, []terminu.Span) {
 	var b strings.Builder
 	var spans []terminu.Span
@@ -419,9 +418,6 @@ func refsText(refs []ref) (string, []terminu.Span) {
 			st = terminu.Fg(mauve)
 		case kindTag:
 			st, glyph = terminu.Fg(terminu.Peach), glyphRefTag
-		}
-		if r.head {
-			st = st.Bolded()
 		}
 		text := glyph + " " + r.name
 		b.WriteString(text)
@@ -627,6 +623,7 @@ func (h *historyScreen) showFiles() {
 	c, ok := h.current()
 	if !ok {
 		h.files.EmptyFact, h.files.EmptyHint = "No commits yet", "Press [1] to see the files to commit"
+		h.files.ClearFilter()
 		h.files.SetRows(nil)
 		h.files.Location, h.items, h.filesOf, h.filesP.Fail = "", nil, "", nil
 		h.message, h.descP.Fail = "", nil
@@ -636,6 +633,7 @@ func (h *historyScreen) showFiles() {
 	if c.SHA == h.filesOf {
 		return
 	}
+	h.files.ClearFilter() // another commit's files in it (tdp panel.14)
 	if msg, err := h.g.repo.Message(c.SHA); err != nil {
 		h.descP.Fail = &terminu.Failure{Fact: "Can't read the message of " + git.Short(c.SHA) + ": " + reason(gitLines(err)), Hint: "Press [R] to read it again"}
 		h.message = ""

@@ -25,9 +25,9 @@ func (s *statusScreen) newLog() {
 	s.logP = &terminu.Panel{Label: "History", Body: s.logList}
 	s.logP.Actions = append([]terminu.Action{
 		{Key: "Enter", Label: "Diff", Desc: "this commit's change to the file, UNIFIED or SPLIT", Scope: item, Hint: "diff",
-			Hidden:   func() bool { _, ok := s.logCommit(); return !ok },
-			Disabled: func() bool { c, _ := s.logCommit(); return c.Binary }, // no text to compare (tdp panel.9)
-			Do:       s.openLogged},
+			// binary: no text to compare, so no Diff (tdp panel.9, M6)
+			Hidden: func() bool { c, ok := s.logCommit(); return !ok || c.Binary },
+			Do:     s.openLogged},
 		s.g.unzoom(),
 	}, s.logList.Actions()...)
 }
@@ -61,6 +61,7 @@ func (s *statusScreen) showLog() {
 		return
 	}
 	s.logOf, s.logged, s.logP.Fail = key, nil, nil
+	s.logList.ClearFilter() // another file's history in it (tdp panel.14)
 	s.logP.Name = path
 	s.logList.EmptyHint = "Press [1] to go to the files"
 	switch {

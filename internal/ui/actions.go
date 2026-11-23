@@ -395,9 +395,9 @@ func (g *gittu) rebase(onto string) tea.Cmd {
 func (h *historyScreen) fileActions() []terminu.Action {
 	return []terminu.Action{
 		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: item, Hint: "diff",
-			Hidden:   func() bool { _, ok := h.file(); return !ok },
-			Disabled: func() bool { it, _ := h.file(); return it.Text == nil }, // binary: no text to compare (tdp panel.9)
-			Do:       h.openFile},
+			// binary: no text to compare, so no Diff (tdp panel.9, M6)
+			Hidden: func() bool { it, ok := h.file(); return !ok || it.Text == nil },
+			Do:     h.openFile},
 		h.g.unzoom(),
 	}
 }

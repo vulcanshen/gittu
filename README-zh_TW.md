@@ -163,7 +163,7 @@ gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著
 ## 疑難排解
 
 - **push、pull 要密碼**：gittu 沒辦法問密碼，git 會失敗並說明原因。請用 ssh agent，https 的話用 credential helper。
-- **commit 被 hook 擋下**：hook 印的內容在錯誤訊息裡；再按一次 `[c]`，剛剛寫的訊息還在。
+- **commit 被 hook 擋下**：蓋在 commit 表單上的錯誤訊息寫了原因，hook 印的全文在 App Log（`!`）；關掉錯誤訊息，寫好的訊息還在表單裡，可以再 commit 一次。
 
 ## 設定與資料
 

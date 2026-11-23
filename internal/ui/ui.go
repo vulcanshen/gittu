@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -76,9 +77,9 @@ type gittu struct {
 	editing bool
 	// readErr is why the last read failed, "" when it did not.
 	readErr string
-	// draft is a commit message written but not committed yet (a hook
-	// stopped it), to write again.
-	draft string
+	// committing reports git committing from the commit form, off the update
+	// loop: no reading again meanwhile.
+	committing atomic.Bool
 	// lefts are the left's widths the user set, by the terminal's width
 	// (task 23), as the state file keeps them.
 	lefts map[int]int
@@ -162,7 +163,7 @@ type doneMsg struct {
 func (g *gittu) onMsg(msg tea.Msg) tea.Cmd {
 	switch m := msg.(type) {
 	case tickMsg:
-		if g.busy == "" && !g.reading && !g.editing {
+		if g.busy == "" && !g.reading && !g.editing && !g.committing.Load() {
 			g.reading = true
 			return tea.Batch(g.read(false), g.tick())
 		}

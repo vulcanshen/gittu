@@ -38,6 +38,13 @@ func startWithState(t *testing.T, r *gittest.Repo, dir string, w, h int) (*gittu
 	return g, tdptest.Start(t, g.a, w, h)
 }
 
+// committed waits for the commit form's commit to go through: it runs with
+// the form open (tdp form.7), not as the operations do.
+func committed(t *testing.T, d *tdptest.Driver) {
+	t.Helper()
+	d.WaitFor(func() bool { return d.Has("Committed ") || d.Has("Amended ") }, 20*time.Second)
+}
+
 // done waits for the git gittu runs to end.
 func done(t *testing.T, g *gittu, d *tdptest.Driver) {
 	t.Helper()
@@ -2085,7 +2092,7 @@ func TestCommitMessage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
-	g, d := start(t, r, 100, 32)
+	_, d := start(t, r, 100, 32)
 	d.Press("1", "c")
 	has(t, d, "COMMIT", "Title", "not set", "Description", "none", "Commit", "Enter:edit Tab:actions Esc:cancel")
 	d.Press("Tab", "Enter") // no title: an error, the form kept (tdp form.16)
@@ -2097,7 +2104,7 @@ func TestCommitMessage(t *testing.T) {
 	d.Press("Esc", "Enter")
 	has(t, d, "Why it changed")
 	d.Press("Tab", "Enter")
-	done(t, g, d)
+	committed(t, d)
 	has(t, d, "Committed ", "Change the readme")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%B")); got != "Change the readme\n\nWhy it changed" {
 		t.Errorf("last commit %q", got)
@@ -2118,20 +2125,21 @@ func TestCommitHookKeepsTheMessage(t *testing.T) {
 	}
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
-	g, d := start(t, r, 100, 32)
+	_, d := start(t, r, 100, 32)
 	d.Press("1", "c", "Enter")
 	d.Type("Blocked")
 	d.Press("Enter", "Tab", "Enter")
-	done(t, g, d)
+	d.WaitFor(func() bool { return d.Has("COMMIT FAILED") }, 20*time.Second)
 	has(t, d, "COMMIT FAILED", "no commits today")
 	if err := os.Remove(hook); err != nil {
 		t.Fatal(err)
 	}
-	d.Press("Esc", "c")
-	has(t, d, "Blocked")
-	d.Press("Tab", "Enter") // the message kept: it commits
-	done(t, g, d)
+	d.Press("Esc") // back to the form, the message in it, the focus on Commit (tdp form.16)
+	has(t, d, "COMMIT", "Blocked")
+	d.Press("Enter") // again: it commits
+	d.WaitFor(func() bool { return d.Has("Committed ") }, 20*time.Second)
 	has(t, d, "Committed ", "Blocked")
+	hasNot(t, d, "Tab:actions")
 }
 
 func TestAmendKeepsMessage(t *testing.T) {
@@ -2144,7 +2152,7 @@ func TestAmendKeepsMessage(t *testing.T) {
 	d.Press("Enter")
 	has(t, d, "AMEND", "Say even more", "Amend") // its message, ready
 	d.Press("Tab", "Enter")                      // unchanged: kept
-	done(t, g, d)
+	committed(t, d)
 	has(t, d, "Amended ")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Say even more" {
 		t.Errorf("last commit %q", got)
@@ -2169,7 +2177,7 @@ func TestAmendChangesMessage(t *testing.T) {
 	d.Press("Enter", "Tab") // Title's input; Tab takes the title it had (tdp input.5)
 	d.Type(" reworded")
 	d.Press("Enter", "Tab", "Enter")
-	done(t, g, d)
+	committed(t, d)
 	hasNot(t, d, "PANEL OPERATION")
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "A local commit reworded" {
 		t.Errorf("last commit %q", got)
@@ -2205,7 +2213,7 @@ func TestResolveHunks(t *testing.T) {
 	d.Press("Esc", "c")
 	has(t, d, "COMMIT", "Merge branch 'feature'") // the message git prepared, ready
 	d.Press("Tab", "Enter")                       // as it is: it commits
-	done(t, g, d)
+	committed(t, d)
 	hasNot(t, d, "Merging:")
 }
 
@@ -2626,7 +2634,7 @@ func TestZoomToTheWholeScreen(t *testing.T) {
 		t.Error("still zoomed")
 	}
 	d.Press("!")
-	has(t, d, "Zoomed [3] to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [3] to the whole screen", "Back to all the panels")
 }
 
 // TestDescriptionZooms: [4] DESCRIPTION, narrower than [5] FILES (2:3, the
@@ -2639,10 +2647,40 @@ func TestDescriptionZooms(t *testing.T) {
 	has(t, d, "[4] DESCRIPTION", "z:unzoom")
 	hasNot(t, d, "[3] CURRENT", "[5] FILES")
 	d.Press("z", "!")
-	has(t, d, "Zoomed [4] to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [4] to the whole screen", "Back to all the panels")
 	d.Press("Esc")
 	if r := g.layout(100, 30); r[placeLeft].W != 26 || r[placeRight].W != 41 {
 		t.Errorf("[3] %d wide, [4] %d: not 2:3 of 67", r[2].W, r[3].W)
+	}
+}
+
+// TestFollowersClearTheirFilter: [5] FILES listing another commit's files,
+// and [4] HISTORY another file's history, take their filter away first (tdp
+// panel.14).
+func TestFollowersClearTheirFilter(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Write("README.md", "changed\n")
+	r.Write("new.txt", "new\n")
+	g, d := start(t, r, 120, 32)
+	d.Press("5", "/")
+	d.Type(g.history.files.Rows()[0].Cells[0][:1])
+	d.Press("Enter")
+	if !g.history.files.Filtering() {
+		t.Fatal("no filter on [5]")
+	}
+	d.Press("3", "j")
+	if g.history.files.Filtering() {
+		t.Error("[5] lists another commit's files with its filter still on")
+	}
+	d.Press("1", "4", "/")
+	d.Type(g.status.logList.Rows()[0].Cells[0][:1])
+	d.Press("Enter")
+	if !g.status.logList.Filtering() {
+		t.Fatal("no filter on [4]")
+	}
+	d.Press("1", "j")
+	if g.status.logList.Filtering() {
+		t.Error("[4] lists another file's history with its filter still on")
 	}
 }
 
