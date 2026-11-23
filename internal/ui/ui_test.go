@@ -1279,7 +1279,9 @@ func TestPushWithNoUpstreamAsks(t *testing.T) {
 func TestPushFailsWithItsLines(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
-	r.Git("remote", "set-url", "origin", filepath.Join(t.TempDir(), "gone"))
+	// a short path that is not there, relative to the repository: git's line
+	// fits the popup on one line however long the temp dir is
+	r.Git("remote", "set-url", "origin", "gone")
 	r.Commit("ahead.txt", "a\n", "Get ahead")
 	g, d := start(t, r, 100, 32)
 	d.Press("P")
