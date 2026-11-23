@@ -1412,7 +1412,7 @@ func TestRefreshLogsOnlyChanges(t *testing.T) {
 	refresh() // only what git ignores
 	r.Write("README.md", "outside\n")
 	refresh()
-	d.Press("1", "Enter") // stage README.md: gittu's own change
+	d.Press("1", "s") // stage README.md: gittu's own change
 	done(t, g, d)
 	refresh()
 	d.Press("!")
@@ -1691,7 +1691,7 @@ func TestDiffComparesVersions(t *testing.T) {
 	has(t, d, "Enter:diff")
 	d.Press("Enter")
 	has(t, d, "README.md @ index ↔ README.md", "UNIFIED", "+changed")
-	d.Press("Esc", "1", "Enter", "3", "Enter")
+	d.Press("Esc", "1", "s", "3", "Enter")
 	has(t, d, "README.md @ HEAD ↔ README.md @ index")
 }
 
@@ -1778,8 +1778,8 @@ func TestStageAllLeavesTheConflicts(t *testing.T) {
 	}
 }
 
-// TestUnstageRenameWhole: Enter on a staged rename takes both its paths out
-// of the index.
+// TestUnstageRenameWhole: s on a staged rename takes both its paths out of
+// the index.
 func TestUnstageRenameWhole(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -1787,15 +1787,15 @@ func TestUnstageRenameWhole(t *testing.T) {
 	g, d := start(t, r, 120, 32)
 	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inStaged + "renamed.txt"); return nil })
-	d.Press("Enter")
+	d.Press("s")
 	done(t, g, d)
 	if out := strings.TrimSpace(r.Git("diff", "--cached", "--name-only")); out != "" {
 		t.Errorf("still staged: %q", out)
 	}
 }
 
-// TestStageWalksDown: after Enter stages a file the cursor is on the next
-// one of its group, so Enter walks down the list.
+// TestStageWalksDown: after s stages a file the cursor is on the next one of
+// its group, so s walks down the list.
 func TestStageWalksDown(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
@@ -1805,7 +1805,7 @@ func TestStageWalksDown(t *testing.T) {
 	g, d := start(t, r, 120, 32)
 	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "b.txt"); return nil })
-	d.Press("Enter")
+	d.Press("s")
 	done(t, g, d)
 	if cur, _ := g.status.files.Current(); cur.ID != inUnstaged+"c.txt" {
 		t.Errorf("after staging b.txt the cursor is on %q", cur.ID)
@@ -1854,11 +1854,20 @@ func TestStageUnstage(t *testing.T) {
 	r.Write("README.md", "changed\n")
 	g, d := start(t, r, 100, 32)
 	d.Press("1")
-	has(t, d, "Enter:stage")
-	d.Press("Enter")
+	has(t, d, "Enter:show", "s:stage")
+	d.Press("Enter") // Enter shows the change in [3], staging nothing (the user)
+	if g.screen.Focused() != g.status.diffP {
+		t.Fatalf("Enter on [1] did not go to [3] DIFF:\n%s", strings.Join(d.Screen(), "\n"))
+	}
+	hasNot(t, d, "┃ STAGED")
+	d.Press("1", "Space")
+	has(t, d, "[Enter] Show", "[s]tage")
+	d.Press("Esc", "s")
 	done(t, g, d)
-	has(t, d, "┃ STAGED", "Enter:unstage")
-	d.Press("Enter")
+	has(t, d, "┃ STAGED", "s:unstage")
+	d.Press("Space")
+	has(t, d, "Un[s]tage")
+	d.Press("Esc", "s")
 	done(t, g, d)
 	hasNot(t, d, "┃ STAGED")
 	d.Press("Space") // a toggles, the key bracketed at "all" (the user; tdp main M5-1)

@@ -429,13 +429,19 @@ func (s *statusScreen) fileActions() []terminu.Action {
 	noHunk := func() bool { _, _, ok := s.hunk(); return !ok }
 	inFiles := func() bool { return s.conflict != "" }
 	return []terminu.Action{
-		{Key: "Enter", Label: "Stage", Desc: "this file's change", Scope: item, Hint: "stage",
+		// Enter shows the file's change in [3], as on a conflicted file (tdp
+		// K3: the details); s stages or unstages it (the user, 2026-11-23:
+		// Enter staged before).
+		{Key: "Enter", Label: "Show", Desc: "its change in [3]", Scope: item, Hint: "show",
+			Hidden:    func() bool { _, gr, ok := s.file(); return !ok || gr == inConflict },
+			ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
+		{Key: "s", Label: "Stage", Desc: "this file's change", Scope: item, Hint: "stage",
 			Hidden: s.in(inUnstaged), Disabled: off, Do: func() tea.Cmd {
 				p, next := path(), s.nextInGroup()
 				return g.run("Staging…", "Stage", func() error { return g.repo.Stage(p) },
 					func() tea.Cmd { s.files.Select(next); g.a.Log(terminu.Info, "Staged "+p); return nil })
 			}},
-		{Key: "Enter", Label: "Unstage", Desc: "this file's change, keeping it", Scope: item, Hint: "unstage",
+		{Key: "s", Label: "Unstage", Desc: "this file's change, keeping it", Scope: item, Hint: "unstage",
 			Hidden: s.in(inStaged), Disabled: off, Do: func() tea.Cmd {
 				f, _, _ := s.file()
 				next := s.nextInGroup()

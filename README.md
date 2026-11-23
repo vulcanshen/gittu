@@ -155,8 +155,8 @@ and on `[3]` leaves the mode.
 
 | Where | `Enter` | In the `Space` menu |
 |---|---|---|
-| An unstaged file | Stage | `[m]`ark, Discard, Remove, Ignore |
-| A staged file | Unstage | `[m]`ark, Discard, Remove, Ignore |
+| An unstaged file | Show its change in `[3]` | `[s]`tage, `[m]`ark, Discard, Remove, Ignore |
+| A staged file | Show its change in `[3]` | Un`[s]`tage, `[m]`ark, Discard, Remove, Ignore |
 | A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[3]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all (again: unmark all), Clear marks, Stage `[a]`ll (again: unstage all) |

@@ -137,8 +137,8 @@ CURRENT（打開時在這裡）把 `[2]` cursor 所在的分支、遠端分支�
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
 |---|---|---|
-| 還沒 stage 的檔 | Stage | `[m]`ark、Discard、Remove、Ignore |
-| 已經 stage 的檔 | Unstage | `[m]`ark、Discard、Remove、Ignore |
+| 還沒 stage 的檔 | 到 `[3]` 看它的差異 | `[s]`tage、`[m]`ark、Discard、Remove、Ignore |
+| 已經 stage 的檔 | 到 `[3]` 看它的差異 | Un`[s]`tage、`[m]`ark、Discard、Remove、Ignore |
 | 有衝突的檔 | 到 `[3]`，在那裡按 `Enter` 用 editor 改、`[r]` 標成已解決 | `[m]`ark、Mark `[r]`esolved、Resolve one by one、整個檔 Use mine、Use theirs |
 | 一塊衝突 | 到 `[3]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、mark resolved、`[X]` discard、remove、ignore；`[M]`ark all（再按一次是 unmark all）、Clear marks、Stage `[a]`ll（再按一次是 unstage all） |

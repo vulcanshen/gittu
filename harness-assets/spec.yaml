@@ -1,9 +1,9 @@
-id: 61
+id: 62
 from: v1.3.0
 to: v1.3.1
 tasks:
   - id: 1
-    spec: 61
+    spec: 62
     request: 開啟時的畫面：左右兩個面板，左邊是分支列表，右邊是分支圖
     tdp: [tdp terms.2, tdp terms.3, tdp P3, tdp P5, tdp screen.1, tdp screen.2, tdp screen.3, tdp screen.4, tdp screen.7, tdp panel.1, tdp panel.4, tdp components.2, tdp components.4, tdp K1, tdp K2, tdp K9, tdp M4, tdp L1, tdp L2, tdp L3, tdp L4, tdp L5, tdp E5, tdp E8, tdp note.7, tdp screen.5, tdp confirm, tdp color, tdp F6, tdp L5, tdp L5-4, tdp panel.10]
     remark:
@@ -15,7 +15,7 @@ tasks:
         │ All changes            ││ main                                                 │  ← [1] 的位置列：merge 做到一半時寫 󰞏 Merging: <對方>
         │ STAGED                 ││    GRAPH  HASH     DESCRIPTION           AUTHOR DATE  │
         │   M notes.txt          ││    ◉      a1b2c3d  Fix the graph         vulcan …     │
-        └─ Enter:unstage m:mark ─┘│    │ ◉    …                                           │
+        └─ Enter:show s:unstage ─┘│    │ ◉    …                                           │
         ┏[2] BRANCHESR/T/S━━━━━━┓└─ Enter:files h|l:tab z:zoom ────────── 1 of 300 ──┘
         ┃ ● main ↑1              ┃┌[4] DESCRIPTION─────┐┌[5] FILES──────────────────────┐  ← [3] cursor 那個 commit（task 6）
         ┃   feature              ┃│ Fix the graph      ││ 9f8e7d6 ↔ a1b2c3d             │
@@ -176,16 +176,17 @@ tasks:
       - "[4] HISTORY 的空狀態（tdp screen.8）：沒有檔 No file to show / Press [1] to go to the files（沒有改動時 Press [2] to see the history，跟 [3] 一樣）；還沒有 commit 時 No commits yet / Press [1] to go to the files；檔案還不在任何 commit 裡（沒追蹤、新加的）Not in any commit yet / Press [1] to go to the files；讀不到時 Can't read the history of <路徑>: <說原因的那一行> / Press [R] to read it again（tdp panel.15），下次讀 repo 時再試"
       - "[4] HISTORY 的 commit 上 Enter（[Enter] Diff — this commit's change to the file, UNIFIED or SPLIT；hint Enter:diff）：tdp note.8 的比較，<路徑> @ <第一個 parent 的短 hash> ↔ <路徑> @ <commit 的短 hash>（第一個 commit 左邊寫 empty、是空的），跟 [5] FILES 的 Enter 同一種（tdp K3）；那個 commit 裡是二進位檔（git log --numstat 寫 - -）時停用（tdp panel.9、M6）；記 App Log：Compared <左> with <右>（tdp note.7）"
   - id: 12
-    spec: 54
+    spec: 62
     request: stage、unstage、捨棄改動都在 app 裡做
-    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M5-1, tdp K3, tdp F6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp K12, tdp M6, tdp panel.1, tdp F5, tdp K13, tdp K13-2, tdp K13-3]
+    tdp: [tdp P3, tdp M2, tdp M3, tdp M5, tdp M5-1, tdp K3, tdp F6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp K12, tdp M6, tdp panel.1, tdp F5, tdp K13, tdp K13-2, tdp K13-3, tdp P5, tdp K1, tdp panel.13]
     remark:
       - note: "tdp M5 原本把單一字母的熱鍵框在 label 裡第一次出現的那個字母上；使用者要 app 能自己選框在哪一個：「這點請 tdp 開放 app 想要[]在哪就框在哪」。tdp main 3f82387 收了（M5-1），Stage [a]ll 照它寫"
         issue: 送給 tdp session（2026-11-20）；tdp main 3f82387 收了，tdp v1.3.0 發版（M5-1）
       - "刪除、drop、丟掉改動的鍵照 K13（tdp v1.2.20 的 K13、K13-2、K13-3：會永久拿掉東西的一項在 x、很多在 X，不在 D、d；D 是 Diff 模式；使用者 2026-11-20 在 kbu 定的家族規則）：分支、遠端分支、tag 的 [x] Delete，stash 的 [x] Drop，Working tree 有標記時 [X] Discard the marked（先 confirm）；一個檔的 Discard 沒有熱鍵（使用者 2026-11-20：「discard 不要用 x, 一樣沒有熱鍵」）、全域的 Discard all 沒有熱鍵（使用者 2026-11-20：「Discard all 不要熱鍵」，沒標記時按 X 不會丟掉全部）（K13 只規定給了鍵就在 x、X，沒規定一定要有鍵）；Remove（git rm）也會刪檔，沒有熱鍵"
-      - "[1] CHANGES 的 Enter 照那一列在哪一組：UNSTAGED 是 Stage、STAGED 是 Unstage、CONFLICTS 是進去解衝突（task 14）；hint 照 cursor 那一列寫 Enter:stage／Enter:unstage／Enter:resolve（tdp K3：三組是三種項目，同一種永遠同一個動作）"
+      - "[1] CHANGES 的 s 切換 stage（使用者 2026-11-23：「enter stage 移除，換一個可以 toggle stage 的熱鍵」）：UNSTAGED 的列是 [s]tage、STAGED 的列是 Un[s]tage，同一個鍵照那一列在哪一組用 Hidden 分開（跟 m 的 Mark／Unmark、a 的 Stage all／Unstage all 一樣），hint s:stage／s:unstage；熱鍵 app 可以自行決定（tdp P5），s 不是 core key、不是移動的鍵（tdp K1、K12），[1] 沒有用到它；全域的 S 是 Stash，大小寫是兩個鍵（tdp M5）。CONFLICTS 的列沒有 s：衝突的檔照 task 14 由 Mark [r]esolved stage"
+      - "[1] CHANGES 的 Enter 一律是 Show（2026-11-23 起；之前 UNSTAGED 是 Stage、STAGED 是 Unstage）：focus 到 [3] DIFF，那個檔的明細（tdp K3：在列出項目的 panel 上，Enter 可以把 focus 移到顯示那一項明細的 panel；tdp panel.13），UNSTAGED、STAGED 是 Show — its change in [3]，CONFLICTS 照 task 14 是 Show — it in [3], to edit it there；hint Enter:show（tdp K3：同一種項目永遠同一個動作，三組都是進 [3]）"
       - "item operation：Discard（沒有熱鍵，使用者 2026-11-20；這個檔的改動，confirm、警告無法復原；沒追蹤的檔是刪掉它）；panel operation：a 切換全部 stage 與 unstage（使用者 2026-11-20：「st[a]ge all -> toggle stage [a]ll」）：還有沒 stage 的改動時是 Stage [a]ll（every change），全部都 stage 了是 Unstage [a]ll（every staged change）；鍵框在 all 上（tdp main 3f82387 的 M5-1：預設框第一次出現的字母，app 可以挑別的，使用者要求的；label 自己寫出 [a]，tgo 的 MarkLabel 照原樣畫）；中間有一陣子 tdp 還不允許，寫成 [a]ll staged／[a]ll unstaged；有 stage 的也有沒 stage 的時，Space menu 另外有沒有熱鍵的 Unstage all（u 是移動鍵，tdp K12）"
-      - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 Enter 可以一個一個 stage 下去）"
+      - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 s 可以一個一個 stage 下去）"
   - id: 13
     spec: 36
     request: commit 在 app 裡完成；commit 的輸入是一張 form：第一列 title、第二列 textarea、第三列送出的按鈕（user 2026-11-20）

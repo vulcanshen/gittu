@@ -1,6 +1,6 @@
 tasks:
   - id: 1
-    spec: 61
+    spec: 62
     implementation: |
       一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 [3]、3 [4]、4 [5]；
       跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
@@ -189,15 +189,16 @@ tasks:
       [4] 的 panel operation 還有 z Unzoom（task 17）與 tgo List 的 / 篩選
     test: [TestLongPathKeepsItsLetter, TestFileGroups, TestFileHistory, TestFileLog, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFile, TestNothingToCommitHints, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus]
   - id: 12
-    spec: 54
+    spec: 62
     implementation: |
-      [1] CHANGES 的 Enter 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → Stage（git add -A -- <路徑>；hint Enter:stage）、Staged → Unstage（git restore --staged；還沒有 commit 時 git rm --cached；hint Enter:unstage）、
-      Conflicts → Resolve（task 14；hint Enter:resolve）；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀，cursor 留在原本的位置
+      [1] CHANGES 的 item operation，熱鍵 s 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → [s]tage — this file's change（git add -A -- <路徑>；hint s:stage）、Staged → Un[s]tage — this file's change, keeping it（git restore --staged；還沒有 commit 時 git rm --cached；hint s:unstage）；
+      Conflicts 沒有 s；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀
+      [1] CHANGES 的 Enter：Unstaged、Staged 的列是 [Enter] Show — its change in [3]（hint Enter:show；ToDetails：focus 到 Details [3] DIFF，tgo 做），衝突的檔是 task 14 的 Show — it in [3], to edit it there
       Discard（沒有熱鍵，從 Space menu；衝突的列沒有）：confirm DISCARD: <路徑>，「Discard the change to <路徑>?」（沒追蹤的是「Delete <路徑>?」），內容寫無法復原（Peach）；
       Unstaged 的 git restore -- <路徑>、沒追蹤的刪掉檔案、Staged 的 git restore --staged --worktree --source=HEAD（新加的檔 git rm -f）；Success Discarded the change to <路徑>
       panel operation 熱鍵 a 切換：Stage [a]ll — every change, untracked files too（label 自己寫 [a]，tgo 照原樣畫；git add -A；App Log Staged every change；還有 Unstaged 時出現，什麼改動都沒有時停用）、全部都 stage 了換成 Unstage [a]ll — every staged change, keeping them（git reset -q，還沒有 commit 時 git rm --cached -r .；App Log Unstaged every change）；有 Staged 也有 Unstaged 時，Space menu 另外有沒有熱鍵的 Unstage all；進到衝突的檔裡時都 Hidden
       Stage、Unstage、Discard、Stage all、Unstage all 失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、UNSTAGE FAILED、DISCARD FAILED
-      Enter 的 Stage、Unstage 做完，cursor 到同一組的下一個檔（最後一個時是上一個），連按 Enter 一路往下；改名的列 Unstage 時新舊兩個路徑一起退出 index（Unstage the marked 也是）；沒追蹤的檔 Discard 後的 toast 與 App Log 寫 Deleted <路徑>；Stage [a]ll 不碰衝突的檔（只 git add -A -- 還沒 stage 的檔），有跳過的時 Info toast Staged every change but the <N> conflict(s) / Press [r] on each once it is resolved：衝突的檔只由 Mark [r]esolved stage，它會先看有沒有衝突標記
+      s 的 Stage、Unstage 做完，cursor 到同一組的下一個檔（最後一個時是上一個），連按 s 一路往下；改名的列 Unstage 時新舊兩個路徑一起退出 index（Unstage the marked 也是）；沒追蹤的檔 Discard 後的 toast 與 App Log 寫 Deleted <路徑>；Stage [a]ll 不碰衝突的檔（只 git add -A -- 還沒 stage 的檔），有跳過的時 Info toast Staged every change but the <N> conflict(s) / Press [r] on each once it is resolved：衝突的檔只由 Mark [r]esolved stage，它會先看有沒有衝突標記
     test: [TestStageUnstage, TestDiscardFile, TestStageWalksDown, TestUnstageRenameWhole, TestStageAllLeavesTheConflicts]
   - id: 13
     spec: 36
