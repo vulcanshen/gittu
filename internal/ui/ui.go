@@ -300,6 +300,9 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 func (g *gittu) state() (glyph, text string) {
 	switch {
 	case g.busy != "":
+		// TODO(tgo): the work running here goes in List.LocationWork, Green
+		// with popup.4's loading icon (tdp main a999190, panel.10), once a
+		// terminu-go release has it.
 		return "", g.busy
 	case g.snap != nil && g.snap.State.Op != "":
 		st := g.snap.State

@@ -32,7 +32,7 @@ tasks:
       - "怎麼操作 git：呼叫使用者裝的 git 指令，不用 Go 的 git 函式庫（tdp P5：要呼叫哪些外部指令是功能邏輯）。理由：使用者的 git 設定（hooks、credential helper、ssh、gpg 簽章、pull.rebase）照樣生效；merge 與解衝突跟使用者在終端機打的 git 一模一樣；Go 的函式庫（go-git）沒有完整的 merge。git 指令都不給它終端機（自己的 session），所以不會在畫面上問密碼；要密碼時照錯誤處理（task 10）"
       - {note: "使用者 2026-11-22 要把 History 與 Working tree 合成一個畫面：CHANGES 放在 BRANCHES 上方；focus 在 CHANGES 時，右邊的 [2] 換成 cursor 那個檔的 diff、[3] 換成那個檔的歷史、[4] 收起，focus 回到 BRANCHES 時換回來；chip 列與 statusbar 拿掉，[2] 上面放一塊說明牌寫 branch 與 repo。跟著 focus 換內容、收起 panel 撞到 tdp L5（切換 focus 不能讓任何內容位移）與 L5-2；收起的 panel 的號碼 K1 也沒寫。合成一個畫面、拿掉 chip 列與 statusbar、說明牌照 tdp screen.1、screen.4、panel.17", issue: "送給 tdp session（2026-11-22）；tdp main debfb1b 收了（L5 的例外「跟著帶頭 panel 換的 panel」、L5-4；使用者選 A）：幾塊 panel 可以跟著幾塊帶頭的 panel 裡最後拿到 focus 的那一塊，換內容、收起一塊、讓旁邊的變寬，同一塊帶頭的每次都一樣，focus 移進跟著換的不換；號碼照位置，收起的那塊數字鍵不作用。tgo 要加 API（focus 換了的 hook 或 panel 組），tdp session 在問 terminu-go，出 beta 會送來；之前照 B（按 Enter 才換）；B 在 gittu 用不了（CHANGES 的 Enter 是 stage），跟 tdp session 說了。terminu-go v1.3.1-beta.2 加了 Screen.Following、Screen.Leads（gittu 2026-11-22 升上去照它做；tgo 的 AddScreen 先檢查 Enter 的 Details 才換上帶頭的 panel，所以 Panels 一開始寫 [1] 帶頭的樣子）。tdp v1.3.1 發版（L5、L5-4），terminu-go v1.3.1 正式版，2026-11-22 升上去"}
       - {note: "terminu-go v1.3.1-beta.2 的 AddScreen 檢查 Enter 的 ToDetails 時只看當下的 Panels，還沒照 Leads 換上帶頭的 panel：[1] CHANGES 衝突檔的 Enter（Show，focus 到 Details [3] DIFF）在 Panels 一開始寫 [2] 帶頭的樣子時會 panic。暫時 Panels 一開始寫 [1] 帶頭的樣子，AddScreen 之後 App.Focus([2])", issue: "送給 tdp session 轉 terminu-go（2026-11-22）；terminu-go main 1855dff 收了（還沒 tag，跟 v1.3.1 正式版一起出）：Details 在那個 panel 有 focus 時一定在畫面上就算數，帶頭的 panel 算它自己的 Shows；AddScreen 也檢查只出現在 Shows 裡的 panel 的動作。gittu 在 1855dff 上試過：不繞也過、Shows 裡的 panel 沒有被擋；terminu-go v1.3.1 發版，2026-11-22 升上去，Panels 改回 [2] 帶頭的樣子；App.Focus([2]) 留著：那是打開時 focus 在 [2]，不是繞法"}
-      - {note: "git 在跑時的字（Pushing…）與做到一半的 merge 狀態寫在 [1] 的位置列、Lavender（使用者 2026-11-22 要的放法）；review 判違反 panel.10、color.2、screen.3（進行中的工作 Green、寫在工作自己的列裡），做到一半的操作算不算「位置」tdp 不清楚。先照使用者的放法發版", issue: "送給 tdp session（2026-11-23，第 1 題）"}
+      - {note: "git 在跑時的字（Pushing…）與做到一半的 merge 狀態寫在 [1] 的位置列、Lavender（使用者 2026-11-22 要的放法）；review 判違反 panel.10、color.2、screen.3（進行中的工作 Green、寫在工作自己的列裡），做到一半的操作算不算「位置」tdp 不清楚。先照使用者的放法發版", issue: "送給 tdp session（2026-11-23，第 1 題）；tdp main a999190 收了（panel.10、screen.3、color.2、popup.4、panel-197，還沒發版）：位置列可以寫這個地方做到一半的事（Lavender，icon 可以表示狀態），也可以寫正在這裡跑的工作（Green，跑的時候 icon 換成 popup.4 的 loading icon）；gittu 的做到一半照現在，Pushing… 要換成 tgo 的 List.LocationWork（Green＋轉圈），等下一個 tgo 版"}
   - id: 2
     spec: 54
     request: 在終端機工作的人，在 repo 裡打 gittu 就打開那個 repo；還有 gittu version 與 gittu help
@@ -58,7 +58,7 @@ tasks:
       - "遠端分支沒有對應的本地分支（沒有本地分支追蹤它、也沒有同名的；git.Snapshot.Tracked）時，Enter 是 Check out（as a local branch, and show it in [3]；hint Enter:check out）：照 [c]heck out 一樣先 confirm，git checkout -b <名> --track <遠端分支>，成功後 [2] 的 cursor 停在它、focus 到 [2]（使用者 2026-11-20：「如果 local 沒有 checkout 該 remote branch, 那就先 checkout 到 local, 然後切過去」；這一種的 Enter 改成 checkout，其他的 Enter 照樣只顯示，原本 2026-11-19 說的 Enter 不要 checkout 是對本地分支）。有對應的本地分支的遠端分支在分支圖裡畫得出來（task 18），Enter 照樣是 Show"
       - "2026-11-20 起 [2] 不再進到 commit 的檔案（task 6 改放在 [3]）；比較模式（task 7）進到的清單裡 Tab、數字鍵不作用，[1] 動不了，所以不用再退回分支圖（原本用 tgo Panel.LeaveDiff，2026-11-19 回報給 tdp session 的缺口，terminu-go v1.2.18 加的）"
       - "repo 一個分支都沒有（剛 git init、還沒 commit）時是空狀態（tdp screen.8）：No branches yet / Press [Space] to see what you can do here"
-      - {note: "REMOTES 分頁裡，有對應本地分支的遠端分支 Enter 是 Show，沒有的是 Check out；K3「同一種項目永遠是同一個動作」算不算同一種，tdp 沒寫。先照現在的做", issue: "送給 tdp session（2026-11-23，第 5 題）"}
+      - {note: "REMOTES 分頁裡，有對應本地分支的遠端分支 Enter 是 Show，沒有的是 Check out；K3「同一種項目永遠是同一個動作」算不算同一種，tdp 沒寫。先照現在的做", issue: "送給 tdp session（2026-11-23，第 5 題）；tdp main 1a732c6 收了（K3-2 拿掉，還沒發版）：Enter 是對這一項當下最直觀的動作，app 照每一項的情況決定；gittu 照現在就符合"}
   - id: 4
     spec: 60
     request: 右邊是分支圖，在終端機裡把分支線畫得清楚又好看，大 repo 裡也要夠快；commit 點不要只是單調的圓點
@@ -128,9 +128,9 @@ tasks:
       - "熱鍵（tdp P5 領域熱鍵，不佔 core key 與移動的字母 tdp K12）：c check out、M merge、b rebase、r rename、x delete／drop（K13，見上面）、a apply、o pop；一樣的動詞盡量全 app 用同一個鍵（task 9、10 也是）。rename 用 r、checkout 用 c、[2] 的 rebase 用 b（Re[b]ase）都是使用者 2026-11-19 指定的。[3] 的 commit 上 b 是 [b]ranch here，那裡的 Rebase 沒有熱鍵（task 9，使用者 2026-11-19 不要誤觸）。b 也是 global 的 [b]ranch（在 HEAD 開分支）：panel 的熱鍵優先（tdp M4），在 [2] 上 b 是 rebase，開分支從 Global operation 那一列執行"
       - "成功：Success toast（Checked out feature、Merged feature into main……）；git 失敗：error popup（tdp note.6），標題 <動作> FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp components.5、F5）；merge、rebase、pop 有衝突時不是失敗：Warning toast 寫幾個檔有衝突、Press [1] to resolve them（task 14）。每個動作的結果都記 App Log（tdp note.7；toast 自己會記）"
       - "做完重新讀 repo，[1]、[2]、[3] 跟著變；動作在跑的時候其他會改 repo 的動作停用（tdp M6），[1] 的位置列寫正在做什麼（task 1）"
-      - {note: "Checking out…、Merging… 寫在 [1] 的位置列（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）"}
-      - {note: "本地分支的 check out 只在有改動時 confirm；F6「一旦決定要 confirm，每次都 confirm」只有 picker 的例外", issue: "送給 tdp session（2026-11-23，第 2 題）"}
-      - {note: "Merge、Rebase 做出的 commit、遠端分支 checkout 建的本地分支，cursor 沒移過去；K3-15 的例子都是專門新增一項的動作", issue: "送給 tdp session（2026-11-23，第 4 題）"}
+      - {note: "Checking out…、Merging… 寫在 [1] 的位置列（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）；tdp main a999190 收了（panel.10、screen.3、color.2、popup.4、panel-197，還沒發版）：位置列可以寫這個地方做到一半的事（Lavender，icon 可以表示狀態），也可以寫正在這裡跑的工作（Green，跑的時候 icon 換成 popup.4 的 loading icon）；gittu 的做到一半照現在，Pushing… 要換成 tgo 的 List.LocationWork（Green＋轉圈），等下一個 tgo 版"}
+      - {note: "本地分支的 check out 只在有改動時 confirm；F6「一旦決定要 confirm，每次都 confirm」只有 picker 的例外", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，還沒發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
+      - {note: "Merge、Rebase 做出的 commit、遠端分支 checkout 建的本地分支，cursor 沒移過去；K3-15 的例子都是專門新增一項的動作", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，還沒發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
   - id: 9
     spec: 50
     request: 對 commit 能做的事，都在分支圖的 Space 選單
@@ -142,8 +142,8 @@ tasks:
       - "Cop[y] hash：完整的 hash 放進終端機的剪貼簿（OSC 52），Success toast Copied <短 hash>"
       - "成功、失敗、衝突、App Log、做完重新讀照 task 8"
       - "打 tag 成功的 toast 寫 Tagged <短 hash> as <名>（使用者 2026-11-20 選 1；原本是 Tagged <短 hash> <名>，兩個名字連在一起像一串）"
-      - {note: "Reset 沒有熱鍵、select 裡的 [H]ard 丟掉改動；K13 能不能沒有熱鍵、select 的鍵算不算，tdp 沒寫", issue: "送給 tdp session（2026-11-23，第 3 題）"}
-      - {note: "Cherry-pick、Revert、Merge、Rebase 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）"}
+      - {note: "Reset 沒有熱鍵、select 裡的 [H]ard 丟掉改動；K13 能不能沒有熱鍵、select 的鍵算不算，tdp 沒寫", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，還沒發版；gittu 照現在就符合"}
+      - {note: "Cherry-pick、Revert、Merge、Rebase 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，還沒發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
   - id: 10
     spec: 32
     request: 對整個 repo 的動作（commit、pull、push、fetch、開分支、merge、stash、tag）都在 app 裡做得到
@@ -155,9 +155,9 @@ tasks:
       - "fetch、pull、push 在背景跑：[1] 的位置列寫 Fetching…／Pulling…／Pushing…（task 1；2026-11-22 前是 statusbar，Green），跑完 Success toast；失敗開 error popup（PUSH FAILED……），內容是 git 說原因的那一行（第一個 fatal:／error:），全文記進 App Log（tdp note.6、components.5：外面來的好幾行字不整段放進短字、F5）。git 沒有終端機可以問密碼，要密碼時 git 會失敗，error popup 的最後一列加一句提示用 ssh agent 或 credential helper"
       - "Stash：text input 問訊息，建議值是 git 自己會寫的訊息 WIP on <分支>: <短 hash> <標題>（tdp input.6：沒有舊值、app 有合理的預設；什麼都沒碰就按 Enter 是用它；原本空的 text input 沒碰就按 Enter，照 tdp K3 是直接關掉）；Discard all：confirm，警告那一句寫無法復原"
       - "Refresh 重新讀整個 repo；在 app 外面改了檔案、下了 git 指令，畫面也跟著變，怎麼跟上照 task 19：背景重新讀不移動 focus、cursor 留在同一列（tdp K3）；按 R 的記 Info。讀失敗時舊的內容留著，Error toast 說原因（tdp panel.15；背景的重讀（task 19）接連失敗、說原因的那一行跟上一次一樣時不跳也不記，換了一種才再跳、再記；又讀得到時記一筆 INFO The repository can be read again，不跳 toast（tdp v1.2.18 的 note.7、note-105，使用者 2026-11-19 在 tdp session 選 A）），還沒讀到過時兩個 panel 寫讀不到（task 3）。還沒有 commit 時 Push、Branch、Tag、Stash、Discard all 停用，沒有別的分支時 Merge 停用，沒有 remote 時 Fetch、Push 停用（tdp M6）"
-      - {note: "Fetching…／Pulling…／Pushing… 寫在 [1] 的位置列（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）"}
-      - {note: "Discard all 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）"}
-      - {note: "Pull、Pull all、global 的 Merge 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）"}
+      - {note: "Fetching…／Pulling…／Pushing… 寫在 [1] 的位置列（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）；tdp main a999190 收了（panel.10、screen.3、color.2、popup.4、panel-197，還沒發版）：位置列可以寫這個地方做到一半的事（Lavender，icon 可以表示狀態），也可以寫正在這裡跑的工作（Green，跑的時候 icon 換成 popup.4 的 loading icon）；gittu 的做到一半照現在，Pushing… 要換成 tgo 的 List.LocationWork（Green＋轉圈），等下一個 tgo 版"}
+      - {note: "Discard all 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，還沒發版；gittu 照現在就符合"}
+      - {note: "Pull、Pull all、global 的 Merge 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，還沒發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
   - id: 11
     spec: 60
     request: 看工作區的檔案（git 叫 working tree）：哪些 stage 了、哪些還沒，每個檔案改了什麼
@@ -197,8 +197,8 @@ tasks:
       - "[1] CHANGES 的 Enter 一律是 Show（2026-11-23 起；之前 UNSTAGED 是 Stage、STAGED 是 Unstage）：focus 到 [3] DIFF，那個檔的明細（tdp K3：在列出項目的 panel 上，Enter 可以把 focus 移到顯示那一項明細的 panel；tdp panel.13），UNSTAGED、STAGED 是 Show — its change in [3]，CONFLICTS 照 task 14 是 Show — it in [3], to edit it there；hint Enter:show（tdp K3：同一種項目永遠同一個動作，三組都是進 [3]）"
       - "item operation：Discard（沒有熱鍵，使用者 2026-11-20；這個檔的改動，confirm、警告無法復原；沒追蹤的檔是刪掉它）；panel operation：a 切換全部 stage 與 unstage（使用者 2026-11-20：「st[a]ge all -> toggle stage [a]ll」）：還有沒 stage 的改動時是 Stage [a]ll（every change），全部都 stage 了是 Unstage [a]ll（every staged change）；鍵框在 all 上（tdp main 3f82387 的 M5-1：預設框第一次出現的字母，app 可以挑別的，使用者要求的；label 自己寫出 [a]，tgo 的 MarkLabel 照原樣畫）；中間有一陣子 tdp 還不允許，寫成 [a]ll staged／[a]ll unstaged；有 stage 的也有沒 stage 的時，Space menu 另外有沒有熱鍵的 Unstage all（u 是移動鍵，tdp K12）"
       - "stage、unstage 做完不跳 toast，檔案換到另一組就看得到（tdp toast.2：做完的事用不用 toast app 自行決定）；記 App Log（Staged <路徑>、Unstaged <路徑>）；cursor 留在原本的位置附近（換組的那一列不跟著走，連續按 s 可以一個一個 stage 下去）"
-      - {note: "一個檔的 Discard 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）"}
-      - {note: "s 之後 cursor 到同一組的下一個檔，[1] 有篩選時要不要先清掉（panel.14），tdp 沒寫", issue: "送給 tdp session（2026-11-23，第 6 題）"}
+      - {note: "一個檔的 Discard 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，還沒發版；gittu 照現在就符合"}
+      - {note: "s 之後 cursor 到同一組的下一個檔，[1] 有篩選時要不要先清掉（panel.14），tdp 沒寫", issue: "送給 tdp session（2026-11-23，第 6 題）；tdp main 87beef0 收了（panel-198，還沒發版）：使用者的動作讓篩選後的那一項移走，篩選留著，cursor 落在看得到的哪一項由 app 決定；gittu 照現在就符合"}
   - id: 13
     spec: 36
     request: commit 在 app 裡完成；commit 的輸入是一張 form：第一列 title、第二列 textarea、第三列送出的按鈕（user 2026-11-20）
@@ -210,8 +210,8 @@ tasks:
       - "Amend（沒有熱鍵）：同一張 form，標題 AMEND、按鈕 Amend，帶著上一個 commit 的訊息打開，把 staged 的改動併進上一個 commit（git commit --amend）；已經推上 upstream 時先 confirm 警告要 force push（Peach，tdp F6），沒推上去時不問"
       - "成功 Success toast（Committed <短 hash> <標題>）；hook 擋下或失敗：error popup COMMIT FAILED，內容是 git 說原因的那一行，全文記進 App Log（tdp note.6、components.5、F5）。commit 跑的時候 form 開著，標題後面 loading icon（tdp form.7）；失敗時 error popup 蓋在 form 上，關掉回到 form、值都在，再按一次就是重試（tdp form.16）。2026-11-23 前按下就關掉 form、在背景跑，失敗時訊息留到下次打開，review 判違反 form.16 後改掉"
       - "Description 的 textarea 的 Tab 是 input_tab_width 格空白（task 15 的設定，tdp E3）"
-      - {note: "Amend 只在 HEAD 已經推上 upstream 時 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）"}
-      - {note: "Commit、Amend 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）"}
+      - {note: "Amend 只在 HEAD 已經推上 upstream 時 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，還沒發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
+      - {note: "Commit、Amend 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，還沒發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
   - id: 14
     spec: 57
     request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
@@ -231,10 +231,10 @@ tasks:
       - "記 App Log：Used mine in conflict 2 of README.md 之類，每一次選擇一筆"
       - "Abort 的 confirm 內容寫 Everything goes back to how it was before the <op>; conflicts you have resolved are lost.（使用者 2026-11-20 選 1；原本的 What it did so far is undone, conflicts resolved too. 讀起來像衝突會被解掉）"
       - "整個檔的 Use mine／Use theirs（與 task 21 的 for the marked）在檔案衝突之後改過時先 confirm（使用者 2026-11-20：「有手動調整過的檔案……先跳出警告」、「如果gittu關閉重開，還會記得嗎?」→ 比修改時間，「好，照這樣做」）：git 先寫出衝突的檔、再寫它停下來時留的檔（MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD、REBASE_HEAD，2026-11-20 實測四種都是這個順序），所以檔比它新就是衝突之後存過（一塊一塊選過、用 editor 改過、在 gittu 外面改過都算，重開 gittu 也算）；沒有那種檔可比（stash 套用時的衝突）或讀不到檔時每次都問；沒改過不問。confirm USE MINE／USE THEIRS：「Use mine for <路徑>?」，內容 <路徑>: changed after the conflict（或 gittu can't tell whether it was changed after the conflict）與整個檔會換掉、衝突之後的改動會不見（都是 Peach，tdp confirm）；存檔沒改內容也算改過，會多問一次"
-      - {note: "區塊清單的位置列寫 <狀態> › <路徑>（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）"}
-      - {note: "Mark resolved 只在還有衝突標記時、整個檔的 Use mine／Use theirs 只在衝突之後改過時 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）"}
-      - {note: "[A]bort 會丟掉解好的衝突，用的鍵是 A，算不算 K13 的永久拿掉", issue: "送給 tdp session（2026-11-23，第 3 題）"}
-      - {note: "Continue 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）"}
+      - {note: "區塊清單的位置列寫 <狀態> › <路徑>（同 task 1）", issue: "送給 tdp session（2026-11-23，第 1 題）；tdp main a999190 收了（panel.10、screen.3、color.2、popup.4、panel-197，還沒發版）：位置列可以寫這個地方做到一半的事（Lavender，icon 可以表示狀態），也可以寫正在這裡跑的工作（Green，跑的時候 icon 換成 popup.4 的 loading icon）；gittu 的做到一半照現在，Pushing… 要換成 tgo 的 List.LocationWork（Green＋轉圈），等下一個 tgo 版"}
+      - {note: "Mark resolved 只在還有衝突標記時、整個檔的 Use mine／Use theirs 只在衝突之後改過時 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，還沒發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
+      - {note: "[A]bort 會丟掉解好的衝突，用的鍵是 A，算不算 K13 的永久拿掉", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，還沒發版；gittu 照現在就符合"}
+      - {note: "Continue 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，還沒發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
   - id: 15
     spec: 61
     request: 設定與 terminu 家族其他 app 一樣（多行文字的 Tab 寬度）
@@ -309,9 +309,9 @@ tasks:
       - "Ignore（item operation，沒有熱鍵；不在衝突的檔）：寫進 repo 頂層的 .gitignore，一個檔一行 /<路徑>（從頂層算、只對到它；* ? [ \\ 與尾端空白跳脫），已經有那一行就不重寫；還在 index 裡的檔先 git rm --cached（git 不會忽略已經追蹤的檔），檔案留著；有這種檔時先 confirm（IGNORE）說它們不再被追蹤，只有沒追蹤的檔時不問"
       - "App Log（tdp note.7：P3 的動作都記）：Marked <路徑>、Unmarked <路徑>、Marked every file、Cleared the marks；整批的 stage、unstage 每個檔一筆（跟單一的同一句）；Discard、Remove、Ignore 整批時每個檔一筆，再加一個 Success toast 說幾個檔；Use mine／theirs 整批時一個 Success toast（<N> files resolved with mine and staged）"
       - "鍵、git 的做法（git rm、.gitignore 的寫法、已追蹤的檔停止追蹤）是 app 照 git 的意思決定的預設（使用者沒有指定）"
-      - {note: "Use mine／Use theirs for the marked、Ignore、Mark the marked resolved 照狀態決定 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）"}
-      - {note: "Remove、Remove the marked 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）"}
-      - {note: "清單是空的時 [M]ark all 用 Disabled，不讓 M 落到全域的 [M]erge；M6 說不出現、M4 沒寫不出現時鍵歸誰", issue: "送給 tdp session（2026-11-23，第 7 題）"}
+      - {note: "Use mine／Use theirs for the marked、Ignore、Mark the marked resolved 照狀態決定 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，還沒發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
+      - {note: "Remove、Remove the marked 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，還沒發版；gittu 照現在就符合"}
+      - {note: "清單是空的時 [M]ark all 用 Disabled，不讓 M 落到全域的 [M]erge；M6 說不出現、M4 沒寫不出現時鍵歸誰", issue: "送給 tdp session（2026-11-23，第 7 題）；tdp main 96c0f5b 收了（M4-5，還沒發版）：panel 的熱鍵蓋掉 global 的鍵時，那一列暫時不出現也照樣是 panel 的，按了不作用；清單空了時 Mark all 要照 M6 Hidden，等下一個 tgo 版改好按鍵處理再拿掉 Disabled"}
   - id: 22
     spec: 43
     request: 使用者自訂的動作：使用者自己寫操作的腳本，${{source}} 是來源分支、${{target}} 是目標分支，執行時換成實際的分支；腳本存起來，算使用者的資料、不是 gittu 的設定；放在第三個畫面 CUSTOM（user 2026-11-20；這一版先不做，先發版）

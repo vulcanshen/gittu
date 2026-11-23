@@ -565,7 +565,9 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		// M (the user) is the panel's over the global Merge (tdp M4): Mark all,
 		// and Unmark all once every file is marked, as m is on one (the user);
 		// off, not hidden, when there is nothing to mark, so M never merges
-		// here.
+		// here. TODO(tgo): hidden then (tdp main 96c0f5b, M4-5: a panel's key
+		// over a global one stays the panel's while its row is gone), once a
+		// terminu-go release handles the key so.
 		{Key: "M", Label: "Mark all", Desc: "every file listed", Scope: panel,
 			Hidden: func() bool { return inFiles() || s.allMarked() }, Disabled: s.files.Empty,
 			Do: func() tea.Cmd {
