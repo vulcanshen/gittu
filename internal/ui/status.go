@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -91,16 +92,13 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = append(append(s.fileActions(), s.hunkActions()...), g.unzoom())
 	s.diffP.Actions = []terminu.Action{
-		// A conflicted file: Enter edits it, r marks it resolved (the user);
-		// no Edit on Windows (task 24).
+		// A conflicted file: Enter edits it, r marks it resolved (the user).
 		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
-			Hidden: func() bool { return onWindows || s.in(inConflict)() }, Disabled: func() bool { return !g.idle() },
+			Hidden: s.in(inConflict), Disabled: func() bool { return !g.idle() },
 			Do: func() tea.Cmd { f, _, _ := s.file(); return s.edit(f.Path) }},
 		s.resolvedAction(panel),
-		// On a conflicted file Enter is Edit, but on Windows, which has no
-		// Edit: there it compares HEAD with the file (tdp K3; task 24).
 		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "diff",
-			Hidden: func() bool { return s.diff.Empty() || !s.text || !onWindows && !s.in(inConflict)() }, Do: s.openDiff},
+			Hidden: func() bool { return s.diff.Empty() || !s.text || !s.in(inConflict)() }, Do: s.openDiff},
 		g.unzoom(),
 	}
 	s.newLog()
@@ -475,7 +473,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}},
 		// A conflicted file: Enter goes to [2], Enter there edits it in the
 		// user's editor, r marks it resolved (the user).
-		{Key: "Enter", Label: "Show", Desc: showDesc(), Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: "it in [3], to edit it there", Scope: item, Hint: "show",
 			Hidden: s.in(inConflict), ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		s.resolvedAction(item),
 		{Label: "Resolve one by one", Desc: "pick mine, theirs or both for each conflict", Scope: item,
@@ -1106,31 +1104,100 @@ func (s *statusScreen) askUseSide(fs []git.File, theirs bool) *terminu.Ask {
 // checked for conflict markers left (the user).
 func (s *statusScreen) edit(path string) tea.Cmd {
 	g := s.g
-	ed, err := g.repo.Editor()
+	file := filepath.Join(g.repo.Dir, path)
+	command, err := s.editor(file)
+	if errors.Is(err, errNoEditor) {
+		return g.a.ErrorAbout("Edit failed", path, noEditor...)
+	}
 	if err != nil {
 		return g.a.ErrorAbout("Edit failed", path, err.Error())
 	}
 	g.a.Log(terminu.Info, "Editing "+path)
 	g.editing = true
 	term := &terminu.Terminal{Title: "Edit", Subject: path, Dir: g.repo.Dir, Ends: true, Env: editorEnv(),
-		Command: []string{"sh", "-c", ed + ` "$@"`, "sh", filepath.Join(g.repo.Dir, path)}}
+		Command: command}
 	term.OnExit = func(err error) tea.Cmd { return s.edited(path, err) }
 	return g.a.OpenTerminal(term)
 }
 
-// onWindows is gittu running on Windows, where terminu-go has no PTY for a
-// terminal popup: gittu does not open an editor there, and a conflict is
-// resolved one block at a time or in a tool of the user's own (the user,
-// task 24). A variable, so the tests can take the Windows way.
+// editor is the command that edits file: git's editor line run by sh, as git
+// runs it. Windows has no sh for it, and a git there that falls back on its
+// own vi finds none: the editor set in git, else Microsoft Edit, else vim,
+// else none, saying what to install (the user, task 24).
+func (s *statusScreen) editor(file string) ([]string, error) {
+	if !onWindows {
+		ed, err := s.g.repo.Editor()
+		if err != nil {
+			return nil, err
+		}
+		return []string{"sh", "-c", ed + ` "$@"`, "sh", file}, nil
+	}
+	ed, set, err := s.g.repo.EditorSet()
+	if err != nil {
+		return nil, err
+	}
+	if args := splitCommand(ed); set && len(args) > 0 {
+		return append(args, file), nil
+	}
+	for _, name := range []string{"edit", "vim"} {
+		if p, err := lookPath(name); err == nil {
+			return []string{p, file}, nil
+		}
+	}
+	return nil, errNoEditor
+}
+
+// errNoEditor is Windows with no editor set in git, no Microsoft Edit and no
+// vim; noEditor is what Edit says then, a line each so the command and the
+// address are not cut.
+var (
+	errNoEditor = errors.New("no editor")
+	noEditor    = []string{
+		"No editor to open it in: install Microsoft Edit or vim,",
+		"or set yours with `git config core.editor`.",
+		"Microsoft Edit: https://learn.microsoft.com/en-us/windows/edit/",
+	}
+)
+
+// onWindows is gittu running on Windows, where Edit finds its editor as
+// editor says (task 24). A variable, so the tests can take the Windows way.
 var onWindows = runtime.GOOS == "windows"
 
-// showDesc is what Show on a conflicted file says it does: no editing in [3]
-// on Windows.
-func showDesc() string {
-	if onWindows {
-		return "it in [3]"
+// lookPath finds a program on PATH; a variable, so the tests can say what is
+// there.
+var lookPath = exec.LookPath
+
+// splitCommand splits an editor line into its words as a Windows command
+// line is: at blanks outside double or single quotes, the quotes dropped, a
+// backslash kept (a Windows path has them).
+func splitCommand(line string) []string {
+	var words []string
+	var w strings.Builder
+	in, quote := false, rune(0)
+	for _, c := range line {
+		switch {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			} else {
+				w.WriteRune(c)
+			}
+		case c == '"' || c == '\'':
+			quote, in = c, true
+		case c == ' ' || c == '\t':
+			if in {
+				words, in = append(words, w.String()), false
+				w.Reset()
+			}
+		default:
+			w.WriteRune(c)
+			in = true
+		}
 	}
-	return "it in [3], to edit it there"
+	if in {
+		words = append(words, w.String())
+	}
+	return words
 }
 
 // edited reads the repository again after the editor ended and says what is

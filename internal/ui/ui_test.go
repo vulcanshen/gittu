@@ -2304,7 +2304,7 @@ func TestResolveHunks(t *testing.T) {
 // their lines, none an Info saying r marks it resolved; r on [2] stages it
 // (the user; tdp terminal, textarea.1).
 func TestEditConflict(t *testing.T) {
-	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows has no Edit (TestNoEditOnWindows)")
+	unixOnly(t, "the stand-in editor is a sh script")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, runs := filepath.Join(dir, "editor"), filepath.Join(dir, "runs")
@@ -2343,7 +2343,7 @@ func TestEditConflict(t *testing.T) {
 // read again, so its swap file is not logged as changed outside gittu; nor is
 // the file it saved, read when it ends (the user).
 func TestEditorPausesRefresh(t *testing.T) {
-	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows has no Edit (TestNoEditOnWindows)")
+	unixOnly(t, "the stand-in editor is a sh script")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, goOn := filepath.Join(dir, "editor"), filepath.Join(dir, "go-on")
@@ -2993,30 +2993,102 @@ func unixOnly(t *testing.T, why string) {
 	}
 }
 
-// TestNoEditOnWindows: on Windows gittu opens no editor (no PTY there): a
-// conflicted file has no Edit in [3], whose Enter compares HEAD with the file
-// as on any other file; Show says no more than that it goes to [3] (the
-// user, task 24; tdp K3).
-func TestNoEditOnWindows(t *testing.T) {
-	r := gittest.Conflicted(t)
-	defer func(w bool) { onWindows = w }(onWindows)
-	onWindows = true
-	g, d := start(t, r, 100, 32)
-	d.Press("1", "Space")
-	has(t, d, "[Enter] Show", "it in [3]")
-	hasNot(t, d, "to edit it there")
-	d.Press("Esc", "Enter")
-	if g.a.Screen().Focused() != g.status.diffP {
-		t.Fatal("Enter on a conflicted file did not go to [3]")
+// windowsEditors makes the Windows way: no editor set in git, and lookPath
+// finding the stand-ins named in found (edit or vim) as sh scripts that write
+// their name in runs and resolve the file.
+func windowsEditors(t *testing.T, found ...string) (runs string) {
+	t.Helper()
+	for _, k := range []string{"GIT_EDITOR", "VISUAL", "EDITOR"} {
+		t.Setenv(k, "") // put back after the test
+		os.Unsetenv(k)  // git takes an empty one as set
 	}
-	has(t, d, "Enter:diff r:resolved")
-	hasNot(t, d, "Enter:edit")
-	d.Press("Space")
-	has(t, d, "Mark [r]esolved")
-	hasNot(t, d, "Edit")
-	d.Press("Esc", "Enter")
-	has(t, d, "notes.txt @ HEAD ↔ notes.txt", "UNIFIED")
-	hasNot(t, d, "EDIT")
+	dir := t.TempDir()
+	runs = filepath.Join(dir, "runs")
+	paths := map[string]string{}
+	for _, name := range found {
+		p := filepath.Join(dir, name)
+		script := "#!/bin/sh\necho " + name + " >> " + runs + "\nprintf 'a\\nB\\nc\\n' > \"$1\"\n"
+		if err := os.WriteFile(p, []byte(script), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		paths[name] = p
+	}
+	w, look := onWindows, lookPath
+	t.Cleanup(func() { onWindows, lookPath = w, look })
+	onWindows = true
+	lookPath = func(name string) (string, error) {
+		if p, ok := paths[name]; ok {
+			return p, nil
+		}
+		return "", fmt.Errorf("%s: not found", name)
+	}
+	return runs
+}
+
+// TestEditOnWindows: on Windows, with no editor set in git, Edit opens
+// Microsoft Edit, or vim when there is no edit, in the terminal popup; the
+// editor set in git comes first (the user, task 24).
+func TestEditOnWindows(t *testing.T) {
+	unixOnly(t, "the stand-in editors are sh scripts")
+	for _, c := range []struct {
+		name, want string
+		found      []string
+		gitEditor  bool
+	}{
+		{"edit first", "edit", []string{"edit", "vim"}, false},
+		{"vim when no edit", "vim", []string{"vim"}, false},
+		{"the editor set in git", "mine", []string{"edit", "vim"}, true},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			r := gittest.Conflicted(t)
+			runs := windowsEditors(t, c.found...)
+			if c.gitEditor {
+				mine := filepath.Join(filepath.Dir(runs), "mine")
+				script := "#!/bin/sh\necho mine >> " + runs + "\nprintf 'a\\nB\\nc\\n' > \"$1\"\n"
+				if err := os.WriteFile(mine, []byte(script), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				r.Git("config", "core.editor", mine)
+			}
+			_, d := start(t, r, 100, 32)
+			d.Press("1", "Enter")
+			has(t, d, "Enter:edit r:resolved")
+			d.Press("Enter")
+			d.WaitFor(func() bool { return d.Has("no conflicts left") }, 5*time.Second)
+			b, err := os.ReadFile(runs)
+			if err != nil || strings.TrimSpace(string(b)) != c.want {
+				t.Errorf("ran %q (%v), want %s", b, err, c.want)
+			}
+		})
+	}
+}
+
+// TestNoEditorOnWindows: on Windows with no editor set in git, no Microsoft
+// Edit and no vim, Edit says to install one, or to set one in git (the user,
+// task 24).
+func TestNoEditorOnWindows(t *testing.T) {
+	r := gittest.Conflicted(t)
+	windowsEditors(t)
+	_, d := start(t, r, 100, 32)
+	d.Press("1", "Enter", "Enter")
+	has(t, d, "EDIT FAILED: notes.txt", "install Microsoft Edit", "learn.microsoft.com/en-us/windows/edit", "or vim", "`git config core.editor`")
+}
+
+// TestSplitCommand: an editor line splits into its words as a Windows command
+// line does.
+func TestSplitCommand(t *testing.T) {
+	for line, want := range map[string][]string{
+		"vim":         {"vim"},
+		"code --wait": {"code", "--wait"},
+		`"C:/Program Files/Notepad++/notepad++.exe" -multiInst -nosession`: {"C:/Program Files/Notepad++/notepad++.exe", "-multiInst", "-nosession"},
+		`C:\tools\vim\vim.exe`: {`C:\tools\vim\vim.exe`},
+		"'my editor'  -w ":     {"my editor", "-w"},
+		"":                     nil,
+	} {
+		if got := splitCommand(line); !slices.Equal(got, want) {
+			t.Errorf("splitCommand(%q) = %q, want %q", line, got, want)
+		}
+	}
 }
 
 // TestDiffTakesCRLFAsGitDoes: with core.autocrlf on (Git for Windows'

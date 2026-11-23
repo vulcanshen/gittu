@@ -4,8 +4,10 @@ Each release names the version of terminu design (tdp) it follows.
 
 ## Unreleased
 
-- Windows (amd64, arm64): Scoop, a PowerShell install script and `gittu update`. gittu cannot open your editor there:
-  resolve a conflict one block at a time, with mine or theirs, or in a tool of your own, then mark it resolved
+- Windows 10 1809 and later (amd64, arm64): Scoop, a PowerShell install script and `gittu update`. A conflicted file
+  opens in the editor set in git, else in Microsoft Edit, else in vim; with none, gittu says what to install
+- With no answer about the terminal's background (as in a tmux popup), the second row of a commit takes a flat colour
+  instead of a fade cut short; in tmux the background is asked for first, so it is found
 - A working tree file with CRLF where git keeps LF (core.autocrlf, Git for Windows' default) shows no change on those
   line endings, as `git diff` does
 

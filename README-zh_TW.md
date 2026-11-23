@@ -24,7 +24,7 @@
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
 - **要 commit 的檔案**：衝突、已經 stage、還沒 stage 的檔案，在分支上面；移到它們上，右邊就是 cursor 那個檔的差異與改過它的 commit；stage、unstage、捨棄改動、commit。
-- **用你自己的 editor 解衝突**：在有衝突的檔上按 `Enter` 到 `[3]`，再按 `Enter` 用 git 設定的 editor 打開（Windows 沒有）；離開 editor 後，
+- **用你自己的 editor 解衝突**：在有衝突的檔上按 `Enter` 到 `[3]`，再按 `Enter` 用 git 設定的 editor 打開（Windows 上 git 沒設 editor 時用 [Microsoft Edit](https://learn.microsoft.com/en-us/windows/edit/) 或 vim）；離開 editor 後，
   gittu 會告訴你哪幾行還有衝突標記，`r` 把它標成已解決（標記的那些從 `Space` 選單）。也可以一塊一塊選用我的、用對方的或兩個都要。
   merge、rebase、cherry-pick、revert 做到一半時可以放棄或繼續。
 - **用你自己的 git**：gittu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
@@ -33,7 +33,7 @@
 
 ### 需求
 
-- macOS、Linux（WSL 也可以）或 Windows。
+- macOS、Linux（WSL 也可以）或 Windows 10 1809 以後。
 - `PATH` 上有 git（Windows 是 [Git for Windows](https://gitforwindows.org)）。
 - 終端機用 [Nerd Font](https://www.nerdfonts.com)：圖示與框線都是 Nerd Font 的字。
 - 支援 truecolor（24-bit）的終端機：256 色下分不出淡化的顏色與層色。
@@ -167,7 +167,7 @@ CURRENT（打開時在這裡）把 `[2]` cursor 所在的分支、遠端分支�
 |---|---|---|
 | 還沒 stage 的檔 | 到 `[3]` 看它的差異 | `[s]`tage、`[m]`ark、Discard、Remove、Ignore |
 | 已經 stage 的檔 | 到 `[3]` 看它的差異 | Un`[s]`tage、`[m]`ark、Discard、Remove、Ignore |
-| 有衝突的檔 | 到 `[3]`，在那裡按 `Enter` 用 editor 改（Windows 上是跟 HEAD 比較）、`[r]` 標成已解決 | `[m]`ark、Mark `[r]`esolved、Resolve one by one、整個檔 Use mine、Use theirs |
+| 有衝突的檔 | 到 `[3]`，在那裡按 `Enter` 用 editor 改、`[r]` 標成已解決 | `[m]`ark、Mark `[r]`esolved、Resolve one by one、整個檔 Use mine、Use theirs |
 | 一塊衝突 | 到 `[3]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、mark resolved、`[X]` discard、remove、ignore；`[M]`ark all（再按一次是 unmark all）、Clear marks、Stage `[a]`ll（再按一次是 unstage all） |
 | `[4]` HISTORY：commit | 那個檔在這個 commit 的兩個版本 | `[/]` 篩選 |
@@ -222,8 +222,8 @@ left:
 - gittu 沒辦法問密碼或 passphrase：請用 ssh agent 或 credential helper。
 - 衝突只顯示我的與對方的，不顯示共同的祖先。
 - 沒有互動式 rebase、submodule、worktree、git-flow。
-- Windows 上 gittu 開不了你的 editor：衝突可以一塊一塊選、整個檔用我的或對方的，或用你自己的工具改，改完按 `r` 標成已解決
-  （檔裡還有衝突標記時會先問）。
+- Windows 上 git 沒設 editor 時，衝突的檔用 Microsoft Edit 打開，沒有就用 vim；兩個都沒有時，gittu 會請你安裝其中一個，或用
+  `git config core.editor` 設你自己的。
 
 ## 相關連結
 

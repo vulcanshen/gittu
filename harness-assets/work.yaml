@@ -52,7 +52,7 @@ tasks:
       換分頁（OnTab）時先離開進到的 stash 檔案清單（tgo Panel.LeaveDiff），[3] 跟著新分頁 cursor 那一列換，跟移動一樣（2026-11-20 實測發現切回去過的分頁 [3] 不跟）
     test: [TestBranchTabs, TestBranchTabsEmpty, TestBranchTabsEmptyHints, TestBranchMovesTheGraph, TestBranchesEmpty, TestUpstreamGone, TestEnterShowsTheCommit, TestActionsClearTheFilter, TestEnterChecksOutARemoteBranch, TestFirstReadFails, TestReadTheSample, TestVersionCompare, TestTabFollowsToTheGraph]
   - id: 4
-    spec: 60
+    spec: 66
     implementation: |
       [3] COMMITS 是 tgo List，Filterable（/ 篩選 commit 的每一欄）：欄 GRAPH、HASH（短 hash）、DESCRIPTION（Shrink，最少 12 格）、
       AUTHOR（Shrink，最少 6 格，Drop 2）、DATE（YYYY-MM-DD，Overlay0，Drop 1）
@@ -161,7 +161,7 @@ tasks:
       在背景重新讀 repo 照 task 19（每 3 秒），換上畫面：cursor 留在同一列（SetRows），focus 不動
     test: [TestFetchPullPush, TestPushWithNoUpstreamAsks, TestPushFailsWithItsLines, TestNewBranchAndTagAtHead, TestPickMerge, TestStashAndDiscardAll, TestRefreshAndReadingAgain, TestRefreshFailureKeepsContent, TestPushWithoutRemote, TestNoCommitYet]
   - id: 11
-    spec: 60
+    spec: 66
     implementation: |
       [1] CHANGES（task 1 那個畫面的左上，帶頭的 panel）是 tgo List（Marks，task 21；一欄、沒有表頭：<字母> <路徑>，字母用 Row.Styled 上色；路徑由 gittu 照 [1] 的寬度從前面截（寬度 − 9：框、邊距、標記欄、字母與空白、cursor 的箭頭、多留一格），…接在字母後面，Layout 記下 [1] 的寬度（statusScreen.laidOut），變了就重新做每一列；Row.Cells 是完整的 <字母> <路徑>，篩選照它比對；Shrink、Path 留著當保險），位置列 All changes；git status --porcelain=v1 -z 讀出來，三組：
       Conflicts（unmerged：U 在任一邊、AA、DD；旗標 U Red）、Staged（index 有改；旗標是 index 的字母）、Unstaged（working tree 有改，沒追蹤的也在這組，旗標 ? Overlay0）；
@@ -177,7 +177,7 @@ tasks:
       背景重新讀時（task 19），同一列的兩邊文字變了才再 SetDiff（view 留在原處，tdp note.9），換了一列也是 SetDiff；衝突區塊那一層照 task 14
       [2] 上的 Enter（[Enter] Diff — its two versions, UNIFIED or SPLIT；hint Enter:diff；沒有內容、二進位檔時 Hidden；沒追蹤的資料夾是 App.OpenDiff(diffP, DiffItem{Anchor, Other, Items: 同上})，在 [2] 裡進到那份清單）：
       tgo App.OpenDiff(diffP, DiffItem{Anchor, Other, Text})：STAGED <舊路徑> @ HEAD ↔ <路徑> @ index（git show HEAD:<舊路徑>、git show :<路徑>）；
-      UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔）；沒追蹤的檔 <路徑> @ empty ↔ <路徑>（index 裡沒有它，左邊是空的，跟 History 裡 commit 新增的檔一樣寫 empty）；衝突的檔 <路徑> @ HEAD ↔ <路徑>（[3] 畫的；Enter 只在 Windows 打開它，其他平台衝突檔的 Enter 是 Edit，Diff Hidden）；
+      UNSTAGED <路徑> @ index ↔ <路徑>（git show :<路徑>、工作區的檔）；沒追蹤的檔 <路徑> @ empty ↔ <路徑>（index 裡沒有它，左邊是空的，跟 History 裡 commit 新增的檔一樣寫 empty）；衝突的檔 <路徑> @ HEAD ↔ <路徑>（[3] 畫的；衝突檔的 Enter 是 Edit，Diff Hidden）；
       衝突區塊那一層 MINE · <標記> ↔ THEIRS · <標記>（那一塊兩邊的行）；tgo 打開比較（UNIFIED、SPLIT）或兩邊一樣時 Info toast；App Log 記 Info：Compared <左> with <右>
       沒有改動時：[1] 空狀態 Nothing to commit / Press [2] to see the history；[3] No file to show / Press [2] to see the history（[1] 沒有檔可以去）；[4] 也一樣
       [4] HISTORY（filelog.go；[1] 帶頭時在位置 4）：tgo List，欄 HASH、DESCRIPTION（Shrink、MinWidth 12、Fill）、AUTHOR（Shrink、MinWidth 6、Drop 2）、DATE（Drop 1，Overlay0），SpreadFill，Filterable；label HISTORY: <路徑>（Panel.Name）；
@@ -221,12 +221,12 @@ tasks:
       跟 Commit 一樣 form 開著跑；成功 Success「Amended <短 hash> <第一行>」，失敗時 error popup AMEND FAILED 蓋在 form 上，同 Commit
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks, TestCommitFormClosedFirst]
   - id: 14
-    spec: 65
+    spec: 66
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [3], to edit it there；hint Enter:show；ToDetails）：focus 到 [3]；[3] 顯示 HEAD 對工作區的檔（帶著標記）
       [3] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
       Command: sh -c '<editor> "$@"' sh <頂層>/<路徑>, Env 清掉外層終端機的名字（TERM_PROGRAM 等，同 sshu）})，App Log Info Editing <路徑>；拿不到 editor 時 error popup EDIT FAILED: <路徑>
-      Windows 上（onWindows）沒有 Edit：Hidden，[1] 的 Show 說明是 it in [3]（task 24）
+      Windows 上（onWindows）Command 由 task 24 的 statusScreen.editor 決定，不用 sh -c
       editor 結束（OnExit）：在背景重新讀 repo；讀那個檔找 <<<<<<< ／ >>>>>>> 標記的行（7 個字、後面接空白或行尾）：有 → Warning「<路徑> still has conflicts on lines <範圍>」（一塊從 <<<<<<< 到 >>>>>>> 寫成 2–6，只剩一行標記的寫那一行，例 line 3；最多 8 個，其他寫 and <N> more）；
       沒有 → Info「<路徑> has no conflicts left: press [r] to mark it resolved」；讀不到 → Error「Can't read <路徑>: <原因>」；editor 結束得不好時 App Log 記 Warning The editor of <路徑> ended with <原因>，照樣檢查
       item operation（[1]）與 panel operation（[3]）Mark [r]esolved — stage it: its conflicts are done（label 自己寫 [r]，tgo 照原樣畫；hint r:resolved；衝突檔才有；git 在跑時停用）：還有標記時 confirm MARK RESOLVED「Mark <路徑> resolved?」，
@@ -340,11 +340,14 @@ tasks:
       left 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it
     test: [TestSplitKeys, TestSplitKeptByWidth, TestSplitFollowsTheTerminal, TestSplitAtItsEnds, TestSplitDisabledWhenZoomed, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
   - id: 24
-    spec: 65
+    spec: 66
     implementation: |
       呼叫 git（internal/git 的 run）：detach(cmd)，unix（proc_unix.go，build tag !windows）SysProcAttr{Setsid: true}；Windows（proc_windows.go）SysProcAttr{CreationFlags: CREATE_NO_WINDOW 0x08000000}；GIT_TERMINAL_PROMPT=0 照舊
-      Edit（task 14，[3] 顯示衝突檔時的 Enter）：Hidden 加上 onWindows（runtime.GOOS == "windows"）：Windows 上不列在 Space menu、? 與 hint；那裡 [3] 的 Diff 不因為是衝突檔而 Hidden，Enter 打開 <路徑> @ HEAD ↔ <路徑> 的比較（task 11），hint Enter:diff r:resolved；
-      [1] 衝突檔的 Show 說明 showDesc()：Windows 是 it in [3]，其他平台照舊 it in [3], to edit it there；Mark resolved、Resolve one by one、Use mine／Use theirs 照舊（task 14）
+      Edit（task 14）的 Command：statusScreen.editor(<頂層>/<路徑>)；不是 Windows（onWindows = runtime.GOOS == "windows"）時照舊 sh -c '<git var GIT_EDITOR> "$@"' sh <檔>；
+      Windows：Repo.EditorSet：GIT_EDITOR、VISUAL、EDITOR 有一個不是空的，或 git config core.editor 有值，才是使用者設了，那時用 git var GIT_EDITOR 的結果（沒設時不問 git：沒有 TERM 時它會失敗）；
+      設了：splitCommand（空白分開，雙引號或單引號裡算一個字、引號拿掉，反斜線照原樣）拆成字，後面接檔；沒設：lookPath（exec.LookPath）找 edit，再找 vim，找到的完整路徑接檔；
+      都沒有：error popup EDIT FAILED: <路徑>，內容三行（指令與網址不被折斷）No editor to open it in: install Microsoft Edit or vim, ／ or set yours with `git config core.editor`. ／ Microsoft Edit: https://learn.microsoft.com/en-us/windows/edit/（要使用者打的指令用反引號，tdp M5）；
+      找到之後照 task 14：tgo App.OpenTerminal 的 terminal popup（terminu-go v1.3.6 在 Windows 上用 ConPTY），結束後重新讀、檢查衝突標記、toast
       CRLF：[3] 與比較 popup 的兩邊（task 12 的 DiffItem.Text），index 對工作區、HEAD 對衝突檔這兩種，工作區那一邊用 asGitSees(a, b)：工作區有 \r\n、git 那一邊沒有時 \r\n 換成 \n，否則照原樣
       衝突的區塊（task 14）：找標記本來就去掉行尾的 \r，區塊的行保留 \r 寫回（CRLF 的檔解完還是 CRLF），[3] 顯示時 \r 由 tgo 的 Pager 拿掉
       設定、狀態的位置照舊用 os.UserHomeDir（Windows 是 %USERPROFILE%）；icon 寬度、更新（Scoop 印 scoop update gittu）由 terminu-go 做
@@ -352,6 +355,6 @@ tasks:
       release.yml 測試的 matrix 加 windows-latest（go test ./...，不帶 -race）；install.sh 的 WINDOWS="yes"（unix 以外的 OS 叫人用 install.ps1）；
       install.ps1：抓最新的 release，windows_<amd64|arm64>.zip 解開，gittu.exe 放到 %LOCALAPPDATA%\gittu，加進使用者的 PATH，印 Nerd Font、truecolor、Git for Windows 的提醒；
       uninstall.ps1：刪掉 gittu.exe（資料夾空了也刪）、從 PATH 拿掉，問要不要刪設定目錄（GITTU__CONFIG、XDG_CONFIG_HOME\gittu 或 %USERPROFILE%\.config\gittu），GITTU__STATE 另外指定時也問；
-      README 兩份：需求加 Windows 與 Git for Windows、Windows 不量 icon 寬度、Scoop 與 PowerShell 的安裝與移除、更新時 Scoop 的說法、Windows 沒有 Edit（衝突用其他工具解）、設定的位置、限制
-      測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh（editor 跑在 unix 的 PTY，Windows 沒有 Edit）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）
-    test: [TestNoEditOnWindows, TestDiffTakesCRLFAsGitDoes, TestConflictLinesWithoutCR, TestResolveHunks, TestMarkResolvedAsks]
+      README 兩份：需求加 Windows 與 Git for Windows、Windows 不量 icon 寬度、Scoop 與 PowerShell 的安裝與移除、更新時 Scoop 的說法、Windows 的 editor 順序（git 設的、Microsoft Edit、vim）與 Windows 10 1809 起、設定的位置
+      測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh、TestEditOnWindows（代替 editor 的是 sh 腳本）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）
+    test: [TestEditOnWindows, TestNoEditorOnWindows, TestSplitCommand, TestDiffTakesCRLFAsGitDoes, TestConflictLinesWithoutCR, TestResolveHunks, TestMarkResolvedAsks]

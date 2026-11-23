@@ -109,6 +109,26 @@ func (r *Repo) Editor() (string, error) {
 	return strings.TrimSpace(out), nil
 }
 
+// EditorSet is the editor the user set for git, in GIT_EDITOR, core.editor,
+// VISUAL or EDITOR, as git would open it (Editor); false when none is set,
+// git not asked then: with none, a terminal without TERM (Windows) makes git
+// var fail rather than fall back on vi.
+func (r *Repo) EditorSet() (string, bool, error) {
+	set := false
+	for _, k := range []string{"GIT_EDITOR", "VISUAL", "EDITOR"} {
+		set = set || os.Getenv(k) != ""
+	}
+	if !set {
+		out, err := r.Run("config", "core.editor")
+		set = err == nil && strings.TrimSpace(out) != ""
+	}
+	if !set {
+		return "", false, nil
+	}
+	ed, err := r.Editor()
+	return ed, err == nil, err
+}
+
 // readLines reads a working tree file as lines, each keeping a \r of a CRLF;
 // end reports a line break after the last line.
 func (r *Repo) readLines(path string) (lines []string, end bool, err error) {
