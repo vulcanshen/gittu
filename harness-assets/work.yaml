@@ -170,7 +170,7 @@ tasks:
       讀出下面 Enter 那兩個版本的文字，tgo Pager.SetDiff(舊的, 新的) 照 UNIFIED 畫（只畫有差異的段落、前後 3 行、分隔線、兩欄行號、- Red、+ Green，沒有 @@），位置列（Panel.Location）<Anchor> ↔ <Other>；
       兩邊一樣時 EmptyFact No differences between the two / Press [1] to go to the files；任一邊前 8000 位元組有 NUL（二進位檔）時 SetLines(nil)、Not a text file: no lines to compare / Press [1] to go to the files；
       沒追蹤的資料夾：tgo Pager.SetDiffItems(裡面的檔)，每一項 DiffItem{Mark: DiffAdded, Name: <路徑>, Anchor: <路徑> @ empty, Other: <路徑>, Text: "" 對工作區的檔}
-      （git ls-files --others --exclude-standard -- <資料夾>；前 8000 位元組有 NUL 的檔沒有 Text，清單裡那一項的 Enter 停用），位置列 <資料夾> @ empty ↔ <資料夾>，沒有檔時 No files in it to show / Press [1] to go to the files；
+      （git ls-files --others --exclude-standard -- <資料夾>；前 8000 位元組有 NUL 的檔沒有 Text，清單裡那一項沒有 Diff：tgo 的清單讓它的 Enter 不出現，tdp panel.9），位置列 <資料夾> @ empty ↔ <資料夾>，沒有檔時 No files in it to show / Press [1] to go to the files；
       [1] 換到另一列（不是同一列重新讀）時先 tgo Panel.LeaveDiff，退出上一列進去的清單；
       讀不到時：換了一列（沒有舊內容）Panel.Fail Can't show the change: <說原因的那一行> / Press [R] to read it again；同一列重新讀時讀不到，舊的內容留著，Error toast「Can't show the change to <路徑>: <說原因的那一行>」「Press [R] to read it again」
       （原因跟上一次一樣時不跳也不記，同 task 3；又讀得到時 App Log 記 INFO The change to <路徑> can be shown again，不跳 toast）；兩種都把那一句（Error）與 git 印的全文記進 App Log
