@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- Windows (amd64, arm64): Scoop, a PowerShell install script and `gittu update`; a conflicted file opens in Notepad there,
+  where gittu cannot run your editor inside itself
+- A working tree file with CRLF where git keeps LF (core.autocrlf, Git for Windows' default) shows no change on those
+  line endings, as `git diff` does
+
 ## v0.1.0 — tdp v1.3.3
 
 - First version: a git client for the terminal, one screen of five panels: the files to commit above the branches,

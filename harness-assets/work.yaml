@@ -221,11 +221,12 @@ tasks:
       跟 Commit 一樣 form 開著跑；成功 Success「Amended <短 hash> <第一行>」，失敗時 error popup AMEND FAILED 蓋在 form 上，同 Commit
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks, TestCommitFormClosedFirst]
   - id: 14
-    spec: 64
+    spec: 65
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [3], to edit it there；hint Enter:show；ToDetails）：focus 到 [3]；[3] 顯示 HEAD 對工作區的檔（帶著標記）
       [3] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
       Command: sh -c '<editor> "$@"' sh <頂層>/<路徑>, Env 清掉外層終端機的名字（TERM_PROGRAM 等，同 sshu）})，App Log Info Editing <路徑>；拿不到 editor 時 error popup EDIT FAILED: <路徑>
+      Windows 上（onWindows）Edit 不開 terminal popup，照 task 24 開 Notepad
       editor 結束（OnExit）：在背景重新讀 repo；讀那個檔找 <<<<<<< ／ >>>>>>> 標記的行（7 個字、後面接空白或行尾）：有 → Warning「<路徑> still has conflicts on lines <範圍>」（一塊從 <<<<<<< 到 >>>>>>> 寫成 2–6，只剩一行標記的寫那一行，例 line 3；最多 8 個，其他寫 and <N> more）；
       沒有 → Info「<路徑> has no conflicts left: press [r] to mark it resolved」；讀不到 → Error「Can't read <路徑>: <原因>」；editor 結束得不好時 App Log 記 Warning The editor of <路徑> ended with <原因>，照樣檢查
       item operation（[1]）與 panel operation（[3]）Mark [r]esolved — stage it: its conflicts are done（label 自己寫 [r]，tgo 照原樣畫；hint r:resolved；衝突檔才有；git 在跑時停用）：還有標記時 confirm MARK RESOLVED「Mark <路徑> resolved?」，
@@ -338,3 +339,21 @@ tasks:
       terminu.KeepAside 備份成 .bak 之後用 yaml.Node 把那幾筆（或整個 left）拿掉重寫，MisfitNotice(path, copy, misfits…)；備份做不出來時不重寫，Error 的 Notice 加 MisfitNotice(path, "", …)；這一次都不用那幾筆
       left 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it
     test: [TestSplitKeys, TestSplitKeptByWidth, TestSplitFollowsTheTerminal, TestSplitAtItsEnds, TestSplitDisabledWhenZoomed, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
+  - id: 24
+    spec: 65
+    implementation: |
+      呼叫 git（internal/git 的 run）：detach(cmd)，unix（proc_unix.go，build tag !windows）SysProcAttr{Setsid: true}；Windows（proc_windows.go）SysProcAttr{CreationFlags: CREATE_NO_WINDOW 0x08000000}；GIT_TERMINAL_PROMPT=0 照舊
+      Edit（task 14，[3] 顯示衝突檔時的 Enter）：onWindows（runtime.GOOS == "windows"）時 statusScreen.notepad(路徑)：openNotepad(<頂層>\<路徑>)（exec.Command("notepad.exe", 路徑).Start()，Process.Release()，不等它結束），
+      成功：App Log Info Editing <路徑> in Notepad，Info toast Opened <路徑> in Notepad: save it, then press [r] to mark it resolved；不設 editing（定時重新讀 repo 照常，task 19：存了之後 [3] 跟著更新）；
+      開不起來：error popup EDIT FAILED: <路徑>（原因）；Edit 的說明在 Windows 是 it in Notepad, to resolve its conflicts，其他平台照舊 it in your editor, to resolve its conflicts
+      按 r（task 14 的 Mark resolved）時檔裡還有衝突標記照舊先 confirm
+      CRLF：[3] 與比較 popup 的兩邊（task 12 的 DiffItem.Text），index 對工作區、HEAD 對衝突檔這兩種，工作區那一邊用 asGitSees(a, b)：工作區有 \r\n、git 那一邊沒有時 \r\n 換成 \n，否則照原樣
+      衝突的區塊（task 14）：找標記本來就去掉行尾的 \r，區塊的行保留 \r 寫回（CRLF 的檔解完還是 CRLF），[3] 顯示時 \r 由 tgo 的 Pager 拿掉
+      設定、狀態的位置照舊用 os.UserHomeDir（Windows 是 %USERPROFILE%）；icon 寬度、更新（Scoop 印 scoop update gittu）由 terminu-go 做
+      發版：.goreleaser.yaml 的 goos 加 windows、archives 的 format_overrides windows 用 zip、scoops（vulcanshen/scoop-bucket，skip_upload: auto，description 跟 brews 同一句），brews 的 caveats 寫 macOS, Linux (WSL too) and Windows；
+      release.yml 測試的 matrix 加 windows-latest（go test ./...，不帶 -race）；install.sh 的 WINDOWS="yes"（unix 以外的 OS 叫人用 install.ps1）；
+      install.ps1：抓最新的 release，windows_<amd64|arm64>.zip 解開，gittu.exe 放到 %LOCALAPPDATA%\gittu，加進使用者的 PATH，印 Nerd Font、truecolor、Git for Windows 的提醒；
+      uninstall.ps1：刪掉 gittu.exe（資料夾空了也刪）、從 PATH 拿掉，問要不要刪設定目錄（GITTU__CONFIG、XDG_CONFIG_HOME\gittu 或 %USERPROFILE%\.config\gittu），GITTU__STATE 另外指定時也問；
+      README 兩份：需求加 Windows 與 Git for Windows、Windows 不量 icon 寬度、Scoop 與 PowerShell 的安裝與移除、更新時 Scoop 的說法、衝突檔在 Windows 用 Notepad、設定的位置、限制
+      測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh（editor 跑在 unix 的 PTY）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）
+    test: [TestEditInNotepad, TestDiffTakesCRLFAsGitDoes, TestConflictLinesWithoutCR, TestResolveHunks, TestMarkResolvedAsks]

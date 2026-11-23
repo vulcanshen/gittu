@@ -5,7 +5,9 @@ import (
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -91,7 +93,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.filesP.Actions = append(append(s.fileActions(), s.hunkActions()...), g.unzoom())
 	s.diffP.Actions = []terminu.Action{
 		// A conflicted file: Enter edits it, r marks it resolved (the user).
-		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
+		{Key: "Enter", Label: "Edit", Desc: editDesc(), Scope: panel, Hint: "edit",
 			Hidden: s.in(inConflict), Disabled: func() bool { return !g.idle() },
 			Do: func() tea.Cmd { f, _, _ := s.file(); return s.edit(f.Path) }},
 		s.resolvedAction(panel),
@@ -776,6 +778,17 @@ func (s *statusScreen) hunkLines(h git.Hunk) []string {
 	return append(lines, h.Theirs...)
 }
 
+// asGitSees is the working tree's text b as git compares it with a, the text
+// git keeps: with core.autocrlf on (Git for Windows' default) the file has
+// CRLF where git keeps LF, and git diff takes the line endings as no change;
+// so does gittu (task 24). A file git keeps with CRLF stays as it is.
+func asGitSees(a, b string) string {
+	if strings.Contains(b, "\r\n") && !strings.Contains(a, "\r\n") {
+		return strings.ReplaceAll(b, "\r\n", "\n")
+	}
+	return b
+}
+
 // mineName names a conflict's own side: MINE · HEAD (main).
 func (s *statusScreen) mineName(h git.Hunk) string {
 	mine := "MINE · " + h.MineLabel
@@ -928,7 +941,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 					return "", "", err
 				}
 				b, err := repo.WorkFile(path)
-				return a, b, err
+				return a, asGitSees(a, b), err
 			}}
 		default: // a conflict: what HEAD has against the file with its markers
 			item = terminu.DiffItem{Anchor: path + " @ HEAD", Other: path, Text: func() (string, string, error) {
@@ -937,7 +950,7 @@ func (s *statusScreen) item() (terminu.DiffItem, bool) {
 					return "", "", err
 				}
 				b, err := repo.WorkFile(path)
-				return a, b, err
+				return a, asGitSees(a, b), err
 			}}
 		}
 	} else {
@@ -1091,6 +1104,9 @@ func (s *statusScreen) askUseSide(fs []git.File, theirs bool) *terminu.Ask {
 // checked for conflict markers left (the user).
 func (s *statusScreen) edit(path string) tea.Cmd {
 	g := s.g
+	if onWindows {
+		return s.notepad(path)
+	}
 	ed, err := g.repo.Editor()
 	if err != nil {
 		return g.a.ErrorAbout("Edit failed", path, err.Error())
@@ -1101,6 +1117,42 @@ func (s *statusScreen) edit(path string) tea.Cmd {
 		Command: []string{"sh", "-c", ed + ` "$@"`, "sh", filepath.Join(g.repo.Dir, path)}}
 	term.OnExit = func(err error) tea.Cmd { return s.edited(path, err) }
 	return g.a.OpenTerminal(term)
+}
+
+// onWindows is gittu running on Windows, where terminu-go has no PTY for a
+// terminal popup: a conflicted file is opened in Notepad instead (the user,
+// task 24). A variable, so the tests can take the Windows way.
+var onWindows = runtime.GOOS == "windows"
+
+// editDesc is what Edit says it does: Notepad on Windows.
+func editDesc() string {
+	if onWindows {
+		return "it in Notepad, to resolve its conflicts"
+	}
+	return "it in your editor, to resolve its conflicts"
+}
+
+// openNotepad opens path in Notepad and does not wait for it: Windows 11's
+// Notepad opens a file as a tab of a window already open, and the program
+// started ends at once. A variable, so the tests open nothing.
+var openNotepad = func(path string) error {
+	cmd := exec.Command("notepad.exe", path)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
+}
+
+// notepad opens a conflicted file in Notepad, on Windows (the user, task 24).
+// gittu goes on as it is: the file read again shows what was saved, and r
+// asks first while conflict markers are left (task 14).
+func (s *statusScreen) notepad(path string) tea.Cmd {
+	g := s.g
+	if err := openNotepad(filepath.Join(g.repo.Dir, filepath.FromSlash(path))); err != nil {
+		return g.a.ErrorAbout("Edit failed", path, err.Error())
+	}
+	g.a.Log(terminu.Info, "Editing "+path+" in Notepad")
+	return g.a.Toast(terminu.Info, "Opened "+path+" in Notepad: save it, then press [r] to mark it resolved")
 }
 
 // edited reads the repository again after the editor ended and says what is

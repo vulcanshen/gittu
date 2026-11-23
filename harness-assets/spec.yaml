@@ -1,4 +1,4 @@
-id: 64
+id: 65
 from: v1.3.2
 to: v1.3.3
 tasks:
@@ -215,7 +215,7 @@ tasks:
       - {note: "Commit、Amend 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，tdp v1.3.2 發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
       - "Commit 做好之後，[3] COMMITS 先清掉篩選、cursor 移到新的 commit（tdp v1.3.2 的 K3-15：Commit 的目的就是新增一個 commit，不是順帶多出來的；2026-11-23 review 判違反後改；上面第 4 題的回答說的是 Merge、Pull 這類順帶做出的）；Amend 改的是上一個 commit，cursor 留在原處"
   - id: 14
-    spec: 64
+    spec: 65
     request: merge 和解衝突：在衝突的檔上按 Enter 到 [2]、再按 Enter 用 editor 改，改完重新讀、檢查還有沒有衝突標記，[r] 把一個檔標成已解決、勾選的從 Space menu 一起標成已解決（user 2026-11-20；R 的熱鍵後來拿掉）；也可以每個衝突的區塊選「用我的」「用對方的」或「兩個都要」，畫面得同時看得到兩邊
     tdp: [tdp panel.5, tdp panel.10, tdp panel.13, tdp K3, tdp K4, tdp K11, tdp P3, tdp M2, tdp M5, tdp M6, tdp confirm, tdp note.6, tdp note.7, tdp toast.2, tdp P5, tdp F6, tdp T1, tdp F5, tdp terminal, tdp terminal.4, tdp textarea.1, tdp T1-8, tdp M5-1, tdp panel.14, tdp color.1, tdp K13, tdp F6-6, tdp K13-6, tdp K3-15, tdp panel-197, tdp M4-5, tdp M4-6, tdp panel-198]
     remark:
@@ -238,6 +238,7 @@ tasks:
       - {note: "[A]bort 會丟掉解好的衝突，用的鍵是 A，算不算 K13 的永久拿掉", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，tdp v1.3.2 發版；gittu 照現在就符合"}
       - {note: "Continue 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，tdp v1.3.2 發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
       - {note: "Mark resolved 只在還有衝突標記時 confirm（標記帶進 commit 的風險），標記清掉了直接 stage；tdp v1.3.2 的 F6-6 只放行「這一次會丟東西或做得比平常多」，帶著標記 stage 算不算，tdp 沒寫（2026-11-23 第二輪 review）。tdp 選 A（tdp main e9445cc，tdp v1.3.3 發版）：F6 的例外加上「會把明顯有問題的東西帶進它做出來的東西裡」，例子就是有衝突標記才問的 Mark resolved；gittu 不用改；terminu-go v1.3.3，2026-11-23 升上去", issue: "送給 tdp session（2026-11-23，F6-6 帶進去的東西）；tdp main e9445cc 照 A 改了，tdp v1.3.3 發版"}
+      - "Windows 上 [3] 衝突檔的 Enter（Edit）不開 terminal popup，直接開 Notepad（使用者 2026-11-23），見 task 24"
   - id: 15
     spec: 61
     request: 設定與 terminu 家族其他 app 一樣（多行文字的 Tab 寬度）
@@ -336,3 +337,17 @@ tasks:
       - "怎麼用：每次排版照終端機現在的寬度找記下的那一筆，沒有就是三分之一（task 1）；開著時視窗寬度變了也一樣，換成那個寬度記下的，沒有就三分之一"
       - "tdp E3 讀狀態檔：讀不了（YAML 壞了、不是 key 對值）時開 MOVE ASIDE confirm（tgo App.MoveAside）；值不合規則（left 不是 key 對值、寬度不是整數或小於 60、左邊的欄數不是整數或超出那個寬度的範圍，只有手改檔案才會）時先 KeepAside 備份成 state.yaml.bak，再把那幾筆拿掉重寫，Warning toast（tgo MisfitNotice），每一筆一個 WARN（寬度是 60 以上的整數時寫 using <三分之一>，不然寫 taken out）；gittu 不讀的 key 留著，每次啟動 App Log 一筆 INFO Not read"
       - "記 App Log（tdp note.7：從 menu 或熱鍵執行的 global operation）：Left 22 of 77 columns"
+  - id: 24
+    spec: 65
+    request: Windows 版：gittu 在 Windows 上也能用；用 editor 解衝突時，Windows 直接開 Notepad（使用者 2026-11-23：「windows 直接開 NOTE app 當 editor」）
+    tdp: [tdp P5, tdp E1, tdp E3, tdp E5, tdp E7, tdp textarea.1, tdp T1, tdp note.7, tdp toast.2, tdp panel.9, tdp F6, harness project.2, harness project.7]
+    remark:
+      - "平台：macOS、Linux 之外加 Windows（amd64、arm64）；WSL 照舊用 Linux 版。要不要出 Windows 版 app 可以自行決定（harness project.2 的表、project.7）"
+      - "呼叫 git：unix 讓 git 在自己的 session（Setsid），ssh、gpg 開不了 /dev/tty、不會在畫面上問密碼；Windows 沒有 Setsid，改用 CREATE_NO_WINDOW：git 與它開的 ssh 在一個看不到的 console 裡，不會寫到 gittu 的畫面上（GIT_TERMINAL_PROMPT=0 照舊）"
+      - "用 editor 解衝突（task 14）：terminu-go 在 Windows 上沒有 PTY，terminal popup 開不了；Windows 上 [3] 衝突檔的 Enter（Edit）直接開 Notepad（notepad.exe <完整路徑>；使用者 2026-11-23），不用 git 設定的 editor。不等 Notepad 關掉：Windows 11 的 Notepad 會開成已開視窗裡的分頁，叫起來的程式馬上結束，等不到；所以 Info toast 寫 Opened <路徑> in Notepad: save it, then press [r] to mark it resolved，App Log 記 Info Editing <路徑> in Notepad（tdp note.7）。存了之後 [3] 在下一次定時重新讀 repo 時跟著更新（task 19），按 r 時檔裡還有衝突標記照 task 14 先 confirm（tdp F6）。開不起來時 Error toast（Edit failed）。tdp textarea.1：一行就是一行的內容交給使用者的 editor；T1：改完回到原本那一項"
+      - "CRLF：Windows 的 git 預設 core.autocrlf=true，工作區的檔是 CRLF、commit 裡是 LF；比較 commit 裡的版本與工作區的檔時（[3] 的 diff，tdp panel.9），commit 那一邊沒有 CRLF、工作區那一邊有時，工作區的 CRLF 當 LF 比，跟 git diff 一樣只改了換行的不算改；找衝突標記、逐塊解衝突本來就認得 CRLF，寫回時保留"
+      - "設定與狀態的位置（tdp E3）：%USERPROFILE%\\.config\\gittu（Go 的 os.UserHomeDir），跟 macOS、Linux 同一套算法，程式不用改"
+      - "icon 的寬度（tdp E5）：Windows 不探測，預設一格，靠 GITTU__ICON_WIDTH、TERMINU__ICON_WIDTH 覆寫（terminu-go 做），README 寫明"
+      - "更新（tdp E1）：用 Scoop 裝的，gittu update 印出 scoop update gittu（terminu-go 的 SelfUpdate 做）"
+      - "發版（harness project.2、project.7）：goreleaser 打開標著 Windows 的幾行（windows amd64、arm64，zip；scoop bucket vulcanshen/scoop-bucket）；release.yml 的測試加 windows-latest（不帶 -race）；install.ps1、uninstall.ps1 照家族 Windows 版 app 的寫法（怎麼寫 app 可以自行決定）；README 的需求、安裝、限制加上 Windows（tdp E7）"
+      - "驗收：terminu-go 的測試畫面跑得了的照樣寫測試；Notepad、console、Windows 的終端機要在使用者的 Windows VM 上走一遍（work.yaml 的 user 作保）"

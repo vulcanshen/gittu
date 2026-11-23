@@ -339,6 +339,12 @@ user 照原話：「我想討論一個功能，就是讓使用者可以使用'>'
 
 user 照原話：「changes panel 的熱鍵轉換一下，enter stage 移除，換一個可以 toggle stage 的熱鍵」
 
+## Windows 版（2026-11-23）
+
+user 照原話：「ok, 那我們可以試試看能不能作 windows?」
+（同一天早些時候：「windows 可以用虛擬機測，這版先不做好了」，v0.1.0 沒有做）
+問 Windows 上用 editor 解衝突怎麼辦（terminu-go 在 Windows 沒有 PTY，開不了 terminal popup）之後：「不，windows 直接開 NOTE app 當 editor, 這樣都不用問」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

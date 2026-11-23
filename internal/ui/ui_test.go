@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -2303,6 +2304,7 @@ func TestResolveHunks(t *testing.T) {
 // their lines, none an Info saying r marks it resolved; r on [2] stages it
 // (the user; tdp terminal, textarea.1).
 func TestEditConflict(t *testing.T) {
+	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows opens Notepad (TestEditInNotepad)")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, runs := filepath.Join(dir, "editor"), filepath.Join(dir, "runs")
@@ -2341,6 +2343,7 @@ func TestEditConflict(t *testing.T) {
 // read again, so its swap file is not logged as changed outside gittu; nor is
 // the file it saved, read when it ends (the user).
 func TestEditorPausesRefresh(t *testing.T) {
+	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows opens Notepad (TestEditInNotepad)")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, goOn := filepath.Join(dir, "editor"), filepath.Join(dir, "go-on")
@@ -2968,6 +2971,7 @@ func TestStateUnreadKey(t *testing.T) {
 // TestStateCannotBeWritten: a state directory gittu can't write in gives an
 // Error toast; the left is moved all the same.
 func TestStateCannotBeWritten(t *testing.T) {
+	unixOnly(t, "a folder's mode does not keep a Windows user from writing in it")
 	dir := t.TempDir()
 	if err := os.Chmod(dir, 0o555); err != nil {
 		t.Fatal(err)
@@ -2978,5 +2982,88 @@ func TestStateCannotBeWritten(t *testing.T) {
 	has(t, d, "Can't write state.yaml")
 	if w := leftWidth(d); w != 42 {
 		t.Errorf("the left is %d wide, want 42", w)
+	}
+}
+
+// unixOnly skips a test on Windows, for why.
+func unixOnly(t *testing.T, why string) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("unix only: " + why)
+	}
+}
+
+// TestEditInNotepad: on Windows, Enter on a conflicted file in [3] opens it in
+// Notepad, and gittu does not wait for it: the toast says to save it and press
+// r, the App Log has it; Notepad that does not start is an error (the user,
+// task 24).
+func TestEditInNotepad(t *testing.T) {
+	r := gittest.Conflicted(t)
+	var opened []string
+	var fail error
+	defer func(w bool, open func(string) error) { onWindows, openNotepad = w, open }(onWindows, openNotepad)
+	onWindows = true
+	openNotepad = func(path string) error { opened = append(opened, path); return fail }
+	g, d := start(t, r, 100, 32)
+	d.Press("1", "Enter")
+	has(t, d, "Enter:edit r:resolved")
+	d.Press("Space")
+	has(t, d, "it in Notepad, to resolve its conflicts")
+	d.Press("Esc", "Enter")
+	has(t, d, "Opened notes.txt in Notepad: save it, then press [r] to mark it resolved")
+	dir, _ := filepath.EvalSymlinks(r.Dir)
+	if want := filepath.Join(dir, "notes.txt"); len(opened) != 1 || opened[0] != want {
+		t.Errorf("opened %q, want %q", opened, want)
+	}
+	if g.editing {
+		t.Error("gittu waits for Notepad")
+	}
+	fail = fmt.Errorf("notepad.exe not found")
+	d.Press("Enter")
+	has(t, d, "EDIT FAILED: notes.txt", "notepad.exe not found")
+	d.Press("Esc", "Esc", "!") // the error popup, then the toast
+	has(t, d, "Editing notes.txt in Notepad")
+}
+
+// TestDiffTakesCRLFAsGitDoes: with core.autocrlf on (Git for Windows'
+// default) a file of the working tree has CRLF where git keeps LF; the diff in
+// [3] takes those line endings as no change, as git diff does (task 24).
+func TestDiffTakesCRLFAsGitDoes(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("notes.txt", "a\nb\nc\n", "Start the notes")
+	r.Git("config", "core.autocrlf", "true")
+	r.Write("notes.txt", "a\r\nB\r\nc\r\n")
+	_, d := start(t, r, 120, 32)
+	d.Press("1")
+	has(t, d, "M notes.txt", "notes.txt @ index ↔ notes.txt", "-b", "+B")
+	hasNot(t, d, "-a", "+a", "-c", "+c")
+}
+
+// TestConflictLinesWithoutCR: a conflicted file with CRLF (on Windows with
+// core.autocrlf on, every one) shows its blocks without the \r (the lib's
+// Pager drops it), and a block resolved keeps the file's CRLF (task 24).
+func TestConflictLinesWithoutCR(t *testing.T) {
+	r := gittest.New(t)
+	r.Commit("notes.txt", "a\r\nb\r\nc\r\n", "Start the notes")
+	r.Git("checkout", "-q", "-b", "feature")
+	r.Commit("notes.txt", "a\r\nB from feature\r\nc\r\n", "Change b on feature")
+	r.Git("checkout", "-q", "main")
+	r.Commit("notes.txt", "a\r\nB from main\r\nc\r\n", "Change b on main")
+	if out, err := r.Try("merge", "--no-edit", "feature"); err == nil {
+		t.Fatalf("the merge has no conflict:\n%s", out)
+	}
+	g, d := start(t, r, 100, 32)
+	d.Press("1")
+	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Resolve one by one") })
+	has(t, d, "B from main", "B from feature")
+	for _, l := range d.Screen() {
+		if strings.Contains(l, "\r") {
+			t.Errorf("a \\r on the screen: %q", l)
+		}
+	}
+	d.Press("m")
+	done(t, g, d)
+	if got := r.Read("notes.txt"); got != "a\r\nB from main\r\nc\r\n" {
+		t.Errorf("notes.txt %q", got)
 	}
 }

@@ -32,8 +32,8 @@ first.
 - **The files to commit**: the conflicts, the staged and the unstaged files, above the branches; on them, the right
   shows the diff of the one under the cursor and the commits that changed it; stage, unstage, discard and commit.
 - **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[3]`, and `Enter` there opens it in the editor
-  git uses; when you leave it, gittu says which lines still have conflict markers, and `r` marks it resolved (the
-  marked ones from the `Space` menu). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
+  git uses (Notepad on Windows); when you leave it, gittu says which lines still have conflict markers, and `r` marks it
+  resolved (the marked ones from the `Space` menu). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
   revert.
 - **Your git**: gittu runs the git you have, so your hooks, credential helper, ssh keys and settings work as they do
   in the shell.
@@ -42,8 +42,8 @@ first.
 
 ### Requirements
 
-- macOS or Linux (WSL too).
-- git on your `PATH`.
+- macOS, Linux (WSL too) or Windows.
+- git on your `PATH` (on Windows, [Git for Windows](https://gitforwindows.org)).
 - A [Nerd Font](https://www.nerdfonts.com) terminal profile: the icons and the frames are Nerd Font glyphs.
 - A truecolor (24-bit) terminal: the faded colours and the layer colours cannot be told apart in 256 colours.
 - A terminal at least 60 columns wide and 24 rows high; in a smaller one gittu shows only its name, the size it needs
@@ -58,21 +58,39 @@ gittu measures how many cells an icon and a powerline symbol take when it starts
 | `TERMINU__ICON_WIDTH` | The cells an icon takes, for every terminu family app: set it once and they all read it |
 | `TERMINU__POWERLINE_WIDTH` | The cells a powerline symbol takes, for every terminu family app |
 
-Run inside a family app's terminal, gittu gets the `TERMINU__` ones from the app around it.
+Run inside a family app's terminal, gittu gets the `TERMINU__` ones from the app around it. On Windows gittu does not
+measure them: an icon and a powerline symbol take one cell unless you set them.
 
-### Homebrew
+### Homebrew (macOS, Linux)
 
 ```sh
 brew install vulcanshen/tap/gittu
 ```
 
+### Scoop (Windows)
+
+```powershell
+scoop bucket add vulcanshen https://github.com/vulcanshen/scoop-bucket
+scoop install gittu
+```
+
 ### Script
+
+macOS, Linux:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | sh
 ```
 
 No sudo: it installs to `~/.local/bin`.
+
+Windows PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/vulcanshen/gittu/main/install.ps1 | iex
+```
+
+It installs to `%LOCALAPPDATA%\gittu` and adds it to your `PATH`.
 
 ### The first start
 
@@ -86,7 +104,8 @@ its own but `state.yaml`, when you move the line between the left and the right 
 gittu update
 ```
 
-It brings gittu to its latest release the way it was installed: Homebrew upgrades it, the script's copy is replaced.
+It brings gittu to its latest release the way it was installed: Homebrew upgrades it, the script's copy is replaced;
+installed with Scoop, it says to close gittu and run `scoop update gittu`.
 
 ### Uninstall
 
@@ -94,10 +113,18 @@ It brings gittu to its latest release the way it was installed: Homebrew upgrade
 brew uninstall gittu
 ```
 
+```powershell
+scoop uninstall gittu
+```
+
 Installed with the script:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.sh | sh
+```
+
+```powershell
+irm https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.ps1 | iex
 ```
 
 ## Quick start
@@ -160,7 +187,7 @@ and on `[3]` leaves the mode.
 |---|---|---|
 | An unstaged file | Show its change in `[3]` | `[s]`tage, `[m]`ark, Discard, Remove, Ignore |
 | A staged file | Show its change in `[3]` | Un`[s]`tage, `[m]`ark, Discard, Remove, Ignore |
-| A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
+| A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor (Notepad on Windows) and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[3]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all (again: unmark all), Clear marks, Stage `[a]`ll (again: unstage all) |
 | `[4]` HISTORY: a commit | The file's two versions in it | `[/]` filter |
@@ -197,7 +224,7 @@ what changed.
 ## Settings and data
 
 gittu keeps no data and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/gittu` (or
-`~/.config/gittu`; `GITTU__CONFIG` names another directory). gittu never makes it; with no file, it uses the default.
+`~/.config/gittu`, `%USERPROFILE%\.config\gittu` on Windows; `GITTU__CONFIG` names another directory). gittu never makes it; with no file, it uses the default.
 
 ```yaml
 input_tab_width: 4   # the spaces Tab puts in a commit message, and a tab in a diff is drawn as
@@ -227,7 +254,8 @@ A `state.yaml` gittu cannot read is offered to be moved aside as `config.yaml` i
 - gittu cannot ask for a password or a passphrase: use an ssh agent or a credential helper.
 - A conflict shows mine and theirs, not the common ancestor.
 - No interactive rebase, submodules, worktrees or git-flow.
-- macOS and Linux only (WSL too); there is no Windows build.
+- On Windows a conflicted file opens in Notepad, not in the editor git uses, and gittu does not wait for it: save it
+  there, then press `r` (it asks first while conflict markers are left).
 
 ## Links
 

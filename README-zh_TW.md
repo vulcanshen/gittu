@@ -24,7 +24,7 @@
 - **所有操作都在 `Space` 選單**：checkout、merge、rebase、cherry-pick、revert、reset、開分支、打 tag、改名、刪除、stash、
   fetch、pull、push —— 需要先問的，執行前會先問。
 - **要 commit 的檔案**：衝突、已經 stage、還沒 stage 的檔案，在分支上面；移到它們上，右邊就是 cursor 那個檔的差異與改過它的 commit；stage、unstage、捨棄改動、commit。
-- **用你自己的 editor 解衝突**：在有衝突的檔上按 `Enter` 到 `[3]`，再按 `Enter` 用 git 設定的 editor 打開；離開 editor 後，
+- **用你自己的 editor 解衝突**：在有衝突的檔上按 `Enter` 到 `[3]`，再按 `Enter` 用 git 設定的 editor 打開（Windows 是 Notepad）；離開 editor 後，
   gittu 會告訴你哪幾行還有衝突標記，`r` 把它標成已解決（標記的那些從 `Space` 選單）。也可以一塊一塊選用我的、用對方的或兩個都要。
   merge、rebase、cherry-pick、revert 做到一半時可以放棄或繼續。
 - **用你自己的 git**：gittu 呼叫你裝的 git，hooks、credential helper、ssh 金鑰與設定都跟在 shell 裡一樣。
@@ -33,8 +33,8 @@
 
 ### 需求
 
-- macOS 或 Linux（WSL 也可以）。
-- `PATH` 上有 git。
+- macOS、Linux（WSL 也可以）或 Windows。
+- `PATH` 上有 git（Windows 是 [Git for Windows](https://gitforwindows.org)）。
 - 終端機用 [Nerd Font](https://www.nerdfonts.com)：圖示與框線都是 Nerd Font 的字。
 - 支援 truecolor（24-bit）的終端機：256 色下分不出淡化的顏色與層色。
 - 終端機至少 60 欄寬、24 列高；比這小時 gittu 只顯示名稱、需要的大小與怎麼離開，視窗拉大後回到原本的樣子。
@@ -48,21 +48,39 @@ gittu 啟動時會量 icon 與 powerline 符號各佔幾格。量錯時可以自
 | `TERMINU__ICON_WIDTH` | icon 佔幾格，terminu 家族每個 app 共用：設一次，每個 app 都讀得到 |
 | `TERMINU__POWERLINE_WIDTH` | powerline 符號佔幾格，terminu 家族每個 app 共用 |
 
-在家族 app 的終端機裡跑時，外層的 app 會替 gittu 設好 `TERMINU__` 這兩個。
+在家族 app 的終端機裡跑時，外層的 app 會替 gittu 設好 `TERMINU__` 這兩個。Windows 上 gittu 不會量，沒有指定時 icon 與
+powerline 符號都當作一格。
 
-### Homebrew
+### Homebrew（macOS、Linux）
 
 ```sh
 brew install vulcanshen/tap/gittu
 ```
 
+### Scoop（Windows）
+
+```powershell
+scoop bucket add vulcanshen https://github.com/vulcanshen/scoop-bucket
+scoop install gittu
+```
+
 ### 安裝腳本
+
+macOS、Linux：
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | sh
 ```
 
 不用 sudo：裝到 `~/.local/bin`。
+
+Windows PowerShell：
+
+```powershell
+irm https://raw.githubusercontent.com/vulcanshen/gittu/main/install.ps1 | iex
+```
+
+裝到 `%LOCALAPPDATA%\gittu`，並加進你的 `PATH`。
 
 ### 第一次啟動
 
@@ -75,7 +93,8 @@ gittu 才會改動你的 repo；它自己只寫 `state.yaml`，而且只在你�
 gittu update
 ```
 
-照當初安裝的方式更新到最新的正式版：Homebrew 裝的用 Homebrew 更新，安裝腳本裝的直接換成新版。
+照當初安裝的方式更新到最新的正式版：Homebrew 裝的用 Homebrew 更新，安裝腳本裝的直接換成新版；Scoop 裝的會告訴你先關掉
+gittu，再執行 `scoop update gittu`。
 
 ### 移除
 
@@ -83,10 +102,18 @@ gittu update
 brew uninstall gittu
 ```
 
+```powershell
+scoop uninstall gittu
+```
+
 用安裝腳本裝的：
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.sh | sh
+```
+
+```powershell
+irm https://raw.githubusercontent.com/vulcanshen/gittu/main/uninstall.ps1 | iex
 ```
 
 ## 快速開始
@@ -140,7 +167,7 @@ CURRENT（打開時在這裡）把 `[2]` cursor 所在的分支、遠端分支�
 |---|---|---|
 | 還沒 stage 的檔 | 到 `[3]` 看它的差異 | `[s]`tage、`[m]`ark、Discard、Remove、Ignore |
 | 已經 stage 的檔 | 到 `[3]` 看它的差異 | Un`[s]`tage、`[m]`ark、Discard、Remove、Ignore |
-| 有衝突的檔 | 到 `[3]`，在那裡按 `Enter` 用 editor 改、`[r]` 標成已解決 | `[m]`ark、Mark `[r]`esolved、Resolve one by one、整個檔 Use mine、Use theirs |
+| 有衝突的檔 | 到 `[3]`，在那裡按 `Enter` 用 editor 改（Windows 是 Notepad）、`[r]` 標成已解決 | `[m]`ark、Mark `[r]`esolved、Resolve one by one、整個檔 Use mine、Use theirs |
 | 一塊衝突 | 到 `[3]` 讀完整的內容 | Use `[m]`ine、use `[t]`heirs、use `[b]`oth |
 | 整個 panel | | 有標記時：對標記的檔 stage、unstage、用我的、用對方的、mark resolved、`[X]` discard、remove、ignore；`[M]`ark all（再按一次是 unmark all）、Clear marks、Stage `[a]`ll（再按一次是 unstage all） |
 | `[4]` HISTORY：commit | 那個檔在這個 commit 的兩個版本 | `[/]` 篩選 |
@@ -167,7 +194,7 @@ gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著
 
 ## 設定與資料
 
-gittu 沒有資料與快取。設定是 `$XDG_CONFIG_HOME/gittu`（或 `~/.config/gittu`；`GITTU__CONFIG` 指定別的目錄）裡的
+gittu 沒有資料與快取。設定是 `$XDG_CONFIG_HOME/gittu`（或 `~/.config/gittu`，Windows 是 `%USERPROFILE%\.config\gittu`；`GITTU__CONFIG` 指定別的目錄）裡的
 `config.yaml`。gittu 不會自己建它；沒有這個檔時用預設值。
 
 ```yaml
@@ -195,7 +222,8 @@ left:
 - gittu 沒辦法問密碼或 passphrase：請用 ssh agent 或 credential helper。
 - 衝突只顯示我的與對方的，不顯示共同的祖先。
 - 沒有互動式 rebase、submodule、worktree、git-flow。
-- 只有 macOS 與 Linux（WSL 也可以），沒有 Windows 版。
+- Windows 上有衝突的檔用 Notepad 打開，不是 git 設定的 editor，gittu 也不等它關掉：在 Notepad 存檔後按 `r`（檔裡還有衝突
+  標記時會先問）。
 
 ## 相關連結
 

@@ -13,7 +13,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 )
 
 // Repo is a git repository's working tree.
@@ -93,9 +92,7 @@ func (r *Repo) run(stdin string, args ...string) (string, string, error) {
 		"GIT_MERGE_AUTOEDIT=no", // a merge takes its message as git writes it
 		"GIT_OPTIONAL_LOCKS=0",  // reading the status does not take the index lock
 	)
-	// A session of its own: no controlling terminal, so ssh and gpg cannot
-	// open /dev/tty and write over the screen to ask for a passphrase.
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	detach(cmd)
 	if stdin != "" {
 		cmd.Stdin = strings.NewReader(stdin)
 	}

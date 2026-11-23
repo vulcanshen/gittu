@@ -22,7 +22,7 @@ builds:
       # unix-first: no Windows build unless the app needs one.
       - linux
       - darwin
-      # - windows   # Windows
+      - windows   # Windows
     goarch:
       - amd64
       - arm64
@@ -35,10 +35,10 @@ builds:
 archives:
   - formats:
       - tar.gz
-    # format_overrides:   # Windows
-    #   - goos: windows
-    #     formats:
-    #       - zip
+    format_overrides:   # Windows
+      - goos: windows
+        formats:
+          - zip
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
@@ -73,20 +73,21 @@ brews:
     caveats: |
       Run `gittu` in a git repository to start, or `gittu <path>`.
       It runs the git you have installed. It keeps one setting in
-      ~/.config/gittu/config.yaml, and nothing else.
+      ~/.config/gittu/config.yaml, and the width of the left in
+      ~/.config/gittu/state.yaml.
 
       A Nerd Font terminal profile and a truecolor (24-bit) terminal are
-      required. macOS and Linux (WSL too).
+      required. macOS, Linux (WSL too) and Windows.
     # app: dependencies, when the app calls other programs.
     test: |
       system "#{bin}/gittu", "version"
 
-# scoops:   # Windows
-#   - repository:
-#       owner: vulcanshen
-#       name: scoop-bucket
-#       token: "{{ .Env.GITHUB_TOKEN }}"
-#     skip_upload: auto
-#     homepage: "https://github.com/vulcanshen/gittu"
-#     # app: the same line as the brews description above.
-#     description: "gittu: what it is (terminu family)"
+scoops:   # Windows
+  - repository:
+      owner: vulcanshen
+      name: scoop-bucket
+      token: "{{ .Env.GITHUB_TOKEN }}"
+    skip_upload: auto
+    homepage: "https://github.com/vulcanshen/gittu"
+    # app: the same line as the brews description above.
+    description: "gittu: a git client for the terminal (terminu family)"
