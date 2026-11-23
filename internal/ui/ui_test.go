@@ -2304,7 +2304,7 @@ func TestResolveHunks(t *testing.T) {
 // their lines, none an Info saying r marks it resolved; r on [2] stages it
 // (the user; tdp terminal, textarea.1).
 func TestEditConflict(t *testing.T) {
-	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows opens Notepad (TestEditInNotepad)")
+	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows has no Edit (TestNoEditOnWindows)")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, runs := filepath.Join(dir, "editor"), filepath.Join(dir, "runs")
@@ -2343,7 +2343,7 @@ func TestEditConflict(t *testing.T) {
 // read again, so its swap file is not logged as changed outside gittu; nor is
 // the file it saved, read when it ends (the user).
 func TestEditorPausesRefresh(t *testing.T) {
-	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows opens Notepad (TestEditInNotepad)")
+	unixOnly(t, "the editor runs in a terminal popup, a unix PTY; Windows has no Edit (TestNoEditOnWindows)")
 	r := gittest.Conflicted(t)
 	dir := t.TempDir()
 	editor, goOn := filepath.Join(dir, "editor"), filepath.Join(dir, "go-on")
@@ -2993,36 +2993,30 @@ func unixOnly(t *testing.T, why string) {
 	}
 }
 
-// TestEditInNotepad: on Windows, Enter on a conflicted file in [3] opens it in
-// Notepad, and gittu does not wait for it: the toast says to save it and press
-// r, the App Log has it; Notepad that does not start is an error (the user,
-// task 24).
-func TestEditInNotepad(t *testing.T) {
+// TestNoEditOnWindows: on Windows gittu opens no editor (no PTY there): a
+// conflicted file has no Edit in [3], whose Enter compares HEAD with the file
+// as on any other file; Show says no more than that it goes to [3] (the
+// user, task 24; tdp K3).
+func TestNoEditOnWindows(t *testing.T) {
 	r := gittest.Conflicted(t)
-	var opened []string
-	var fail error
-	defer func(w bool, open func(string) error) { onWindows, openNotepad = w, open }(onWindows, openNotepad)
+	defer func(w bool) { onWindows = w }(onWindows)
 	onWindows = true
-	openNotepad = func(path string) error { opened = append(opened, path); return fail }
 	g, d := start(t, r, 100, 32)
-	d.Press("1", "Enter")
-	has(t, d, "Enter:edit r:resolved")
-	d.Press("Space")
-	has(t, d, "it in Notepad, to resolve its conflicts")
+	d.Press("1", "Space")
+	has(t, d, "[Enter] Show", "it in [3]")
+	hasNot(t, d, "to edit it there")
 	d.Press("Esc", "Enter")
-	has(t, d, "Opened notes.txt in Notepad: save it, then press [r] to mark it resolved")
-	dir, _ := filepath.EvalSymlinks(r.Dir)
-	if want := filepath.Join(dir, "notes.txt"); len(opened) != 1 || opened[0] != want {
-		t.Errorf("opened %q, want %q", opened, want)
+	if g.a.Screen().Focused() != g.status.diffP {
+		t.Fatal("Enter on a conflicted file did not go to [3]")
 	}
-	if g.editing {
-		t.Error("gittu waits for Notepad")
-	}
-	fail = fmt.Errorf("notepad.exe not found")
-	d.Press("Enter")
-	has(t, d, "EDIT FAILED: notes.txt", "notepad.exe not found")
-	d.Press("Esc", "Esc", "!") // the error popup, then the toast
-	has(t, d, "Editing notes.txt in Notepad")
+	has(t, d, "Enter:diff r:resolved")
+	hasNot(t, d, "Enter:edit")
+	d.Press("Space")
+	has(t, d, "Mark [r]esolved")
+	hasNot(t, d, "Edit")
+	d.Press("Esc", "Enter")
+	has(t, d, "notes.txt @ HEAD ↔ notes.txt", "UNIFIED")
+	hasNot(t, d, "EDIT")
 }
 
 // TestDiffTakesCRLFAsGitDoes: with core.autocrlf on (Git for Windows'

@@ -4,8 +4,8 @@ Each release names the version of terminu design (tdp) it follows.
 
 ## Unreleased
 
-- Windows (amd64, arm64): Scoop, a PowerShell install script and `gittu update`; a conflicted file opens in Notepad there,
-  where gittu cannot run your editor inside itself
+- Windows (amd64, arm64): Scoop, a PowerShell install script and `gittu update`. gittu cannot open your editor there:
+  resolve a conflict one block at a time, with mine or theirs, or in a tool of your own, then mark it resolved
 - A working tree file with CRLF where git keeps LF (core.autocrlf, Git for Windows' default) shows no change on those
   line endings, as `git diff` does
 

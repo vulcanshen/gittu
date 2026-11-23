@@ -5,7 +5,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"slices"
@@ -92,13 +91,16 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
 	s.filesP.Actions = append(append(s.fileActions(), s.hunkActions()...), g.unzoom())
 	s.diffP.Actions = []terminu.Action{
-		// A conflicted file: Enter edits it, r marks it resolved (the user).
-		{Key: "Enter", Label: "Edit", Desc: editDesc(), Scope: panel, Hint: "edit",
-			Hidden: s.in(inConflict), Disabled: func() bool { return !g.idle() },
+		// A conflicted file: Enter edits it, r marks it resolved (the user);
+		// no Edit on Windows (task 24).
+		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
+			Hidden: func() bool { return onWindows || s.in(inConflict)() }, Disabled: func() bool { return !g.idle() },
 			Do: func() tea.Cmd { f, _, _ := s.file(); return s.edit(f.Path) }},
 		s.resolvedAction(panel),
+		// On a conflicted file Enter is Edit, but on Windows, which has no
+		// Edit: there it compares HEAD with the file (tdp K3; task 24).
 		{Key: "Enter", Label: "Diff", Desc: "its two versions, UNIFIED or SPLIT", Scope: panel, Hint: "diff",
-			Hidden: func() bool { return s.diff.Empty() || !s.text || !s.in(inConflict)() }, Do: s.openDiff},
+			Hidden: func() bool { return s.diff.Empty() || !s.text || !onWindows && !s.in(inConflict)() }, Do: s.openDiff},
 		g.unzoom(),
 	}
 	s.newLog()
@@ -473,7 +475,7 @@ func (s *statusScreen) fileActions() []terminu.Action {
 			}},
 		// A conflicted file: Enter goes to [2], Enter there edits it in the
 		// user's editor, r marks it resolved (the user).
-		{Key: "Enter", Label: "Show", Desc: "it in [3], to edit it there", Scope: item, Hint: "show",
+		{Key: "Enter", Label: "Show", Desc: showDesc(), Scope: item, Hint: "show",
 			Hidden: s.in(inConflict), ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
 		s.resolvedAction(item),
 		{Label: "Resolve one by one", Desc: "pick mine, theirs or both for each conflict", Scope: item,
@@ -1104,9 +1106,6 @@ func (s *statusScreen) askUseSide(fs []git.File, theirs bool) *terminu.Ask {
 // checked for conflict markers left (the user).
 func (s *statusScreen) edit(path string) tea.Cmd {
 	g := s.g
-	if onWindows {
-		return s.notepad(path)
-	}
 	ed, err := g.repo.Editor()
 	if err != nil {
 		return g.a.ErrorAbout("Edit failed", path, err.Error())
@@ -1120,39 +1119,18 @@ func (s *statusScreen) edit(path string) tea.Cmd {
 }
 
 // onWindows is gittu running on Windows, where terminu-go has no PTY for a
-// terminal popup: a conflicted file is opened in Notepad instead (the user,
+// terminal popup: gittu does not open an editor there, and a conflict is
+// resolved one block at a time or in a tool of the user's own (the user,
 // task 24). A variable, so the tests can take the Windows way.
 var onWindows = runtime.GOOS == "windows"
 
-// editDesc is what Edit says it does: Notepad on Windows.
-func editDesc() string {
+// showDesc is what Show on a conflicted file says it does: no editing in [3]
+// on Windows.
+func showDesc() string {
 	if onWindows {
-		return "it in Notepad, to resolve its conflicts"
+		return "it in [3]"
 	}
-	return "it in your editor, to resolve its conflicts"
-}
-
-// openNotepad opens path in Notepad and does not wait for it: Windows 11's
-// Notepad opens a file as a tab of a window already open, and the program
-// started ends at once. A variable, so the tests open nothing.
-var openNotepad = func(path string) error {
-	cmd := exec.Command("notepad.exe", path)
-	if err := cmd.Start(); err != nil {
-		return err
-	}
-	return cmd.Process.Release()
-}
-
-// notepad opens a conflicted file in Notepad, on Windows (the user, task 24).
-// gittu goes on as it is: the file read again shows what was saved, and r
-// asks first while conflict markers are left (task 14).
-func (s *statusScreen) notepad(path string) tea.Cmd {
-	g := s.g
-	if err := openNotepad(filepath.Join(g.repo.Dir, filepath.FromSlash(path))); err != nil {
-		return g.a.ErrorAbout("Edit failed", path, err.Error())
-	}
-	g.a.Log(terminu.Info, "Editing "+path+" in Notepad")
-	return g.a.Toast(terminu.Info, "Opened "+path+" in Notepad: save it, then press [r] to mark it resolved")
+	return "it in [3], to edit it there"
 }
 
 // edited reads the repository again after the editor ended and says what is

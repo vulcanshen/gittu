@@ -344,6 +344,7 @@ user 照原話：「changes panel 的熱鍵轉換一下，enter stage 移除，�
 user 照原話：「ok, 那我們可以試試看能不能作 windows?」
 （同一天早些時候：「windows 可以用虛擬機測，這版先不做好了」，v0.1.0 沒有做）
 問 Windows 上用 editor 解衝突怎麼辦（terminu-go 在 Windows 沒有 PTY，開不了 terminal popup）之後：「不，windows 直接開 NOTE app 當 editor, 這樣都不用問」
+review 判固定開 Notepad 違反 tdp textarea.1（要開使用者自己的 editor），問要回報 tdp 還是照 tdp 開使用者在 git 設的 editor 之後：「不然我們 windows 沒有開 PTY 也沒有開 editor 的功能，使用者就自己用其他工具解衝」
 
 ## 後續可擴充
 

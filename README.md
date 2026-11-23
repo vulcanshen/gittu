@@ -32,7 +32,7 @@ first.
 - **The files to commit**: the conflicts, the staged and the unstaged files, above the branches; on them, the right
   shows the diff of the one under the cursor and the commits that changed it; stage, unstage, discard and commit.
 - **Conflicts in your editor**: `Enter` on a conflicted file shows it in `[3]`, and `Enter` there opens it in the editor
-  git uses (Notepad on Windows); when you leave it, gittu says which lines still have conflict markers, and `r` marks it
+  git uses (not on Windows); when you leave it, gittu says which lines still have conflict markers, and `r` marks it
   resolved (the marked ones from the `Space` menu). Or take mine, theirs or both one block at a time. Abort or continue a merge, rebase, cherry-pick or
   revert.
 - **Your git**: gittu runs the git you have, so your hooks, credential helper, ssh keys and settings work as they do
@@ -187,7 +187,7 @@ and on `[3]` leaves the mode.
 |---|---|---|
 | An unstaged file | Show its change in `[3]` | `[s]`tage, `[m]`ark, Discard, Remove, Ignore |
 | A staged file | Show its change in `[3]` | Un`[s]`tage, `[m]`ark, Discard, Remove, Ignore |
-| A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor (Notepad on Windows) and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
+| A conflicted file | Show it in `[3]`, where `Enter` edits it in your editor (on Windows it compares it with HEAD) and `[r]` marks it resolved | `[m]`ark, Mark `[r]`esolved, Resolve one by one, Use mine, Use theirs, for the whole file |
 | A conflict | Read it whole in `[3]` | Use `[m]`ine, use `[t]`heirs, use `[b]`oth |
 | The panel | | With files marked: stage, unstage, use mine, use theirs, mark resolved, `[X]` discard, remove or ignore the marked; `[M]`ark all (again: unmark all), Clear marks, Stage `[a]`ll (again: unstage all) |
 | `[4]` HISTORY: a commit | The file's two versions in it | `[/]` filter |
@@ -254,8 +254,8 @@ A `state.yaml` gittu cannot read is offered to be moved aside as `config.yaml` i
 - gittu cannot ask for a password or a passphrase: use an ssh agent or a credential helper.
 - A conflict shows mine and theirs, not the common ancestor.
 - No interactive rebase, submodules, worktrees or git-flow.
-- On Windows a conflicted file opens in Notepad, not in the editor git uses, and gittu does not wait for it: save it
-  there, then press `r` (it asks first while conflict markers are left).
+- On Windows gittu cannot open your editor: resolve a conflict one block at a time, with mine or theirs for the whole
+  file, or in a tool of your own, then press `r` to mark it resolved (it asks first while conflict markers are left).
 
 ## Links
 
