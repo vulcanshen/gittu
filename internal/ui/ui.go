@@ -80,6 +80,11 @@ type gittu struct {
 	// committing reports git committing from the commit form, off the update
 	// loop: no reading again meanwhile.
 	committing atomic.Bool
+	// unsaid is the Success of a commit the form made that no doneMsg has
+	// said: the form closed before git ended, what it returned dropped (tdp
+	// form.7). The next read logs it, no toast (tdp note.7), and is gittu's
+	// own, not changed outside gittu.
+	unsaid atomic.Pointer[string]
 	// lefts are the left's widths the user set, by the terminal's width
 	// (task 23), as the state file keeps them.
 	lefts map[int]int
@@ -165,6 +170,10 @@ func (g *gittu) onMsg(msg tea.Msg) tea.Cmd {
 	case tickMsg:
 		if g.busy == "" && !g.reading && !g.editing && !g.committing.Load() {
 			g.reading = true
+			if said := g.unsaid.Swap(nil); said != nil {
+				g.a.Log(terminu.Success, *said)
+				return tea.Batch(g.readOwn(), g.tick())
+			}
 			return tea.Batch(g.read(false), g.tick())
 		}
 		return g.tick()
@@ -292,27 +301,21 @@ func (g *gittu) conflictsSaid(what string) func(int) tea.Cmd {
 	}
 }
 
-// state is what [1]'s location row says in place of All changes, which
-// only holds the place (the user): what git is doing while it runs, else
-// an operation stopped half way (a merge, rebase, cherry-pick or revert)
-// and the other side, its state's glyph first: conflicts left, or none,
-// ready to commit or go on; "" for neither.
+// state is what the repository is in the middle of, for [1]'s location row
+// in place of All changes, which only holds the place (the user): an
+// operation stopped half way (a merge, rebase, cherry-pick or revert) and
+// the other side, its state's glyph first: conflicts left, or none, ready to
+// commit or go on; "" for none (tdp panel.10, Lavender).
 func (g *gittu) state() (glyph, text string) {
-	switch {
-	case g.busy != "":
-		// TODO(tgo): the work running here goes in List.LocationWork, Green
-		// with popup.4's loading icon (tdp main a999190, panel.10), once a
-		// terminu-go release has it.
-		return "", g.busy
-	case g.snap != nil && g.snap.State.Op != "":
-		st := g.snap.State
-		glyph = glyphReady
-		if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
-			glyph = glyphConflicts
-		}
-		return glyph, stateWord(st.Op) + ": " + st.Other
+	if g.snap == nil || g.snap.State.Op == "" {
+		return "", ""
 	}
-	return "", ""
+	st := g.snap.State
+	glyph = glyphReady
+	if slices.ContainsFunc(g.snap.Files, git.File.Conflicted) {
+		glyph = glyphConflicts
+	}
+	return glyph, stateWord(st.Op) + ": " + st.Other
 }
 
 // stateWord is an operation stopped half way, as [1]'s location row says it.

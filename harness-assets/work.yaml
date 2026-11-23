@@ -1,6 +1,6 @@
 tasks:
   - id: 1
-    spec: 62
+    spec: 63
     implementation: |
       一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 [3]、3 [4]、4 [5]；
       跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
@@ -9,15 +9,15 @@ tasks:
       Layout：左邊是 gittu.leftOf(寬度)（使用者用 < > 調過這個寬度時是記下的欄數，不然寬度的三分之一，60 欄時 20｜40；task 23），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
       最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
       沒有 statusbar、沒有 STATUS 說明牌（2026-11-22 拿掉）：[1] 的位置列（List.Location、LocationGlyph，tgo 畫成 Lavender）每次 Layout 都重寫（statusScreen.located）：
-      git 指令在跑時是在做什麼（Pushing…、Merging… 之類，沒有 glyph）；不然做到一半的 merge、rebase、cherry-pick、revert 時是 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>，
-      glyph 在還有衝突的檔時是 nf-md-alarm_light、沒有時 nf-md-check_circle；都沒有時 All changes；進到衝突的檔裡時 hunk 清單的位置列是 <同一句> › <路徑>
+      做到一半的 merge、rebase、cherry-pick、revert 時 Location 是 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（gittu.state），
+      glyph 在還有衝突的檔時是 nf-md-alarm_light、沒有時 nf-md-check_circle（tgo 畫成 Lavender）；git 指令在跑時 LocationWork 是在做什麼（Pushing…、Merging… 之類，gittu.busy；tgo v1.3.2 接在後面畫成 Green，icon 換成轉的 loading icon，設回 "" 換回 glyph）；兩個都沒有時 Location 是 All changes；進到衝突的檔裡時 hunk 清單的 Location 是 <同一句> › <路徑>（沒有狀態時只有路徑），LocationWork 同上
       q 與 Ctrl-C：tgo App.QuitFlow；沒有 git 指令在跑時直接離開（tea.Quit）；有在跑時開 confirm QUIT「Quit gittu?」，內容 git is still at work: <在做什麼>（Peach）；有 popup 開著時 tgo 先問
       git 指令都是 internal/git 呼叫使用者 PATH 上的 git：工作目錄是 repo 的頂層，環境加 GIT_TERMINAL_PROMPT=0、GIT_MERGE_AUTOEDIT=no、GIT_OPTIONAL_LOCKS=0，
       Setsid（沒有控制終端機，ssh、gpg 開不了 /dev/tty）；改 repo 的操作在背景跑（tea.Cmd），跑完重新讀整個 repo、換上畫面
       L4 的畫面測試：tdptest 每一格畫面都量；tdptest.Check 在各種尺寸與 icon 寬度走第一次啟動；gittu 自己會開的 popup（diff viewer、new branch 的 text input、
       reset 的 select、checkout 的 confirm、commit 的 form、stash 的 text input）各在 80×32 打開，用 tdptest.EachIconWidth 跑三種寬度，
       開著改成 60×32、50×32、80×12、50×12、59×32、80×5、1×1，再回到 80×32：每一格都滿寬、不當掉；popup 自己的框由 tgo 測（tdp E8）
-    test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestPanelsFollowTheLead, TestNoStatusRow, TestLocationSaysTheMerge, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
+    test: [TestOpensAt80x24, TestHistoryLayout, TestFilesLocationFitsAt60, TestFileStatusScreen, TestPanelsFollowTheLead, TestNoStatusRow, TestLocationSaysTheMerge, TestLocationSaysTheWork, TestQuitAtOnce, TestQuitAsksWhileGitRuns, TestFirstLaunch, TestOwnPopupsEverySize]
   - id: 2
     spec: 54
     implementation: |
@@ -30,7 +30,7 @@ tasks:
       不是 repo、路徑不在：不開畫面，stderr 印 gittu: <路徑> is not in a git repository（或系統的原因），結束碼 1；PATH 上沒有 git：gittu: git not found in PATH，結束碼 1
     test: [TestVersionAndHelp, TestNotARepository, TestNoGit, TestBadArguments, TestOpenFindsTheTop]
   - id: 3
-    spec: 57
+    spec: 63
     implementation: |
       [2] 有四個分頁（tgo Panel.Tabs：label Branches、Tabs Remotes、Tags、Stashes；OnTab 把 Body 換成那一頁的 List），h|l 切換（tgo 做，下框 hint 寫 h|l:tab）；
       每一頁是自己的 tgo List：單欄、沒有表頭，Filterable（/ 篩選，panel operation [/] Filter 篩目前那一頁）；BRANCHES 那一頁有 Flags（標記欄放旗標）
@@ -115,7 +115,7 @@ tasks:
       原本的標記（List.Marks、[m]ark）與 panel operation [C]ompare the two marked commits 拿掉；原本進到 [3] 的差異清單（panel.10）改成放在 [5]（當時叫 [3]）
     test: [TestDiffTwoCommits, TestDiffSameCommits]
   - id: 8
-    spec: 57
+    spec: 63
     implementation: |
       [2] 的 item operation（tgo Action；同一個鍵依那一列的種類用 Hidden 分開；改 repo 的在有 git 指令在跑時 Disabled）：
       本地分支（BRANCHES 那一頁）：[c]heck out（目前的分支停用；git checkout <分支>；平常不問，工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），先 confirm「Check out <分支>?」，內容 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；Success toast Checked out <分支>）、[M]erge（confirm MERGE「Merge <分支> into <目前的分支>?」；git merge --no-edit）、
@@ -134,7 +134,7 @@ tasks:
       merge、rebase、cherry-pick、revert 做到一半時（State.Op 不是空的），[2] 與 [3] 的 Merge、Rebase、Cherry-pick、Revert 與全域的 Merge 停用（tdp M6：git 不接受）；停在衝突時（Warning toast），下一次讀 repo 後 [1] CHANGES 先清掉篩選（List.ClearFilter；tdp panel.14），cursor 放在第一個衝突的檔
     test: [TestCheckoutWarnsOfChanges, TestCheckoutBranch, TestMergeBranchConflicts, TestMergeAndRebaseBranch, TestRenameBranch, TestDeleteUnmergedAsksAgain, TestCurrentBranchOperationsOff, TestCheckoutRemoteBranch, TestDeleteRemoteBranch, TestTagOperations, TestStashOperations, TestPushBranch, TestDeleteUnmergedBranch, TestMergeStopsOnConflicts, TestNoMergeHalfway]
   - id: 9
-    spec: 50
+    spec: 63
     implementation: |
       [2] 的 commit 上（item operation）：[c]heck out（confirm，內容 HEAD is left detached…（Peach）；工作區有 staged 或 unstaged 的改動時（沒追蹤的檔不算），confirm 多一句 Changes not committed come along to <去的地方>; git stops if they would be overwritten.（Peach）；git checkout --detach <hash>）、
       [b]ranch（text input NEW BRANCH，提示 A branch at <短 hash>, checked out，檢查同 rename；git checkout -b <名> <hash>；Success Made and checked out <名>）、
@@ -146,7 +146,7 @@ tasks:
       進到 commit 裡時這些都 Hidden；成功、失敗、衝突、重新讀照 task 8
     test: [TestCommitOperations, TestResetHardAsks, TestResetSoft]
   - id: 10
-    spec: 32
+    spec: 63
     implementation: |
       global operation（tgo App.Global；Space menu 的 Global operation 那一列打開，熱鍵在 panel 上也能按，panel 有同一個鍵時以 panel 的為準）：
       [c]ommit（task 13）、Amend（task 13）、[p]ull（git pull --no-edit；衝突照 task 8；detached、沒有 upstream、upstream 在遠端被刪掉時停用）、Pull all（沒有熱鍵；git pull --all --no-edit：每個 remote 都 fetch，再 pull 目前的分支；Success Fetched every remote and pulled <分支>；衝突、失敗、停用同 [p]ull）、[P]ush（還沒有 commit 時停用；有 upstream：git push；沒有：confirm「Push <分支> to <remote> and track it?」，git push -u <remote> <分支>；
@@ -189,7 +189,7 @@ tasks:
       [4] 的 panel operation 還有 z Unzoom（task 17）與 tgo List 的 / 篩選
     test: [TestLongPathKeepsItsLetter, TestFileGroups, TestFileHistory, TestFileLog, TestDiffFollowsCursor, TestDiffDrawnAsUnified, TestDiffNotText, TestDiffNewFile, TestNothingToCommitHints, TestDiffNewFolder, TestDiffComparesVersions, TestFileStatusScreen, TestStatus, TestFollowersClearTheirFilter]
   - id: 12
-    spec: 62
+    spec: 63
     implementation: |
       [1] CHANGES 的 item operation，熱鍵 s 依那一列在哪一組（同一個鍵用 Hidden 分開）：Unstaged → [s]tage — this file's change（git add -A -- <路徑>；hint s:stage）、Staged → Un[s]tage — this file's change, keeping it（git restore --staged；還沒有 commit 時 git rm --cached；hint s:unstage）；
       Conflicts 沒有 s；stage、unstage 不跳 toast，App Log 記 Info Staged <路徑>／Unstaged <路徑>，做完重新讀
@@ -201,7 +201,7 @@ tasks:
       s 的 Stage、Unstage 做完，cursor 到同一組的下一個檔（最後一個時是上一個），連按 s 一路往下；改名的列 Unstage 時新舊兩個路徑一起退出 index（Unstage the marked 也是）；沒追蹤的檔 Discard 後的 toast 與 App Log 寫 Deleted <路徑>；Stage [a]ll 不碰衝突的檔（只 git add -A -- 還沒 stage 的檔），有跳過的時 Info toast Staged every change but the <N> conflict(s) / Press [r] on each once it is resolved：衝突的檔只由 Mark [r]esolved stage，它會先看有沒有衝突標記
     test: [TestStageUnstage, TestDiscardFile, TestStageWalksDown, TestUnstageRenameWhole, TestStageAllLeavesTheConflicts]
   - id: 13
-    spec: 36
+    spec: 63
     implementation: |
       global operation [c]ommit：沒有 staged 的改動時停用（merge 做到一半、沒有衝突時不停用）
       tgo Form COMMIT（glyph nf-dev-git_commit，Name the commit message：改過後 Esc 問 Discard changes to the commit message?）：
@@ -212,14 +212,16 @@ tasks:
       跑的時候標題後面是 loading icon、按鈕上 Enter 不作用（tgo 做，tdp form.7），背景的刷新暫停（gittu.committing）；成功時 form 關掉，再重新讀 repo，Success「Committed <短 hash> <第一行>」，
       從 Space menu、Global operation 打開的也一起關（tgo App.CloseAll；tdp T1）；失敗（hook 擋下）時 form 留著，error popup COMMIT FAILED 蓋在 form 上（tgo），內容是 git 與 hook 說原因的那一行，
       git 印的全文一列一筆記進 App Log（tdp F5、components.5）；關掉 error popup 回到 form，值都在、focus 在按鈕上，再按 Enter 就是重試（tdp form.16）
-      跑的時候按 Esc：form 關掉（改過時照樣先問 Discard changes to the commit message?），tgo 丟掉 SubmitLong 的結果、不顯示（tdp form.7：還沒跑完就關掉算取消）；git commit 不停：hook 跑到一半停下來，index 可能留在一半，所以讓它跑完（tdp form.7 的「能停就停」），做出來的 commit 由背景的刷新讀到（task 19）
+      Commit 成功時 [3] COMMITS 先清掉篩選，cursor 移到新的 commit（tdp K3-15：Commit 的目的就是新增；panel.14）；Amend 改的是上一個 commit，cursor 留在原處
+      跑的時候按 Esc：form 關掉（改過時照樣先問 Discard changes to the commit message?），tgo 丟掉 SubmitLong 的結果、不顯示（tdp form.7：還沒跑完就關掉算取消）；git commit 不停：hook 跑到一半停下來，index 可能留在一半，所以讓它跑完（tdp form.7 的「能停就停」）；
+      git 跑完時 gittu.committing 清掉、背景的刷新照常（task 19）；成功時把 Committed <短 hash> <第一行>（Amend 是 Amended）記在 gittu.unsaid：form 開著跑完時 doneMsg 清掉它、照常跳 toast；form 先關了時，下一次背景的刷新把它以 Success 記進 App Log（tdp note.7：動作做了、有結果），不跳 toast（form.7），這次讀當成 gittu 自己的（readOwn），不記 Changed outside gittu
       Amend（沒有熱鍵；還沒有 commit 時停用）：HEAD 已經在 upstream 上（git merge-base --is-ancestor HEAD @{upstream}）時先 confirm AMEND「Amend the last commit?」，
       內容是上一個訊息的第一行與 It is on <upstream> already: pushing it again takes a force push.（Peach）；沒推上去時不問；接著同一張 form AMEND（按鈕 Amend）帶著上一個訊息打開，
       按 Amend 用 form 上的訊息 git commit --amend；Title 清空了送出同 COMMIT 擋（Title is required）；
       跟 Commit 一樣 form 開著跑；成功 Success「Amended <短 hash> <第一行>」，失敗時 error popup AMEND FAILED 蓋在 form 上，同 Commit
-    test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks]
+    test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks, TestCommitFormClosedFirst]
   - id: 14
-    spec: 57
+    spec: 63
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [3], to edit it there；hint Enter:show；ToDetails）：focus 到 [3]；[3] 顯示 HEAD 對工作區的檔（帶著標記）
       [3] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
@@ -227,15 +229,16 @@ tasks:
       editor 結束（OnExit）：在背景重新讀 repo；讀那個檔找 <<<<<<< ／ >>>>>>> 標記的行（7 個字、後面接空白或行尾）：有 → Warning「<路徑> still has conflicts on lines <範圍>」（一塊從 <<<<<<< 到 >>>>>>> 寫成 2–6，只剩一行標記的寫那一行，例 line 3；最多 8 個，其他寫 and <N> more）；
       沒有 → Info「<路徑> has no conflicts left: press [r] to mark it resolved」；讀不到 → Error「Can't read <路徑>: <原因>」；editor 結束得不好時 App Log 記 Warning The editor of <路徑> ended with <原因>，照樣檢查
       item operation（[1]）與 panel operation（[3]）Mark [r]esolved — stage it: its conflicts are done（label 自己寫 [r]，tgo 照原樣畫；hint r:resolved；衝突檔才有；git 在跑時停用）：還有標記時 confirm MARK RESOLVED「Mark <路徑> resolved?」，
-      內容 <路徑>: conflicts on lines <範圍> 與 They are staged as they are, and the commit takes them.（都是 Peach），沒有就不問；在背景 git add -A -- <路徑>；Success Marked <路徑> resolved；[1] 先清掉篩選（tdp panel.14），cursor 到 STAGED 的那個檔
+      內容 <路徑>: conflicts on lines <範圍> 與 They are staged as they are, and the commit takes them.（都是 Peach），沒有就不問；在背景 git add -A -- <路徑>；Success Marked <路徑> resolved；[1] 不清篩選（tdp panel-198：使用者對篩選後的那一項做的動作讓它移走），cursor 到 STAGED 的那個檔；那一列被篩選擋住時（例：用 U 篩出衝突的檔），tgo List.Select 不動，cursor 停在篩選看得到的、原本位置上的那一列
       Resolve one by one（item operation，沒有熱鍵，原本的 Enter）：讀那個檔，找出 <<<<<<< ／ ||||||| ／ ======= ／ >>>>>>> 之間的區塊（標記 7 個字、後面接空白或行尾），
       先清掉 [1] 的篩選（List.ClearFilter；tdp panel.14：進到一項裡面，panel.10），[1] 的 body 換成區塊清單（tgo List，一欄）：Conflict N · lines <開始>–<結束>（標記的行號），位置列 <狀態> › <路徑>（task 1，例：Merging: <對方> › <路徑>），Panel.OnEsc 設好；
       Esc 回到檔案清單，cursor 回到那個檔
       [3] 是 cursor 那個區塊（OnMove 換）：label CONFLICT: <路徑>，MINE · <標記上寫的>（是 HEAD 時接 (<目前的分支>)，Teal，不用粗體：tdp color.1）、那一段的行、空一列、THEIRS · <標記上寫的>（Mauve）、那一段的行；有 diff3 的 base 時不畫
       區塊的 item operation：[Enter] Read（ToDetails：focus 到 [3]）、Use [m]ine、Use [t]heirs、Use [b]oth（mine first, then theirs）；hint Enter:read m:mine t:theirs b:both：
+      這四個（statusScreen.hunkActions）一直在 [1] 的 Actions，檔案那一層 Hidden；它們的鍵照 tdp M4-5 一直是 [1] 的（tgo v1.3.2）：檔案那一層按 t、b 不作用，不會變成全域的 [t]ag、[b]ranch（m 在那一層是 Mark）
       選了就改寫那個檔（同一個權限，其他行照舊、保留結尾的換行），那個區塊換成選的行，App Log 記 Info Used <mine／theirs／both> in conflict N of <路徑>；
       還有區塊時重新讀、cursor 停在下一個；最後一個解完在背景 git add，Success「<路徑> resolved and staged」，[1] 回到檔案清單、先清掉篩選（tdp panel.14），cursor 在 STAGED 的那個檔
-      檔案那一層的衝突檔：Use mine、Use theirs（for the whole file, and stage it；都沒有熱鍵，m 是標記，task 21；t 是全域的 Tag）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」，[1] 先清掉篩選、cursor 到 STAGED 的那個檔（tdp panel.14）
+      檔案那一層的衝突檔：Use mine、Use theirs（for the whole file, and stage it；都沒有熱鍵，m 是標記，task 21；t、b 是區塊那一層的 Use theirs、Use both）：git checkout --ours／--theirs -- <路徑> 再 git add；Success「<路徑> resolved with mine／theirs and staged」，[1] 不清篩選（tdp panel-198），cursor 到 STAGED 的那個檔（被篩選擋住時同 Mark resolved）
       執行前看檔案在衝突之後改過沒有：.git 裡 MERGE_HEAD、CHERRY_PICK_HEAD、REVERT_HEAD、REBASE_HEAD 最新的修改時間，檔案的修改時間比它晚就是改過；沒有那些檔（stash 的衝突）或讀不到檔案時當作看不出來；
       改過或看不出來時 confirm USE MINE／USE THEIRS「Use mine for <路徑>?」，內容 <路徑>: changed after the conflict（看不出來時 <路徑>: gittu can't tell whether it was changed after the conflict）
       與 The whole file becomes mine: any change made to it after the conflict is lost.（都是 Peach），沒改過不問
@@ -244,7 +247,7 @@ tasks:
       Continue <rebase／cherry-pick／revert>（沒有熱鍵；還有衝突時停用；git -c core.editor=true <op> --continue；Success Went on with the <op>；又停在衝突時照 task 8）
       失敗：改寫衝突的檔失敗開 error popup RESOLVE FAILED: <路徑>（原因，tgo 記進 App Log）；最後一個區塊解完的 git add、整個檔用一邊、Abort、Continue（不是停在衝突的）
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
-    test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestLocationSaysTheMerge]
+    test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestLocationSaysTheMerge, TestHunkKeysStayOnChanges]
   - id: 15
     spec: 61
     implementation: |
@@ -301,7 +304,7 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 48
+    spec: 63
     implementation: |
       [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
@@ -313,14 +316,14 @@ tasks:
       Mark the marked resolved（沒有熱鍵；CONFLICTS；有檔還有衝突標記時 confirm MARK RESOLVED「Mark <N> files resolved?」，每個檔一行 <路徑>: conflicts on lines <範圍>（Peach），沒有就不問；
       git add -A -- <路徑>…；每個檔記 Marked <路徑> resolved；Success Marked <N> files resolved）
       標記的列照它的組（ID 的前綴）與 snapshot 找到檔；同一個檔兩列只算一次；開始做時 List.ClearMarks
-      [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的時 Disabled，不 Hidden，M 不會落到 Merge；進到衝突區塊時 Hidden）；全都標了時換成同一個鍵的 [M] Unmark all（List.ClearMarks；App Log Unmarked every file）；Clear marks（沒有熱鍵；標了一部分時才有；List.ClearMarks；App Log Cleared the marks）
+      [M]ark all（panel operation，蓋過全域的 [M]erge；List.SetMarked 每一列；App Log Marked every file；清單是空的時 Hidden（tdp M6；tgo v1.3.2 讓 panel 的鍵在那一列不出現時照樣是 panel 的，按 M 不作用、不會落到 Merge，tdp M4-5）；進到衝突區塊時 Hidden）；全都標了時換成同一個鍵的 [M] Unmark all（List.ClearMarks；App Log Unmarked every file）；Clear marks（沒有熱鍵；標了一部分時才有；List.ClearMarks；App Log Cleared the marks）
       item operation Remove — this file from the repository（沒有熱鍵；還在 index 裡的檔：不是沒追蹤、不是已經 stage 成刪除，不在衝突）：confirm REMOVE「Remove <路徑>|<N> files from the repository?」，
       內容 Deleted, and the next commit takes them out of the repository.，有沒 commit 的改動時加 Their changes not committed are lost: it can't be undone.（Peach）；git rm -q -f -- <路徑>…；Success Removed <路徑>|<N> files from the repository
       item operation Ignore — add this file to .gitignore（沒有熱鍵；不在衝突）：有還在 index 裡的檔時 confirm IGNORE「Add <路徑>|<N> files to .gitignore?」，內容 Tracked ones stop being tracked…（Peach），沒有就不問；
       先 git rm -q --cached -- <還在 index 裡的>，再把每個檔的一行 /<路徑>（* ? [ \ 前面加 \，尾端空白寫成 \ ）加到頂層 .gitignore 的最後（原本最後沒換行先補一個；已經有的那一行不再寫）；Success Added <路徑>|<N> files to .gitignore
       失敗時照 task 8：error popup <動作> FAILED（STAGE、UNSTAGE、RESOLVE、DISCARD、REMOVE、IGNORE）
       讀 repo 換上新的列時，標記在已經不在的列上的拿掉（例：檔案 stage 了、衝突解了），它回來時不再是標記的
-    test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestUseSideAsksAfterAStash, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows]
+    test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestUseSideAsksAfterAStash, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows, TestMarkAllGoneWhenEmpty]
 
   - id: 23
     spec: 61

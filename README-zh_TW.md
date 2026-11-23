@@ -156,7 +156,7 @@ stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就�
 
 每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、Pull all（每個 remote 都 fetch，再 pull 目前的分支）、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
-revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行。調左右寬度的 `[<]` Narrow the left 與 `[>]` Widen the left 也在這裡。
+revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行；在 `[1]` 上 `t`、`b` 是解衝突區塊用的，在檔案清單上按了不作用。調左右寬度的 `[<]` Narrow the left 與 `[>]` Widen the left 也在這裡。
 
 gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
 

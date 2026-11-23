@@ -181,7 +181,7 @@ fetched, then the current branch pulled), `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on `[2]` and `[3]`, `c` checks out, and Commit is in the global operations; on
-`[2]`, `b` rebases, and Branch is in the global operations. `[<]` Narrow the left and `[>]` Widen the left are there
+`[2]`, `b` rebases, and Branch is in the global operations; on `[1]`, `t` and `b` are for a conflict's blocks, and do nothing on the files. `[<]` Narrow the left and `[>]` Widen the left are there
 too, the keys that move the line between the left and the right.
 
 gittu reads the repository again every 3 seconds, so what you change outside it shows, and the App Log (`!`) says

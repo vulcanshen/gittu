@@ -180,6 +180,37 @@ func TestNoStatusRow(t *testing.T) {
 	hasNot(t, d, "WORKING TREE", "STATUS", "Repo: ", "Branch: ")
 }
 
+// TestLocationSaysTheWork: git running takes the place of All changes, which
+// only holds it (the user), in Green, the loading icon turning (tdp
+// panel.10, popup.4); All changes is back when it ends.
+func TestLocationSaysTheWork(t *testing.T) {
+	g, d := start(t, gittest.Sample(t), 120, 32)
+	d.Press("1")
+	has(t, d, "All changes")
+	d.Do(func() tea.Cmd { g.busy = "Pushing…"; return nil })
+	has(t, d, "Pushing…")
+	hasNot(t, d, "All changes")
+	if !strings.Contains(d.Styled()[1], "38;2;166;227;161m") {
+		t.Errorf("the work is not Green (tdp panel.10, color.2):\n%q", d.Styled()[1])
+	}
+	d.Do(func() tea.Cmd { g.busy = ""; return nil })
+	has(t, d, "All changes")
+	hasNot(t, d, "Pushing…")
+}
+
+// TestMarkAllGoneWhenEmpty: with no file to mark, Mark all is not in the menu
+// (tdp M6), and M on [1] stays its: nothing, never the global Merge (tdp
+// M4-5).
+func TestMarkAllGoneWhenEmpty(t *testing.T) {
+	r := gittest.Sample(t)
+	r.Git("stash", "drop", "-q")
+	_, d := start(t, r, 120, 32)
+	d.Press("1", "Space")
+	hasNot(t, d, "[M]ark all")
+	d.Press("Esc", "M")
+	hasNot(t, d, "MERGE: main")
+}
+
 // TestLocationSaysTheMerge: an operation stopped half way takes the place of
 // All changes in [1]'s location row, its state's glyph first: conflicts
 // left, then none; what git does takes it while it runs (the user).
@@ -189,14 +220,17 @@ func TestLocationSaysTheMerge(t *testing.T) {
 	has(t, d, glyphConflicts+" Merging: feature")
 	hasNot(t, d, "All changes")
 	d.Press("1") // focused: not dimmed
-	if !strings.Contains(d.Styled()[1], "38;2;180;190;254m"+glyphConflicts+" Merging: feature") {
+	if row := d.Styled()[1]; !strings.Contains(row, "38;2;180;190;254m"+glyphConflicts) || !strings.Contains(row, "38;2;180;190;254mMerging: feature") {
 		t.Errorf("the location row is not Lavender (tdp panel.10):\n%q", d.Styled()[1])
 	}
 	d.Do(func() tea.Cmd { g.busy = "Committing…"; return nil })
-	has(t, d, "Committing…")
-	hasNot(t, d, "Merging: feature")
+	has(t, d, "Merging: feature", "Committing…") // the work after the place (tdp panel.10)
+	if !strings.Contains(d.Styled()[1], "38;2;166;227;161m") {
+		t.Errorf("the work is not Green (tdp panel.10, color.2):\n%q", d.Styled()[1])
+	}
 	d.Do(func() tea.Cmd { g.busy = ""; return nil })
 	has(t, d, "Merging: feature")
+	hasNot(t, d, "Committing…")
 	// Into the conflicted file: the file after the state.
 	d.Do(func() tea.Cmd { return g.status.goIn("notes.txt") })
 	has(t, d, "Merging: feature › notes.txt")
@@ -1292,7 +1326,7 @@ func TestNewBranchAndTagAtHead(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	g, d := start(t, r, 100, 32)
-	d.Press("1", "b")
+	d.Press("4", "b") // [4] DESCRIPTION has no b of its own: the global Branch
 	has(t, d, "A branch at HEAD, checked out")
 	d.Type("next")
 	d.Press("Enter")
@@ -2092,7 +2126,7 @@ func TestCommitMessage(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Git("add", "README.md")
-	_, d := start(t, r, 100, 32)
+	g, d := start(t, r, 100, 32)
 	d.Press("1", "c")
 	has(t, d, "COMMIT", "Title", "not set", "Description", "none", "Commit", "Enter:edit Tab:actions Esc:cancel")
 	d.Press("Tab", "Enter") // no title: an error, the form kept (tdp form.16)
@@ -2109,6 +2143,50 @@ func TestCommitMessage(t *testing.T) {
 	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%B")); got != "Change the readme\n\nWhy it changed" {
 		t.Errorf("last commit %q", got)
 	}
+	// What Commit is for, a new commit: [3]'s cursor on it (tdp K3-15).
+	if cur, _ := g.history.commits.Current(); cur.ID != strings.TrimSpace(r.Git("rev-parse", "HEAD")) {
+		t.Errorf("[3]'s cursor on %q, not the new commit", cur.ID)
+	}
+}
+
+// TestCommitFormClosedFirst: the form closed while git commits drops what
+// it returns (tdp form.7): no toast; the next read logs the commit made (tdp
+// note.7), gittu's own, not changed outside gittu.
+func TestCommitFormClosedFirst(t *testing.T) {
+	r := gittest.Sample(t)
+	hook := filepath.Join(r.Dir, ".git", "hooks", "pre-commit")
+	if err := os.WriteFile(hook, []byte("#!/bin/sh\nsleep 1\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	r.Write("README.md", "changed\n")
+	r.Git("add", "README.md")
+	g, d := start(t, r, 100, 32)
+	d.Press("1", "c", "Enter")
+	d.Type("Closed first")
+	d.Press("Enter", "Tab", "Enter", "Esc")
+	if d.Has("Discard changes") {
+		d.Press("Enter")
+	}
+	d.WaitFor(func() bool { return !g.committing.Load() }, 20*time.Second)
+	d.Advance(refreshEvery + time.Second)
+	d.WaitFor(func() bool { return !g.reading }, 5*time.Second)
+	if got := strings.TrimSpace(r.Git("log", "-1", "--format=%s")); got != "Closed first" {
+		t.Fatalf("last commit %q", got)
+	}
+	hasNot(t, d, "Committed ") // no toast
+	d.Press("!")
+	has(t, d, "Committed ", "Closed first")
+	hasNot(t, d, "Changed outside gittu")
+}
+
+// TestHunkKeysStayOnChanges: t and b, a conflicted block's on [1], stay [1]'s
+// out of the blocks (tdp M4-5): nothing, never the global Tag and Branch.
+func TestHunkKeysStayOnChanges(t *testing.T) {
+	_, d := start(t, gittest.Sample(t), 100, 32)
+	d.Press("1", "t")
+	hasNot(t, d, "NEW TAG", "A tag at")
+	d.Press("b")
+	hasNot(t, d, "A branch at HEAD")
 }
 
 func TestCommitOffWithNothingStaged(t *testing.T) {

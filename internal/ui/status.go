@@ -88,7 +88,7 @@ func newStatusScreen(g *gittu) *statusScreen {
 	s.diff = &terminu.Pager{Follow: true, EmptyFact: "No file to show", EmptyHint: "Press [1] to go to the files"}
 	s.diffP = &terminu.Panel{Label: "Diff", Body: s.diff}
 	s.filesP = &terminu.Panel{Label: "Changes", Body: s.files, Details: s.diffP}
-	s.filesP.Actions = append(s.fileActions(), g.unzoom())
+	s.filesP.Actions = append(append(s.fileActions(), s.hunkActions()...), g.unzoom())
 	s.diffP.Actions = []terminu.Action{
 		// A conflicted file: Enter edits it, r marks it resolved (the user).
 		{Key: "Enter", Label: "Edit", Desc: "it in your editor, to resolve its conflicts", Scope: panel, Hint: "edit",
@@ -425,11 +425,28 @@ func (s *statusScreen) hunk() (git.Hunk, int, bool) {
 
 // fileActions are [1]'s operations: on a file by its group, on a conflicted
 // block, and on the whole panel (tdp P3, M2).
+// hunkActions are [1]'s operations on the blocks of the conflicted file gone
+// into, Hidden out of it; their keys stay [1]'s there too (tdp M4-5): t and b
+// on the files do nothing, never the global Tag and Branch.
+func (s *statusScreen) hunkActions() []terminu.Action {
+	off := func() bool { return !s.g.idle() }
+	noHunk := func() bool { _, _, ok := s.hunk(); return !ok }
+	return []terminu.Action{
+		{Key: "Enter", Label: "Read", Desc: "it whole in the panel beside", Scope: item, Hint: "read",
+			Hidden: noHunk, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
+		{Key: "m", Label: "Use mine", Desc: "for this conflict", Scope: item, Hint: "mine",
+			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Mine) }},
+		{Key: "t", Label: "Use theirs", Desc: "for this conflict", Scope: item, Hint: "theirs",
+			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Theirs) }},
+		{Key: "b", Label: "Use both", Desc: "mine first, then theirs", Scope: item, Hint: "both",
+			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Both) }},
+	}
+}
+
 func (s *statusScreen) fileActions() []terminu.Action {
 	g := s.g
 	off := func() bool { return !g.idle() }
 	path := func() string { f, _, _ := s.file(); return f.Path }
-	noHunk := func() bool { _, _, ok := s.hunk(); return !ok }
 	inFiles := func() bool { return s.conflict != "" }
 	return []terminu.Action{
 		// Enter shows the file's change in [3], as on a conflicted file (tdp
@@ -502,15 +519,6 @@ func (s *statusScreen) fileActions() []terminu.Action {
 						return g.a.Toast(terminu.Success, "Discarded the change to "+f.Path)
 					})
 			}},
-		// A conflicted block.
-		{Key: "Enter", Label: "Read", Desc: "it whole in the panel beside", Scope: item, Hint: "read",
-			Hidden: noHunk, ToDetails: func() bool { return true }, Do: func() tea.Cmd { return nil }},
-		{Key: "m", Label: "Use mine", Desc: "for this conflict", Scope: item, Hint: "mine",
-			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Mine) }},
-		{Key: "t", Label: "Use theirs", Desc: "for this conflict", Scope: item, Hint: "theirs",
-			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Theirs) }},
-		{Key: "b", Label: "Use both", Desc: "mine first, then theirs", Scope: item, Hint: "both",
-			Hidden: noHunk, Disabled: off, Do: func() tea.Cmd { return s.resolve(git.Both) }},
 		// The panel: the marked files first (tdp P3).
 		s.batch("Stage the marked", "Staging…", "Stage", []string{inUnstaged}, nil, func(fs []git.File) error {
 			return g.repo.Stage(paths(fs)...)
@@ -564,12 +572,10 @@ func (s *statusScreen) fileActions() []terminu.Action {
 		s.batchWith("Ignore the marked", []string{inStaged, inUnstaged}, nil, s.askIgnore, s.ignore),
 		// M (the user) is the panel's over the global Merge (tdp M4): Mark all,
 		// and Unmark all once every file is marked, as m is on one (the user);
-		// off, not hidden, when there is nothing to mark, so M never merges
-		// here. TODO(tgo): hidden then (tdp main 96c0f5b, M4-5: a panel's key
-		// over a global one stays the panel's while its row is gone), once a
-		// terminu-go release handles the key so.
+		// hidden when there is nothing to mark (tdp M6), M still the panel's
+		// then, doing nothing (tdp M4-5, the lib).
 		{Key: "M", Label: "Mark all", Desc: "every file listed", Scope: panel,
-			Hidden: func() bool { return inFiles() || s.allMarked() }, Disabled: s.files.Empty,
+			Hidden: func() bool { return inFiles() || s.allMarked() || s.files.Empty() },
 			Do: func() tea.Cmd {
 				var ids []string
 				for _, r := range s.files.Rows() {
@@ -961,11 +967,16 @@ func (s *statusScreen) goIn(path string) tea.Cmd {
 // conflicted file gone into (tdp panel.10).
 func (s *statusScreen) located() {
 	glyph, where := s.g.state()
-	if where == "" {
+	work := s.g.busy // git running: Green, the loading icon turning (tdp panel.10, popup.4)
+	if where == "" && work == "" {
 		where = "All changes"
 	}
-	s.files.LocationGlyph, s.files.Location = glyph, where
-	s.hunkList.LocationGlyph, s.hunkList.Location = glyph, where+" › "+s.conflict
+	in := s.conflict
+	if where != "" {
+		in = where + " › " + s.conflict
+	}
+	s.files.LocationGlyph, s.files.Location, s.files.LocationWork = glyph, where, work
+	s.hunkList.LocationGlyph, s.hunkList.Location, s.hunkList.LocationWork = glyph, in, work
 }
 
 // goOut goes back to the files, the cursor on the conflicted file (tdp K4).
@@ -1036,8 +1047,7 @@ func (s *statusScreen) useSide(path string, theirs bool) tea.Cmd {
 	}
 	return g.run("Resolving…", "Resolve", func() error { return g.repo.UseSide(theirs, path) },
 		func() tea.Cmd {
-			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
-			s.files.Select(inStaged + path)
+			s.files.Select(inStaged + path) // the filter kept (tdp panel-198)
 			return g.a.Toast(terminu.Success, path+" resolved with "+word+" and staged")
 		})
 }
@@ -1185,8 +1195,7 @@ func (s *statusScreen) markResolved(fs []git.File) tea.Cmd {
 				g.a.Log(terminu.Info, "Marked "+f.Path+" resolved")
 			}
 		} else {
-			s.files.ClearFilter() // gittu puts the cursor on it (tdp panel.14)
-			s.files.Select(inStaged + fs[0].Path)
+			s.files.Select(inStaged + fs[0].Path) // the filter kept (tdp panel-198)
 		}
 		return g.a.Toast(terminu.Success, "Marked "+named(fs)+" resolved")
 	})
@@ -1249,6 +1258,12 @@ func (g *gittu) messageFor(title, ready string, amend bool) tea.Cmd {
 			}
 			m := doneMsg{title: title, ok: g.committed(msg, amend)}
 			m.snap, m.rerr = repo.Read(remote)
+			said := didCommit(amend)
+			if m.snap != nil {
+				said += git.Short(m.snap.HeadSHA) + " "
+			}
+			said += firstLine(msg)
+			g.unsaid.Store(&said) // said by the doneMsg, or by the next read if the form closed first
 			return func() tea.Msg { return m }, nil
 		}})
 }
@@ -1281,19 +1296,30 @@ func firstLineMore(text string) string {
 }
 
 // committed is what a commit gone through says, the popups the form came
-// from closed too (tdp T1).
+// from closed too (tdp T1). A commit is what Commit is for: [3]'s cursor goes
+// on it, its filter taken away first (tdp K3-15, panel.14); an amend changes
+// the last one, the cursor staying.
 func (g *gittu) committed(msg string, amend bool) func() tea.Cmd {
 	return func() tea.Cmd {
+		g.unsaid.Store(nil) // the toast says it
 		sha := ""
 		if g.snap != nil {
 			sha = git.Short(g.snap.HeadSHA)
+			if h := g.history; !amend && h.inGraph(g.snap.HeadSHA) {
+				h.commits.ClearFilter()
+				h.commits.Select(g.snap.HeadSHA)
+			}
 		}
-		did := "Committed "
-		if amend {
-			did = "Amended "
-		}
-		return tea.Batch(g.a.CloseAll(), g.a.Toast(terminu.Success, did+sha+" "+firstLine(msg)))
+		return tea.Batch(g.a.CloseAll(), g.a.Toast(terminu.Success, didCommit(amend)+sha+" "+firstLine(msg)))
 	}
+}
+
+// didCommit is how a commit's Success starts.
+func didCommit(amend bool) string {
+	if amend {
+		return "Amended "
+	}
+	return "Committed "
 }
 
 // changeFlag is a working tree change's letter in its colour, in [1]'s flag
