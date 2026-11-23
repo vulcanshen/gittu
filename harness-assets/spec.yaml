@@ -236,6 +236,7 @@ tasks:
       - {note: "Mark resolved 只在還有衝突標記時、整個檔的 Use mine／Use theirs 只在衝突之後改過時 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，tdp v1.3.2 發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
       - {note: "[A]bort 會丟掉解好的衝突，用的鍵是 A，算不算 K13 的永久拿掉", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，tdp v1.3.2 發版；gittu 照現在就符合"}
       - {note: "Continue 做出的 commit，cursor 沒移過去（K3-15）", issue: "送給 tdp session（2026-11-23，第 4 題）；tdp main 1e4c140 收了（K3-15，tdp v1.3.2 發版）：cursor 移到新的一項只管目的就是新增的動作，git 動作順帶做出的 commit、本地分支由 app 決定；gittu 留在原處照現在就符合"}
+      - {note: "Mark resolved 只在還有衝突標記時 confirm（標記帶進 commit 的風險），標記清掉了直接 stage；tdp v1.3.2 的 F6-6 只放行「這一次會丟東西或做得比平常多」，帶著標記 stage 算不算，tdp 沒寫（2026-11-23 第二輪 review）。答案出來前照現在", issue: "送給 tdp session（2026-11-23，F6-6 帶進去的東西）"}
   - id: 15
     spec: 61
     request: 設定與 terminu 家族其他 app 一樣（多行文字的 Tab 寬度）
@@ -313,6 +314,7 @@ tasks:
       - {note: "Use mine／Use theirs for the marked、Ignore、Mark the marked resolved 照狀態決定 confirm（F6）", issue: "送給 tdp session（2026-11-23，第 2 題）；tdp main bc937b0 收了（F6-6，tdp v1.3.2 發版）：只在這一次會丟東西或做得比平常多時才問可以，同樣的狀態問法一樣；gittu 照現在就符合"}
       - {note: "Remove、Remove the marked 沒有熱鍵（K13）", issue: "送給 tdp session（2026-11-23，第 3 題）；tdp main 77b7cc1（M3：任何動作都可以沒有熱鍵，app 照使用情境判斷）與 66c8cf1（K13-6：K13 只管目的就是永久拿掉的動作，順帶丟東西的照它做的事取字母，[A]bort、[H]ard 可以，會丟東西時照 F6 問）收了，tdp v1.3.2 發版；gittu 照現在就符合"}
       - {note: "清單是空的時 [M]ark all 用 Disabled，不讓 M 落到全域的 [M]erge；M6 說不出現、M4 沒寫不出現時鍵歸誰", issue: "送給 tdp session（2026-11-23，第 7 題）；tdp main 96c0f5b 收了（M4-5，tdp v1.3.2 發版）：panel 的熱鍵蓋掉 global 的鍵時，那一列暫時不出現也照樣是 panel 的，按了不作用；清單空了時 Mark all 要照 M6 Hidden；terminu-go v1.3.2 改好按鍵處理，2026-11-23 升上去拿掉 Disabled"}
+      - {note: "Mark the marked resolved 只在有檔還有衝突標記時 confirm（同 task 14 那一題）", issue: "送給 tdp session（2026-11-23，F6-6 帶進去的東西）"}
   - id: 22
     spec: 43
     request: 使用者自訂的動作：使用者自己寫操作的腳本，${{source}} 是來源分支、${{target}} 是目標分支，執行時換成實際的分支；腳本存起來，算使用者的資料、不是 gittu 的設定；放在第三個畫面 CUSTOM（user 2026-11-20；這一版先不做，先發版）
