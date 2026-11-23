@@ -79,6 +79,9 @@ type gittu struct {
 	// draft is a commit message written but not committed yet (a hook
 	// stopped it), to write again.
 	draft string
+	// lefts are the left's widths the user set, by the terminal's width
+	// (task 23), as the state file keeps them.
+	lefts map[int]int
 
 	history *historyScreen
 	status  *statusScreen
@@ -90,7 +93,7 @@ type gittu struct {
 func New(repo *git.Repo) *terminu.App { return newGittu(repo).a }
 
 func newGittu(repo *git.Repo) *gittu {
-	g := &gittu{a: terminu.New("gittu"), repo: repo}
+	g := &gittu{a: terminu.New("gittu"), repo: repo, lefts: map[int]int{}}
 	// 24 rows at the least, not 32: an 80×24 terminal opens it (the user;
 	// tdp L1: the app may lower its least size).
 	g.a.MinHeight = 24
@@ -120,10 +123,10 @@ func splash() terminu.Splash {
 	return s
 }
 
-// start reads the settings and starts reading the repository again now and
-// then.
+// start reads the settings and the state, and starts reading the repository
+// again now and then.
 func (g *gittu) start() tea.Cmd {
-	return tea.Batch(g.loadConfig(), g.tick())
+	return tea.Batch(g.loadFiles(), g.tick())
 }
 
 type tickMsg struct{}

@@ -120,6 +120,11 @@ or a merge, rebase, cherry-pick or revert under way, or what git is doing (Pushi
 files of the commit under the cursor. After `[1]`: the diff of the file under its cursor, then the commits that
 changed it, `[5]` hidden. Going into `[3]`, `[4]` or `[5]` changes nothing.
 
+`<` and `>` move the line between the left and the right two columns the way they point, whichever panel you are on.
+gittu remembers where you put it for that terminal width and uses it whenever it opens on a terminal that wide again;
+any other width starts with the left a third of it. The left keeps at least 20 columns and the right 40, so at 60
+columns the line stays where it is.
+
 ### The branches and the graph
 
 | Where | `Enter` | In the `Space` menu |
@@ -136,8 +141,7 @@ changed it, `[5]` hidden. Going into `[3]`, `[4]` or `[5]` changes nothing.
 and tag. `[3]` has two tabs, `h` and `l` switching them: CURRENT, first, keeps on the left the line of the branch, remote
 branch or tag under `[2]`'s cursor, and follows it as you move; ALL keeps main's line (or master's) there. The remote
 branches are hidden at first, but for those a local branch tracks or shares a name with: Show remote branches in
-`[3]`'s `Space` menu draws them all. `z` on `[3]` zooms it wider, with `[1]` and `[2]` at their least width, then to
-the whole screen, then back (on a narrow terminal straight to the whole screen). A branch whose
+`[3]`'s `Space` menu draws them all. `z` on `[3]` puts it on the whole screen, and `z` again puts it back. A branch whose
 upstream was deleted on the remote says `upstream gone`.
 
 `[4]` DESCRIPTION is the whole message of the commit under `[3]`'s cursor (`z` there puts it on the whole screen), and `[5]` FILES beside it lists the files it
@@ -174,7 +178,8 @@ fetched, then the current branch pulled), `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on `[2]` and `[3]`, `c` checks out, and Commit is in the global operations; on
-`[2]`, `b` rebases, and Branch is in the global operations.
+`[2]`, `b` rebases, and Branch is in the global operations. `[<]` Narrow the left and `[>]` Widen the left are there
+too, the keys that move the line between the left and the right.
 
 gittu reads the repository again every 3 seconds, so what you change outside it shows, and the App Log (`!`) says
 what changed.
@@ -188,7 +193,7 @@ what changed.
 
 ## Settings and data
 
-gittu keeps no data, no state and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/gittu` (or
+gittu keeps no data and no cache. Its settings are `config.yaml` in `$XDG_CONFIG_HOME/gittu` (or
 `~/.config/gittu`; `GITTU__CONFIG` names another directory). gittu never makes it; with no file, it uses the default.
 
 ```yaml
@@ -198,6 +203,19 @@ input_tab_width: 4   # the spaces Tab puts in a commit message, and a tab in a d
 It is a key every terminu family app shares. A `config.yaml` gittu cannot read is offered to be moved aside to
 `config.yaml.bak`, or gittu quits; a value that is not a whole number above 0 is kept in `config.yaml.bak` and written
 back as 4. A key gittu does not read (a typo) is left in the file, and the App Log (`!`) says so at every start.
+
+Its state is `state.yaml` in the same directory (`GITTU__STATE` names another): the width of the left for each terminal
+width you moved the line on with `<` and `>`. gittu writes it each time you press them; delete it and every width
+starts with a third again.
+
+```yaml
+left:
+  77: 25    # on a terminal 77 columns wide, the left is 25 columns
+  155: 60
+```
+
+A `state.yaml` gittu cannot read is offered to be moved aside as `config.yaml` is; a width gittu cannot use is kept in
+`state.yaml.bak` and taken out of the file.
 
 ## Limits
 

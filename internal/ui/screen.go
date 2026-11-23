@@ -43,10 +43,10 @@ func (g *gittu) newScreen() {
 // commitsShown reports [2] the leading panel: [3] the commits.
 func (g *gittu) commitsShown() bool { return g.screen.Panels[placeMain] == g.history.histP }
 
-// layout is the panels as zoomed (tdp screen.6): the left a third of the
-// width, [1] above [2], 1:2 (the user); at zoom 1 the left at its least
-// width; at zoom 2 the focused panel alone on the whole area (the others
-// drawn nowhere). On the right [3], then a third of the height for [4] and
+// layout is the panels, or, zoomed, the focused panel alone on the whole
+// area, the others drawn nowhere (tdp screen.6). The left is as wide as the
+// user set it for the terminal's width, else a third (task 23); [1] above
+// [2], 1:2 (the user). On the right [3], then a third of the height for [4] and
 // [5] side by side, 2:3: [5]'s paths take the room, [4] zooms to be read
 // (the user); [4] the whole width while [5] is hidden. Every draw writes
 // [1]'s location row again: what git does changes it.
@@ -54,17 +54,14 @@ func (g *gittu) layout(w, ht int) []terminu.Rect {
 	h, s := g.history, g.status
 	s.located()
 	rects := make([]terminu.Rect, len(g.screen.Panels))
-	if h.zoom == 2 {
+	if h.zoomed {
 		for i, p := range g.screen.Panels {
 			if p == g.screen.Focused() {
 				rects[i] = terminu.Rect{W: w, H: ht}
 			}
 		}
 	} else {
-		left := w / 3
-		if h.zoom == 1 {
-			left = min(leftLeast, w/3)
-		}
+		left := g.leftOf(w)
 		top := ht / 3
 		rects[placeChanges] = terminu.Rect{X: 0, Y: 0, W: left, H: top}
 		rects[placeBranches] = terminu.Rect{X: 0, Y: top, W: left, H: ht - top}
@@ -97,9 +94,17 @@ func (g *gittu) num(p *terminu.Panel) int {
 	return 0
 }
 
+// zoom is the panel operation that puts the focused panel on the whole
+// screen, on [3] COMMITS and [4] DESCRIPTION: one step, as tdp screen.6's
+// default (the user, 2026-11-23: the left's width is set with < and >).
+func (g *gittu) zoom() terminu.Action {
+	return terminu.Action{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
+		Hidden: func() bool { return g.history.zoomed }, Do: func() tea.Cmd { return g.history.zoomTo(true) }}
+}
+
 // unzoom is the panel operation that puts the zoomed screen back, on every
 // panel the focus can be on while zoomed (tdp screen.6).
 func (g *gittu) unzoom() terminu.Action {
 	return terminu.Action{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
-		Hidden: func() bool { return g.history.zoom == 0 }, Do: func() tea.Cmd { return g.history.zoomTo(0) }}
+		Hidden: func() bool { return !g.history.zoomed }, Do: func() tea.Cmd { return g.history.zoomTo(false) }}
 }

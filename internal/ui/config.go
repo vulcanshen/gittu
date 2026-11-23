@@ -110,34 +110,68 @@ func writeTabWidth(path string) error {
 	return os.WriteFile(path, out, st.Mode().Perm())
 }
 
+// loaded is what reading one of gittu's own files at the start came to (tdp
+// E3): the notices to give, and a file that can't be read, path and err, to
+// be moved aside; fresh is going on without it.
+type loaded struct {
+	notices []terminu.Notice
+	path    string
+	err     error
+	fresh   func()
+}
+
+// loadFiles reads gittu's own files at the start, config.yaml then
+// state.yaml (tdp E3): one that can't be read asks to be moved aside before
+// the next is read; the notices of both are given at the end, in the order
+// they came, with one App.Notify.
+func (g *gittu) loadFiles() tea.Cmd {
+	var ns []terminu.Notice
+	loads := []func() loaded{g.loadConfig, g.loadState}
+	var from func(i int) tea.Cmd
+	from = func(i int) tea.Cmd {
+		for ; i < len(loads); i++ {
+			l := loads[i]()
+			ns = append(ns, l.notices...)
+			if l.err != nil {
+				next := i + 1
+				return g.a.MoveAside(l.path, l.err, func() tea.Cmd {
+					if l.fresh != nil {
+						l.fresh()
+					}
+					return from(next)
+				})
+			}
+		}
+		return g.a.Notify(ns...)
+	}
+	return from(0)
+}
+
 // loadConfig reads the settings at the start (tdp E3): a file that can't be
 // read asks to be moved aside; a value that does not fit is kept in a copy
 // and written again as its default; a key gittu never read is left in the
 // file, an INFO at every start.
-func (g *gittu) loadConfig() tea.Cmd {
+func (g *gittu) loadConfig() loaded {
 	path := ConfigPath()
 	width, bad, unread, err := readTabWidth(path)
 	if err != nil {
-		return g.a.MoveAside(path, err, func() tea.Cmd {
-			g.a.InputTabWidth = defaultTabWidth
-			return nil
-		})
+		return loaded{path: path, err: err, fresh: func() { g.a.InputTabWidth = defaultTabWidth }}
 	}
 	g.a.InputTabWidth = width
 	for _, k := range unread {
 		g.a.Log(terminu.Info, "Not read: "+k+" in "+homeShort(path)+"; delete it if you don't need it")
 	}
 	if bad == "" {
-		return nil
+		return loaded{}
 	}
 	misfit := terminu.Misfit{Key: "input_tab_width", Was: bad, Now: strconv.Itoa(defaultTabWidth)}
 	copied, err := terminu.KeepAside(path)
 	if err != nil {
-		return g.a.Notify(terminu.Notice{Kind: terminu.Error, Text: err.Error()}, terminu.MisfitNotice(path, "", misfit))
+		return loaded{notices: []terminu.Notice{{Kind: terminu.Error, Text: err.Error()}, terminu.MisfitNotice(path, "", misfit)}}
 	}
 	if err := writeTabWidth(path); err != nil {
-		return g.a.Notify(terminu.Notice{Kind: terminu.Error, Text: "Can't write " + filepath.Base(path) + ": " + err.Error()},
-			terminu.MisfitNotice(path, copied, misfit))
+		return loaded{notices: []terminu.Notice{{Kind: terminu.Error, Text: "Can't write " + filepath.Base(path) + ": " + err.Error()},
+			terminu.MisfitNotice(path, copied, misfit)}}
 	}
-	return g.a.Notify(terminu.MisfitNotice(path, copied, misfit))
+	return loaded{notices: []terminu.Notice{terminu.MisfitNotice(path, copied, misfit)}}
 }

@@ -1,12 +1,12 @@
 tasks:
   - id: 1
-    spec: 60
+    spec: 61
     implementation: |
       一個畫面（tgo Screen，screen.go；只有一個畫面，tgo 不畫 chip 列；沒有設 App.Status，沒有 statusbar 那一列）：Panels 的位置 0 [1] CHANGES、1 [2] BRANCHES、2 [3]、3 [4]、4 [5]；
       跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
       focus 換到帶頭的 panel（Tab、數字鍵、App.Focus）時 tgo 換上，移進 [3]、[4]、[5] 不換；號碼照位置，收起的 [5] 數字鍵不作用、Tab 跳過，footer 寫 Tab|1–5:panels；
       Panels 寫 [2] 帶頭的樣子（tgo v1.3.1 的 AddScreen 把每個帶頭 panel 的 Shows 也算進 Enter 的 Details：[1] 衝突檔的 Enter 找得到 [3] DIFF），AddScreen 之後 App.Focus([2])：打開時 focus 在 [2]、右邊是 COMMITS
-      Layout：左邊寬度的三分之一（60 欄時 20｜40），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
+      Layout：左邊是 gittu.leftOf(寬度)（使用者用 < > 調過這個寬度時是記下的欄數，不然寬度的三分之一，60 欄時 20｜40；task 23），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
       最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
       沒有 statusbar、沒有 STATUS 說明牌（2026-11-22 拿掉）：[1] 的位置列（List.Location、LocationGlyph，tgo 畫成 Lavender）每次 Layout 都重寫（statusScreen.located）：
       git 指令在跑時是在做什麼（Pushing…、Merging… 之類，沒有 glyph）；不然做到一半的 merge、rebase、cherry-pick、revert 時是 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>，
@@ -244,7 +244,7 @@ tasks:
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
     test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestLocationSaysTheMerge]
   - id: 15
-    spec: 54
+    spec: 61
     implementation: |
       啟動時（tgo App.Start）讀設定檔：GITTU__CONFIG，否則 $XDG_CONFIG_HOME/gittu，否則 ~/.config/gittu，裡面的 config.yaml；沒有檔、沒有這個 key 時 input_tab_width 是 4；
       讀到的值交給 tgo App.InputTabWidth（textarea 的 Tab、viewer 與 Pager 裡的 Tab）；其他 key 不管、不改
@@ -252,8 +252,9 @@ tasks:
       input_tab_width 不是大於 0 的整數：terminu.KeepAside 複製一份 .bak，用 yaml.Node 把那個值改回 4、其他照舊寫回（同一個權限），
       tgo Notify(MisfitNotice(path, copy, Misfit{input_tab_width, 原本的, 4}))：Warning toast 與 App Log 的 WARN；備份做不出來時不重寫，Notify 一件 Error（KeepAside 的錯誤）加 MisfitNotice(path, "")：一件一個 toast，疊起來（tdp v1.3.0 的 toast.2、toast.3、E3-37；不再合成一個）
       input_tab_width 以外的 key 不讀、不改（重寫時也留著），每次啟動 tgo App.Log(Info)：Not read: <key> in <路徑，家目錄寫成 ~>; delete it if you don't need it；不跳 toast
-      gittu 不建設定檔，沒有狀態、資料、快取
-    test: [TestTabWidthSetting, TestConfigMisfit, TestConfigUnreadKey, TestConfigCannotBeRead]
+      gittu 不建設定檔，沒有資料、快取；狀態 state.yaml 見 task 23
+      啟動時 gittu.loadFiles 照順序讀 config.yaml、state.yaml（task 23）：讀不了的那個開 MOVE ASIDE，Enter 之後才讀下一個；兩個的 Notice 收在一起，最後只叫一次 tgo App.Notify
+    test: [TestTabWidthSetting, TestConfigMisfit, TestConfigUnreadKey, TestConfigCannotBeRead, TestStateCannotBeRead]
   - id: 16
     spec: 13
     implementation: |
@@ -261,18 +262,14 @@ tasks:
       internal/ui/icon.svg 是它的副本（go:embed），terminu.NewSplash(icon, "gittu", version.Display(), "A git client for the terminal")；V 打開由 tgo 做
     test: [TestSplashIsDocsIcon, TestSplashOpens]
   - id: 17
-    spec: 57
+    spec: 61
     implementation: |
-      畫面的 tgo Screen.Layout（screen.go）照 zoom 的階段排（historyScreen.zoom）：0 照 task 1；1 是左邊（[1]、[2]）min(20, 寬度/3) 欄、右邊拿剩下的；
-      0 與 1 的 [3]、[4]、[5] 照 task 1 排；2 是有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel；說明牌也是）
-      [3] COMMITS 的 panel operation，同一個鍵 z 依階段用 Hidden 分開：沒放大時 Zoom — wider, [1] and [2] at their least（到第一段）；
-      第一段時、或沒放大而終端機窄（寬度/3 ≤ 20，也就是不到 63 欄）時 Zoom — to the whole screen（到第二段）；第二段時 Unzoom — back to both panels（回到 1:2）；
-      下框 hint 寫 z:zoom 或 z:unzoom
-      每一塊拿得到 focus 的 panel（[1] CHANGES、[2] BRANCHES、[3] COMMITS 與 DIFF、[4] DESCRIPTION 與 HISTORY、[5] FILES）在放大時都有 panel operation z Unzoom — back to both panels（沒放大時 Hidden；gittu.unzoom），下框寫 z:unzoom
-      [4] DESCRIPTION 沒放大時有 panel operation z Zoom — to the whole screen（hint z:zoom），直接到第二段，[4] 佔滿
-      第二段時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [4]、[5]、[1]、[2] 時它佔滿（[5] 收起時 Tab 跳過；到 [1] 時右邊照 task 1 換成 DIFF、HISTORY）；[2] 上 Enter（task 3）把 focus 送回 [3]，[3] 佔滿
-      App Log 記 Info：Zoomed [3]、Zoomed [3] to the whole screen（[4] 上按的寫 Zoomed [4] to the whole screen：有 focus 的那一個，號碼照位置，gittu.num）、Back to both panels
-    test: [TestZoomTwoSteps, TestZoomNarrowSkipsTheFirstStep, TestDescriptionZooms]
+      畫面的 tgo Screen.Layout（screen.go）照有沒有放大排（historyScreen.zoomed）：沒放大照 task 1；放大時有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel）
+      [3] COMMITS 與 [4] DESCRIPTION 的 panel operation，同一個鍵 z 用 Hidden 分開：沒放大時 Zoom — to the whole screen（gittu.zoom），放大時 Unzoom — back to both panels（gittu.unzoom）；下框 hint 寫 z:zoom 或 z:unzoom
+      每一塊拿得到 focus 的 panel（[1] CHANGES、[2] BRANCHES、[3] COMMITS 與 DIFF、[4] DESCRIPTION 與 HISTORY、[5] FILES）在放大時都有 panel operation z Unzoom（沒放大時 Hidden），下框寫 z:unzoom
+      放大時 Tab、數字鍵照 tgo 換 focus，Layout 讓有 focus 的那一個佔滿：換到 [4]、[5]、[1]、[2] 時它佔滿（[5] 收起時 Tab 跳過；到 [1] 時右邊照 task 1 換成 DIFF、HISTORY）；[2] 上 Enter（task 3）把 focus 送回 [3]，[3] 佔滿
+      App Log 記 Info：Zoomed [N] to the whole screen（有 focus 的那一個，號碼照位置，gittu.num）、Back to both panels
+    test: [TestZoomToTheWholeScreen, TestDescriptionZooms]
   - id: 18
     spec: 52
     implementation: |
@@ -324,3 +321,16 @@ tasks:
       讀 repo 換上新的列時，標記在已經不在的列上的拿掉（例：檔案 stage 了、衝突解了），它回來時不再是標記的
     test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestUseSideAsksAfterAStash, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows]
 
+  - id: 23
+    spec: 61
+    implementation: |
+      global operation（gittu.globalActions 的最後兩個，split.go）：< Narrow the left — by 2 columns, kept for this terminal width；> Widen the left — by 2 columns, kept for this terminal width；
+      tgo 把它們列在 global operation popup（[<]、[>] 寫在前面），沒有 popup 開著時在 panel 上直接按；放大時（task 17）、左邊已經到底（< 是 20 欄、> 是寬度 − 40 欄）時 Disabled
+      按一次：gittu.lefts[終端機的寬度（tgo App.Size）] = gittu.leftOf(寬度) ∓ 2（夾在 20 到寬度 − 40 之間），App Log 記 Info：Left <欄> of <寬度> columns，再寫進 state.yaml（writeLeft）
+      gittu.leftOf(w)：lefts 有 w 那一筆時用它，不然 w/3，夾在 20 到 w − 40 之間（w − 40 小於 20 時是 w/3：比最低尺寸小，tgo 不畫）；Layout（task 1）每次都照它排，所以開著時視窗寬度變了也跟著換
+      state.yaml 在 GITTU__STATE，否則設定目錄（task 15）；writeLeft：讀現在的檔（沒有就從空的開始，讀不了就不寫、回錯誤），用 yaml.Node 改 left 底下那一筆（沒有就加在最後；left 不是 key 對值時換成新的），其他照舊，MkdirAll 目錄後寫回（原本的權限，新檔 0644）；寫不進去時 Error toast Can't write state.yaml: <原因>
+      啟動時（gittu.loadFiles，task 15 之後）readState：沒有檔、空檔時 lefts 是空的；YAML 讀不了、不是 mapping：tgo MoveAside（Enter 之後 lefts 是空的）；
+      left 不是 mapping、裡面的寬度不是整數或小於 60、欄數不是整數或不在 20 到寬度 − 40 之間：Misfit（寬度是 60 以上的整數時 Now 是 leftOf 的預設，不然 Now 空的：taken out），
+      terminu.KeepAside 備份成 .bak 之後用 yaml.Node 把那幾筆（或整個 left）拿掉重寫，MisfitNotice(path, copy, misfits…)；備份做不出來時不重寫，Error 的 Notice 加 MisfitNotice(path, "", …)；這一次都不用那幾筆
+      left 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it
+    test: [TestSplitKeys, TestSplitKeptByWidth, TestSplitFollowsTheTerminal, TestSplitAtItsEnds, TestSplitDisabledWhenZoomed, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]

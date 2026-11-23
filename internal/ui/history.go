@@ -53,15 +53,13 @@ type historyScreen struct {
 	// [3] are of, "" when there is none to show or one could not be read.
 	items   map[string]terminu.DiffItem
 	filesOf string
-	// zoom is how far the screen is zoomed (tdp screen.6): 0 not, 1 [3]
-	// wider, the left at its least width, 2 the focused panel on the whole
-	// panel area.
-	zoom int
+	// zoomed reports the focused panel on the whole panel area (tdp
+	// screen.6).
+	zoomed bool
 }
 
-// leftLeast is the left's width when [3] is zoomed with [1] and [2] still
-// beside it: what they have at 60 columns, branch names still readable
-// (tdp L1).
+// leftLeast is the left's least width, [1] and [2]: what they have at 60
+// columns, branch names still readable (tdp L1; task 23).
 const leftLeast = 20
 
 func newHistoryScreen(g *gittu) *historyScreen {
@@ -117,10 +115,8 @@ func newHistoryScreen(g *gittu) *historyScreen {
 	h.descP = &terminu.Panel{Label: "Description", Body: h.desc, Actions: []terminu.Action{
 		// [3] is narrow, there to read: z puts it on the whole screen (the
 		// user; tdp screen.6).
-		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
-			Hidden: func() bool { return h.zoom != 0 }, Do: func() tea.Cmd { return h.zoomTo(2) }},
 		// [3] zoomed can be put back from here too (tdp screen.6), as from every panel.
-		g.unzoom()}}
+		g.zoom(), g.unzoom()}}
 	h.files = &terminu.List{
 		Columns:    []terminu.Column{{Title: "", Shrink: true, Path: true}},
 		Flags:      true,
@@ -177,25 +173,16 @@ func (h *historyScreen) mostLines(s *git.Snapshot) int {
 	return max(git.MaxLines, (left+1)/2)
 }
 
-// narrowZoom reports a terminal where the left is at its least width
-// already: the zoom has no step with [1] and [2] beside [3].
-func (h *historyScreen) narrowZoom() bool {
-	w, _ := h.g.a.Size()
-	return w/3 <= leftLeast
-}
-
-// zoomTo zooms the screen to step z and says so in the App Log (tdp note.7).
-func (h *historyScreen) zoomTo(z int) tea.Cmd {
-	h.zoom = z
-	switch z {
-	case 0:
+// zoomTo puts the focused panel on the whole screen, or puts it back, and
+// says so in the App Log (tdp note.7).
+func (h *historyScreen) zoomTo(on bool) tea.Cmd {
+	h.zoomed = on
+	if !on {
 		h.g.a.Log(terminu.Info, "Back to both panels")
-	case 1:
-		h.g.a.Log(terminu.Info, "Zoomed [3]")
-	case 2: // the panel with the focus: [3] or [4]
-		n := h.g.num(h.g.screen.Focused())
-		h.g.a.Log(terminu.Info, "Zoomed ["+strconv.Itoa(n)+"] to the whole screen")
+		return nil
 	}
+	n := h.g.num(h.g.screen.Focused()) // [3] or [4]
+	h.g.a.Log(terminu.Info, "Zoomed ["+strconv.Itoa(n)+"] to the whole screen")
 	return nil
 }
 

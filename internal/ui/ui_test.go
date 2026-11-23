@@ -21,7 +21,15 @@ import (
 // start opens gittu on the test's repository in a w × h terminal.
 func start(t *testing.T, r *gittest.Repo, w, h int) (*gittu, *tdptest.Driver) {
 	t.Helper()
+	return startWithState(t, r, "", w, h)
+}
+
+// startWithState starts gittu with its state in dir: the settings directory
+// when "", a new one for each test.
+func startWithState(t *testing.T, r *gittest.Repo, dir string, w, h int) (*gittu, *tdptest.Driver) {
+	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("GITTU__STATE", dir)
 	repo, err := git.Open(r.Dir)
 	if err != nil {
 		t.Fatal(err)
@@ -513,7 +521,7 @@ func TestGraphWidensWithRoom(t *testing.T) {
 	if !graphHas("…") {
 		t.Fatalf("[2] beside [1] at 90 columns drew all 14 lines:\n%s", strings.Join(d.Screen(), "\n"))
 	}
-	d.Press("Tab", "z", "z") // [2] on the whole screen
+	d.Press("Tab", "z") // [3] on the whole screen
 	if graphHas("…") {
 		t.Errorf("[2] on the whole screen still cut the lines:\n%s", strings.Join(d.Screen(), "\n"))
 	}
@@ -524,7 +532,7 @@ func TestGraphWidensWithRoom(t *testing.T) {
 // the user picked Fill).
 func TestDescriptionFills(t *testing.T) {
 	_, d := start(t, gittest.Sample(t), 160, 32)
-	d.Press("Tab", "z", "z")
+	d.Press("Tab", "z")
 	for _, row := range d.Screen() {
 		if !strings.Contains(row, "GRAPH") {
 			continue
@@ -2576,29 +2584,26 @@ func leftWidth(d *tdptest.Driver) int {
 	return -1
 }
 
-func TestZoomTwoSteps(t *testing.T) {
+// TestZoomToTheWholeScreen: z on [3] puts it on the whole screen at once,
+// and z again back (the user, 2026-11-23: one step).
+func TestZoomToTheWholeScreen(t *testing.T) {
 	g, d := start(t, gittest.Sample(t), 120, 32)
 	if w := leftWidth(d); w != 40 {
 		t.Fatalf("[1] is %d wide before zooming", w)
 	}
 	d.Press("Tab", "z")
-	if w := leftWidth(d); w != leftLeast {
-		t.Fatalf("first step: [1] is %d wide, want %d", w, leftLeast)
-	}
-	has(t, d, "z:zoom")
-	d.Press("z")
 	if w := leftWidth(d); w != 0 || !d.Has("[3] CURRENT") || d.Has("[2] BRANCHES") {
-		t.Fatalf("second step: [1] still drawn (%d):\n%s", w, strings.Join(d.Screen(), "\n"))
+		t.Fatalf("z did not put [3] on the whole screen (%d):\n%s", w, strings.Join(d.Screen(), "\n"))
 	}
 	has(t, d, "z:unzoom")
 	d.Press("Tab")
 	if !d.Has("[4] DESCRIPTION") || d.Has("[3] CURRENT") || d.Has("[5] FILES") {
-		t.Fatalf("Tab on the whole screen does not show [3] alone:\n%s", strings.Join(d.Screen(), "\n"))
+		t.Fatalf("Tab on the whole screen does not show [4] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
-	has(t, d, "z:unzoom") // put back from [3] too
+	has(t, d, "z:unzoom") // put back from [4] too
 	d.Press("Tab")
 	if !d.Has("[5] FILES") || d.Has("[3] CURRENT") || d.Has("[4] DESCRIPTION") {
-		t.Fatalf("Tab on the whole screen does not show [4] alone:\n%s", strings.Join(d.Screen(), "\n"))
+		t.Fatalf("Tab on the whole screen does not show [5] alone:\n%s", strings.Join(d.Screen(), "\n"))
 	}
 	d.Press("Tab") // round to [1], which leads: [3] the diff
 	if !d.Has("[1] CHANGES") || d.Has("[2] BRANCHES") || d.Has("[3] DIFF") {
@@ -2608,11 +2613,11 @@ func TestZoomTwoSteps(t *testing.T) {
 	if w := leftWidth(d); w != 40 || !d.Has("[3] DIFF") {
 		t.Fatalf("z on [1] did not put the panels back: the left is %d wide", w)
 	}
-	if g.history.zoom != 0 {
-		t.Errorf("zoom %d", g.history.zoom)
+	if g.history.zoomed {
+		t.Error("still zoomed")
 	}
 	d.Press("!")
-	has(t, d, "Zoomed [3]", "Zoomed [3] to the whole screen", "Back to both panels")
+	has(t, d, "Zoomed [3] to the whole screen", "Back to both panels")
 }
 
 // TestDescriptionZooms: [4] DESCRIPTION, narrower than [5] FILES (2:3, the
@@ -2643,14 +2648,208 @@ func TestFilesLocationFitsAt60(t *testing.T) {
 	has(t, d, loc)
 }
 
-func TestZoomNarrowSkipsTheFirstStep(t *testing.T) {
-	g, d := start(t, gittest.Sample(t), 60, 32)
-	d.Press("Tab", "z")
-	if g.history.zoom != 2 || d.Has("[2] BRANCHES") {
-		t.Fatalf("at 60 columns z went to step %d:\n%s", g.history.zoom, strings.Join(d.Screen(), "\n"))
+// --- task 23: the left's width ---
+
+// TestSplitKeys: < and > move the line between the left and the right by
+// two columns, whichever panel has the focus, and keep it in the state.
+func TestSplitKeys(t *testing.T) {
+	dir := t.TempDir()
+	g, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	d.Press(">")
+	if w := leftWidth(d); w != 42 {
+		t.Fatalf("> made the left %d wide, want 42", w)
 	}
-	d.Press("z")
-	if g.history.zoom != 0 {
-		t.Errorf("z did not put it back: %d", g.history.zoom)
+	d.Press("3", "<", "<") // on the right: the same way
+	if w := leftWidth(d); w != 38 {
+		t.Fatalf("< < on [3] made the left %d wide, want 38", w)
+	}
+	if r := g.layout(120, 31); r[placeChanges].W != 38 || r[placeMain].X != 38 || r[placeLeft].W != 82*2/5 {
+		t.Errorf("rects %+v", r)
+	}
+	b, _ := os.ReadFile(filepath.Join(dir, "state.yaml"))
+	if !bytes.Contains(b, []byte("120: 38")) {
+		t.Errorf("state.yaml:\n%s", b)
+	}
+	d.Press("Space", "k", "Enter") // the global row, then the global operation popup
+	has(t, d, "[<] Narrow the left", "[>] Widen the left")
+	d.Press("Esc", "Esc", "!")
+	has(t, d, "Left 42 of 120 columns", "Left 38 of 120 columns")
+}
+
+// TestSplitKeptByWidth: the width set for a terminal is used when gittu opens
+// on a terminal that wide again; another width has a third (the user: A).
+func TestSplitKeptByWidth(t *testing.T) {
+	dir := t.TempDir()
+	r := gittest.Sample(t)
+	_, d := startWithState(t, r, dir, 120, 32)
+	d.Press(">", ">", ">")
+	_, d = startWithState(t, r, dir, 120, 32)
+	if w := leftWidth(d); w != 46 {
+		t.Errorf("opened again at 120 columns: the left %d wide, want 46", w)
+	}
+	_, d = startWithState(t, r, dir, 100, 32)
+	if w := leftWidth(d); w != 33 {
+		t.Errorf("at 100 columns: the left %d wide, want a third", w)
+	}
+}
+
+// TestSplitFollowsTheTerminal: the terminal made wider or narrower while gittu
+// is open takes the width kept for its new width.
+func TestSplitFollowsTheTerminal(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "state.yaml"), []byte("left:\n  100: 50\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	if w := leftWidth(d); w != 40 {
+		t.Fatalf("at 120 columns the left is %d wide", w)
+	}
+	d.Resize(100, 32)
+	if w := leftWidth(d); w != 50 {
+		t.Errorf("at 100 columns the left is %d wide, want 50", w)
+	}
+	d.Resize(120, 32)
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("back at 120 columns the left is %d wide", w)
+	}
+}
+
+// TestSplitAtItsEnds: the left stops at 20 columns and the right at 40; at 60
+// columns neither moves; zoomed, neither does.
+func TestSplitAtItsEnds(t *testing.T) {
+	dir := t.TempDir()
+	_, d := startWithState(t, gittest.Sample(t), dir, 80, 32)
+	d.Press("<", "<", "<", "<")
+	if w := leftWidth(d); w != leftLeast {
+		t.Errorf("the left went to %d", w)
+	}
+	for range 12 {
+		d.Press(">")
+	}
+	if w := leftWidth(d); w != 80-rightLeast {
+		t.Errorf("the right went to %d", 80-w)
+	}
+	_, d = startWithState(t, gittest.Sample(t), t.TempDir(), 60, 32)
+	d.Press("<", ">")
+	if w := leftWidth(d); w != 20 {
+		t.Errorf("at 60 columns the left went to %d", w)
+	}
+	d.Press("Tab", "z", ">", "z")
+	if w := leftWidth(d); w != 20 {
+		t.Errorf("> while zoomed made the left %d wide", w)
+	}
+}
+
+// TestSplitDisabledWhenZoomed: zoomed, < and > do nothing, and say so in the
+// global operation popup (tdp M6).
+func TestSplitDisabledWhenZoomed(t *testing.T) {
+	dir := t.TempDir()
+	g, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	d.Press("Tab", "z", ">", "<", "z")
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("the left is %d wide after < and > zoomed", w)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "state.yaml")); err == nil {
+		t.Error("state.yaml written while zoomed")
+	}
+	g.history.zoomed = true
+	for _, a := range g.splitActions() {
+		if !a.Disabled() {
+			t.Errorf("%s is on while zoomed", a.Label)
+		}
+	}
+}
+
+func TestStateMisfit(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "state.yaml")
+	if err := os.WriteFile(path, []byte("left:\n  120: 50\n  100: 90\n  abc: 3\nother: kept\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	has(t, d, "did not fit", "state.yaml.bak")
+	if w := leftWidth(d); w != 50 {
+		t.Errorf("the left is %d wide, want 50", w)
+	}
+	b, _ := os.ReadFile(path)
+	if !bytes.Contains(b, []byte("120: 50")) || !bytes.Contains(b, []byte("other: kept")) || bytes.Contains(b, []byte("90")) || bytes.Contains(b, []byte("abc")) {
+		t.Errorf("state.yaml:\n%s", b)
+	}
+	if bak, _ := os.ReadFile(path + ".bak"); !bytes.Contains(bak, []byte("100: 90")) {
+		t.Errorf("state.yaml.bak:\n%s", bak)
+	}
+	d.Press("!")
+	has(t, d, `left.100 "90" did not fit; using "33"`, "left.abc did not fit; taken out")
+}
+
+// TestStateCannotBeRead: config.yaml and state.yaml both broken ask one after
+// the other, config.yaml first (tdp E3).
+func TestStateCannotBeRead(t *testing.T) {
+	cfg, dir := t.TempDir(), t.TempDir()
+	if err := os.WriteFile(filepath.Join(cfg, "config.yaml"), []byte("input_tab_width: [\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(dir, "state.yaml")
+	if err := os.WriteFile(path, []byte("left: [\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GITTU__CONFIG", cfg)
+	t.Setenv("GITTU__STATE", dir)
+	repo, _ := git.Open(gittest.Sample(t).Dir)
+	g := newGittu(repo)
+	d := tdptest.Start(t, g.a, 120, 32)
+	has(t, d, "MOVE ASIDE", "config.yaml")
+	d.Press("Enter")
+	has(t, d, "MOVE ASIDE", "state.yaml")
+	d.Press("Enter")
+	hasNot(t, d, "MOVE ASIDE")
+	if _, err := os.Stat(path + ".bak"); err != nil {
+		t.Errorf("no state.yaml.bak: %v", err)
+	}
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("the left is %d wide", w)
+	}
+	d.Press(">")
+	if b, _ := os.ReadFile(path); !bytes.Contains(b, []byte("120: 42")) {
+		t.Errorf("state.yaml:\n%s", b)
+	}
+}
+
+// TestStateUnreadKey: a key gittu never read stays in the file, no toast, an
+// INFO at every start (tdp E3).
+func TestStateUnreadKey(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "state.yaml")
+	want := []byte("refesh: 5\nleft:\n  120: 44\n")
+	if err := os.WriteFile(path, want, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	hasNot(t, d, "did not fit")
+	if w := leftWidth(d); w != 44 {
+		t.Errorf("the left is %d wide, want 44", w)
+	}
+	d.Press(">")
+	b, _ := os.ReadFile(path)
+	if !bytes.Contains(b, []byte("refesh: 5")) || !bytes.Contains(b, []byte("120: 46")) {
+		t.Errorf("state.yaml:\n%s", b)
+	}
+	d.Press("!")
+	has(t, d, "Not read: refesh in ")
+}
+
+// TestStateCannotBeWritten: a state directory gittu can't write in gives an
+// Error toast; the left is moved all the same.
+func TestStateCannotBeWritten(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Chmod(dir, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(dir, 0o755) })
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	d.Press(">")
+	has(t, d, "Can't write state.yaml")
+	if w := leftWidth(d); w != 42 {
+		t.Errorf("the left is %d wide, want 42", w)
 	}
 }

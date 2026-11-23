@@ -109,6 +109,9 @@ cherry-pick、revert 做到一半時寫它，git 在跑時寫在做什麼（Push
 分支圖，加上 cursor 那個 commit 的訊息與檔案；最後在 `[1]`，是 cursor 那個檔的差異，加上改過它的 commit，`[5]` 收起來。移到
 `[3]`、`[4]`、`[5]` 裡不會換。
 
+`<`、`>` 把左右中間那條線往箭頭的方向移兩欄，focus 在哪一塊 panel 都一樣。gittu 會照終端機的寬度記住你調到哪裡，下次在一樣寬
+的終端機打開就照記下的排；沒調過的寬度，左邊是三分之一。左邊至少留 20 欄、右邊至少 40 欄，所以 60 欄寬時那條線不會動。
+
 ### 分支與分支圖
 
 | 在哪裡 | `Enter` | `Space` 選單裡 |
@@ -123,7 +126,7 @@ cherry-pick、revert 做到一半時寫它，git 在跑時寫在做什麼（Push
 
 `[2]` 有 BRANCHES、REMOTES、TAGS、STASHES 四個分頁，用 `h`、`l` 切換。分支圖畫全部的本地分支與 tag。`[3]` 有兩個分頁，用 `h`、`l` 切換：
 CURRENT（打開時在這裡）把 `[2]` cursor 所在的分支、遠端分支或 tag 那條固定在最左邊，`[2]` 移動時跟著換；ALL 把 main（或 master）
-那條固定在最左邊。遠端分支一開始只畫本地分支追蹤的或同名的那些，在 `[3]` 的 `Space` 選單選 Show remote branches 才全部畫出來。在 `[3]` 上按 `z` 放大：先放大到 `[1]`、`[2]` 只剩最小寬度，再到整個畫面，再按一次還原（終端機窄時直接到整個畫面）。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
+那條固定在最左邊。遠端分支一開始只畫本地分支追蹤的或同名的那些，在 `[3]` 的 `Space` 選單選 Show remote branches 才全部畫出來。在 `[3]` 上按 `z` 放大到整個畫面，再按一次還原。upstream 在遠端被刪掉的分支，後面寫 `upstream gone`。
 
 `[4]` DESCRIPTION 是 `[3]` cursor 那個 commit 完整的訊息（在那裡按 `z` 放大到整個畫面），旁邊的 `[5]` FILES 列出它對上一個 commit 改了的檔案，cursor 一動兩個都跟著換：`+` 新增、`-` 刪除、`~` 修改（改名是
 `~ 舊 → 新`）。在 commit 上按 `Enter` 會到 `[5]`，在檔案上按 `Enter`，左右對照打開它的兩個版本，UNIFIED 或 SPLIT（`h`、`l` 切換）。
@@ -152,7 +155,7 @@ stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就�
 
 每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、Pull all（每個 remote 都 fetch，再 pull 目前的分支）、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
-revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行。
+revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行。調左右寬度的 `[<]` Narrow the left 與 `[>]` Widen the left 也在這裡。
 
 gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
 
@@ -163,7 +166,7 @@ gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著
 
 ## 設定與資料
 
-gittu 沒有資料、狀態與快取。設定是 `$XDG_CONFIG_HOME/gittu`（或 `~/.config/gittu`；`GITTU__CONFIG` 指定別的目錄）裡的
+gittu 沒有資料與快取。設定是 `$XDG_CONFIG_HOME/gittu`（或 `~/.config/gittu`；`GITTU__CONFIG` 指定別的目錄）裡的
 `config.yaml`。gittu 不會自己建它；沒有這個檔時用預設值。
 
 ```yaml
@@ -172,6 +175,17 @@ input_tab_width: 4   # commit 訊息裡按 Tab 插入幾個空白，差異裡的
 
 這是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，gittu 會問要不要移到 `config.yaml.bak`，不要就離開；值不是
 大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。gittu 不讀的 key（例：打錯字）留在檔案裡，每次啟動 App Log（`!`）會寫出來。
+
+狀態是同一個目錄裡的 `state.yaml`（`GITTU__STATE` 指定別的目錄）：用 `<`、`>` 調過的每一種終端機寬度，左邊各是幾欄。每按一次
+就寫一次；刪掉它，每一種寬度都回到三分之一。
+
+```yaml
+left:
+  77: 25    # 終端機 77 欄寬時，左邊 25 欄
+  155: 60
+```
+
+讀不了的 `state.yaml` 跟 `config.yaml` 一樣會問要不要移開；gittu 用不了的那一筆，原本的檔留在 `state.yaml.bak`，那一筆從檔案裡拿掉。
 
 ## 限制
 

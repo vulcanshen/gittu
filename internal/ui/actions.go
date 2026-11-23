@@ -477,12 +477,7 @@ func (h *historyScreen) commitActions() []terminu.Action {
 			Hidden: func() bool { return g.remote }, Do: func() tea.Cmd { return h.setRemote(true) }},
 		{Label: "Hide remote branches", Desc: "from the graph", Scope: panel,
 			Hidden: func() bool { return !g.remote }, Do: func() tea.Cmd { return h.setRemote(false) }},
-		{Key: "z", Label: "Zoom", Desc: "wider, [1] and [2] at their least", Scope: panel, Hint: "zoom",
-			Hidden: func() bool { return h.zoom != 0 || h.narrowZoom() }, Do: func() tea.Cmd { return h.zoomTo(1) }},
-		{Key: "z", Label: "Zoom", Desc: "to the whole screen", Scope: panel, Hint: "zoom",
-			Hidden: func() bool { return !(h.zoom == 1 || h.zoom == 0 && h.narrowZoom()) }, Do: func() tea.Cmd { return h.zoomTo(2) }},
-		{Key: "z", Label: "Unzoom", Desc: "back to both panels", Scope: panel, Hint: "unzoom",
-			Hidden: func() bool { return h.zoom != 2 }, Do: func() tea.Cmd { return h.zoomTo(0) }},
+		g.zoom(), g.unzoom(),
 	}
 }
 
@@ -656,7 +651,7 @@ func (g *gittu) globalActions() []terminu.Action {
 					conflicts: g.conflictsSaid(strings.ToUpper(op[:1]) + op[1:])}, "Continuing…", func() error { return g.repo.Continue(op) })
 			}})
 	}
-	return acts
+	return append(acts, g.splitActions()...)
 }
 
 func (g *gittu) hasStaged() bool {
