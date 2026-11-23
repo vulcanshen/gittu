@@ -221,7 +221,7 @@ tasks:
       跟 Commit 一樣 form 開著跑；成功 Success「Amended <短 hash> <第一行>」，失敗時 error popup AMEND FAILED 蓋在 form 上，同 Commit
     test: [TestCommitMessage, TestCommitOffWithNothingStaged, TestCommitHookKeepsTheMessage, TestAmendKeepsMessage, TestAmendChangesMessage, TestResolveHunks, TestCommitFormClosedFirst]
   - id: 14
-    spec: 63
+    spec: 64
     implementation: |
       [1] CHANGES 衝突的檔上 Enter（Show — it in [3], to edit it there；hint Enter:show；ToDetails）：focus 到 [3]；[3] 顯示 HEAD 對工作區的檔（帶著標記）
       [3] 顯示衝突檔時 Enter（Edit — it in your editor, to resolve its conflicts；hint Enter:edit；git 在跑時停用）：git var GIT_EDITOR 拿到 editor，tgo App.OpenTerminal(Terminal{Title: Edit, Subject: <路徑>, Ends: true,
@@ -304,7 +304,7 @@ tasks:
       [2] 先 List.ClearFilter 再 List.Select 過去；cursor 不在走得到的 commit 上時也一樣往那個方向找；找不到時 cursor 不動，Info toast No older／newer commit on <位置列寫的那個名字>
     test: [TestTrace]
   - id: 21
-    spec: 63
+    spec: 64
     implementation: |
       [1] CHANGES 的 tgo List.Marks；item operation m：Mark — this file, to work on the marked together／Unmark — this file（同一個鍵用 Hidden 分開；hint m:mark／m:unmark），List.ToggleMark，App Log Marked <路徑>／Unmarked <路徑>
       panel operation（有標記時才出現，沒有熱鍵；Action.Live 的說明寫「<N> file(s)」，N 是會作用到的檔；N 是 0 或 git 在跑時停用）：
