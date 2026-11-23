@@ -2,7 +2,7 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
-## v0.2.0-beta.1 — tdp v1.3.5
+## v0.1.1 — tdp v1.3.5
 
 - Windows 10 1809 and later (amd64, arm64): Scoop, a PowerShell install script and `gittu update`. A conflicted file
   opens in the editor set in git, else in Microsoft Edit, else in vim; with none, gittu says what to install
