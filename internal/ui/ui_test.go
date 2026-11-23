@@ -239,7 +239,7 @@ func TestLocationSaysTheMerge(t *testing.T) {
 	// No conflict left: the ready glyph.
 	r.Git("add", "notes.txt")
 	d.Do(func() tea.Cmd { return g.read(true) })
-	done(t, g, d)
+	d.WaitFor(func() bool { return d.Has(glyphReady + " Merging: feature") }, 20*time.Second)
 	has(t, d, glyphReady+" Merging: feature")
 	hasNot(t, d, glyphConflicts)
 }
@@ -1730,12 +1730,14 @@ func TestDiffComparesVersions(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Git("stash", "drop", "-q")
 	r.Write("README.md", "changed\n")
-	_, d := start(t, r, 120, 32)
+	g, d := start(t, r, 120, 32)
 	d.Press("1", "3")
 	has(t, d, "Enter:diff")
 	d.Press("Enter")
 	has(t, d, "README.md @ index ↔ README.md", "UNIFIED", "+changed")
-	d.Press("Esc", "1", "s", "3", "Enter")
+	d.Press("Esc", "1", "s")
+	done(t, g, d)
+	d.Press("3", "Enter")
 	has(t, d, "README.md @ HEAD ↔ README.md @ index")
 }
 
@@ -1866,7 +1868,7 @@ func TestMarksGoWithTheirRows(t *testing.T) {
 	markFile(d, g, inUnstaged+"README.md")
 	r.Git("add", "README.md")
 	d.Do(func() tea.Cmd { return g.read(true) })
-	done(t, g, d)
+	d.WaitFor(func() bool { return len(g.status.files.Marked()) == 0 }, 20*time.Second)
 	if m := g.status.files.Marked(); len(m) != 0 {
 		t.Errorf("marks of rows gone: %v", m)
 	}
@@ -2033,7 +2035,7 @@ func TestRemoveAndIgnore(t *testing.T) {
 	r := gittest.Sample(t)
 	r.Write("README.md", "changed\n")
 	r.Write("feature.txt", "changed\n")
-	r.Write("new*.txt", "new\n")
+	r.Write("new[1].txt", "new\n") // [ is a pattern character; * is no file name on Windows
 	g, d := start(t, r, 100, 32)
 	d.Press("1")
 	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "README.md"); return nil })
@@ -2046,11 +2048,11 @@ func TestRemoveAndIgnore(t *testing.T) {
 		t.Errorf("README.md is %q", got)
 	}
 	// An untracked file: no question.
-	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "new*.txt"); return nil })
+	d.Do(func() tea.Cmd { g.status.files.Select(inUnstaged + "new[1].txt"); return nil })
 	d.Do(func() tea.Cmd { return runLabel(t, g, g.status.filesP, "Ignore") })
 	done(t, g, d)
-	has(t, d, "Added new*.txt to .gitignore")
-	if got := r.Read(".gitignore"); got != "/new\\*.txt\n" {
+	has(t, d, "Added new[1].txt to .gitignore")
+	if got := r.Read(".gitignore"); got != "/new\\[1].txt\n" {
 		t.Errorf(".gitignore is %q", got)
 	}
 	// A tracked one, marked: asked, untracked, kept.
@@ -2059,7 +2061,7 @@ func TestRemoveAndIgnore(t *testing.T) {
 	has(t, d, "Add feature.txt to .gitignore?", "stop being tracked")
 	d.Press("Enter")
 	done(t, g, d)
-	if got := r.Read(".gitignore"); got != "/new\\*.txt\n/feature.txt\n" {
+	if got := r.Read(".gitignore"); got != "/new\\[1].txt\n/feature.txt\n" {
 		t.Errorf(".gitignore is %q", got)
 	}
 	if strings.Contains(r.Git("ls-files"), "feature.txt") {
@@ -2628,7 +2630,7 @@ func TestConfigCannotBeRead(t *testing.T) {
 	repo, _ := git.Open(gittest.Sample(t).Dir)
 	g := newGittu(repo)
 	d := tdptest.Start(t, g.a, 100, 32)
-	has(t, d, "MOVE ASIDE", "can't be read")
+	has(t, d, "MOVE ASIDE", "and start fresh?") // the path before "can't be read" may wrap it
 	d.Press("Enter")
 	if _, err := os.Stat(path + ".bak"); err != nil {
 		t.Errorf("no config.yaml.bak: %v", err)

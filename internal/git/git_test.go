@@ -20,7 +20,7 @@ func TestOpenFindsTheTop(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasSuffix(repo.Dir, r.Dir[strings.LastIndex(r.Dir, "/"):]) {
+	if filepath.Base(repo.Dir) != filepath.Base(r.Dir) {
 		t.Errorf("Dir %q is not the top %q", repo.Dir, r.Dir)
 	}
 	if _, err := git.Open(t.TempDir()); err == nil || !strings.Contains(err.Error(), "not in a git repository") {
