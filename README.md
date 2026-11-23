@@ -7,9 +7,11 @@
 
 **A git client for the terminal: the branches beside the history graph, everything you can do in the `Space` menu.**
 
-`gittu` in a repository opens four panels: the branches, remote branches, tags and stashes on the left, the commits
-and their graph on the right, and under them the message and the files of the commit under the cursor. What you can do with the branch or the commit under the cursor is in the `Space` menu,
-and what works on the whole repository is in its global operations. Look into a commit's files and their diffs,
+`gittu` in a repository opens one screen of five panels: on the left the files to commit above the branches, remote
+branches, tags and stashes; on the right the commits and their graph, and under them the message and the files of the
+commit under the cursor. On the files to commit, the right shows the diff of the file under the cursor and the commits
+that changed it instead. What you can do with the file, the branch or the commit under the cursor is in the `Space`
+menu, and what works on the whole repository is in its global operations. Look into a commit's files and their diffs,
 compare two commits, stage and commit, merge, and resolve conflicts in your own editor — with no keys to learn
 first.
 
@@ -44,7 +46,7 @@ first.
 - git on your `PATH`.
 - A [Nerd Font](https://www.nerdfonts.com) terminal profile: the icons and the frames are Nerd Font glyphs.
 - A truecolor (24-bit) terminal: the faded colours and the layer colours cannot be told apart in 256 colours.
-- A terminal at least 60 columns wide and 32 rows high; in a smaller one gittu shows only its name, the size it needs
+- A terminal at least 60 columns wide and 24 rows high; in a smaller one gittu shows only its name, the size it needs
   and how to quit, and comes back as it was once the terminal grows.
 
 gittu measures how many cells an icon and a powerline symbol take when it starts. When it gets them wrong, set them:
@@ -75,8 +77,8 @@ No sudo: it installs to `~/.local/bin`.
 ### The first start
 
 `gittu` opens the repository the current directory is in; `gittu <path>` opens the one `<path>` is in. Outside a
-repository it says so and quits. gittu writes nothing of its own: it changes your repository only when you run an
-operation.
+repository it says so and quits. gittu changes your repository only when you run an operation, and writes nothing of
+its own but `state.yaml`, when you move the line between the left and the right (see Settings and data).
 
 ### Update
 
@@ -107,7 +109,8 @@ gittu
 
 Move with `j`/`k`, press `Space` to see what you can do with the branch or commit under the cursor; the files of the
 commit under the cursor are below the graph. `Tab` goes to the next panel, `1` to the files to commit (the right then
-shows their diff), `2` back to the branches and the graph. `?` lists every key, `q` quits.
+shows their diff; `s` stages or unstages one), `2` back to the branches and the graph. `z` puts a panel on the whole
+screen, `<` and `>` move the line between the left and the right. `?` lists every key, `q` quits.
 
 ## Usage
 

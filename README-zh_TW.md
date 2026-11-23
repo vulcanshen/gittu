@@ -7,9 +7,9 @@
 
 **終端機的 git 工具：左邊是分支，右邊是分支圖，能做的事都在 `Space` 選單裡。**
 
-在 repo 裡打 `gittu`，打開四個面板：左邊是本地分支、遠端分支、tag 與 stash，右邊是 commit 與分支圖，下面是 cursor 那個
-commit 的訊息與它改了的檔案。對 cursor 那個分支或
-commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global operation 裡。看一個 commit 改了哪些檔、
+在 repo 裡打 `gittu`，打開一個有五個面板的畫面：左邊上面是要 commit 的檔案，下面是本地分支、遠端分支、tag 與 stash；
+右邊是 commit 與分支圖，下面是 cursor 那個 commit 的訊息與它改了的檔案。移到要 commit 的檔案上時，右邊換成 cursor 那個檔的
+差異與改過它的 commit。對 cursor 那個檔、分支或 commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global operation 裡。看一個 commit 改了哪些檔、
 每個檔的差異，比較兩個 commit，stage、commit、merge，用你自己的 editor 解衝突 —— 不用先背任何熱鍵。
 
 ![gittu：分支圖、一個 commit 的檔案與差異、要 commit 的檔案、一次 merge 與解衝突](docs/demo.gif)
@@ -37,7 +37,7 @@ commit 能做的事都在 `Space` 選單裡，對整個 repo 的動作在 global
 - `PATH` 上有 git。
 - 終端機用 [Nerd Font](https://www.nerdfonts.com)：圖示與框線都是 Nerd Font 的字。
 - 支援 truecolor（24-bit）的終端機：256 色下分不出淡化的顏色與層色。
-- 終端機至少 60 欄寬、32 列高；比這小時 gittu 只顯示名稱、需要的大小與怎麼離開，視窗拉大後回到原本的樣子。
+- 終端機至少 60 欄寬、24 列高；比這小時 gittu 只顯示名稱、需要的大小與怎麼離開，視窗拉大後回到原本的樣子。
 
 gittu 啟動時會量 icon 與 powerline 符號各佔幾格。量錯時可以自己指定：
 
@@ -66,8 +66,8 @@ curl -fsSL https://raw.githubusercontent.com/vulcanshen/gittu/main/install.sh | 
 
 ### 第一次啟動
 
-`gittu` 打開目前目錄所在的 repo；`gittu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。gittu 自己不寫任何東西：
-只有你執行操作時，才會改動你的 repo。
+`gittu` 打開目前目錄所在的 repo；`gittu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。只有你執行操作時，
+gittu 才會改動你的 repo；它自己只寫 `state.yaml`，而且只在你調左右寬度的時候（見「設定與資料」）。
 
 ### 更新
 
@@ -97,7 +97,8 @@ gittu
 ```
 
 用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼；cursor 那個 commit 改了哪些檔，就列在分支圖下面。`Tab` 換到下一個
-面板，`1` 到要 commit 的檔案（右邊跟著換成它們的差異），`2` 回到分支與分支圖。`?` 列出所有按鍵，`q` 離開。
+面板，`1` 到要 commit 的檔案（右邊跟著換成它們的差異；`s` stage 或 unstage 一個檔），`2` 回到分支與分支圖。`z` 把一個面板放大到整個
+畫面，`<`、`>` 調左右的寬度。`?` 列出所有按鍵，`q` 離開。
 
 ## 使用方式與按鍵
 
