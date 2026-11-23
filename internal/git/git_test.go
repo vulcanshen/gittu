@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -289,7 +290,10 @@ func TestThrough(t *testing.T) {
 func TestIgnoreLine(t *testing.T) {
 	r := gittest.New(t)
 	r.Commit("keep.txt", "k\n", "Start")
-	names := []string{"a*b.txt", "#notes", "!bang", "q?.txt", "[x].txt", "back\\slash", "trail ", "dir/sub file.txt"}
+	names := []string{"#notes", "!bang", "[x].txt", "dir/sub file.txt"}
+	if runtime.GOOS != "windows" { // no file name on Windows has * ? \ or a trailing blank
+		names = append(names, "a*b.txt", "q?.txt", "back\\slash", "trail ")
+	}
 	for _, n := range names {
 		r.Write(n, "x\n")
 	}
