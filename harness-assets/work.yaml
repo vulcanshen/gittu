@@ -358,3 +358,11 @@ tasks:
       README 兩份：需求加 Windows 與 Git for Windows、Windows 不量 icon 寬度、Scoop 與 PowerShell 的安裝與移除、更新時 Scoop 的說法、Windows 的 editor 順序（git 設的、Microsoft Edit、vim）與 Windows 10 1809 起、設定的位置
       測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh、TestEditOnWindows（代替 editor 的是 sh 腳本）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）
     test: [TestEditOnWindows, TestNoEditorOnWindows, TestSplitCommand, TestDiffTakesCRLFAsGitDoes, TestConflictLinesWithoutCR, TestResolveHunks, TestMarkResolvedAsks]
+  - id: 25
+    spec: 67
+    implementation: |
+      docs/social-preview.png：rsvg-convert -w 260 -h 260 docs/icon.svg 畫成 260×260，magick 在 640×320 的黑底上放到 +190+8；
+      下面 640×52 的帶狀（+0+268）用 Tiny5-Regular.ttf 34pt、+antialias（不反鋸齒）、#cdd6f4、gravity center 寫 gittu；-strip 存成 PNG24
+      上傳：GitHub repo 的 Settings → Social preview（沒有 API，使用者在網頁上傳）
+    test:
+      - check: repo

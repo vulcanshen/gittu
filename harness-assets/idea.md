@@ -349,6 +349,10 @@ review 判固定開 Notepad 違反 tdp textarea.1（要開使用者自己的 edi
 （edit、vim 要在 terminal popup 的 PTY 裡跑，terminu-go 在 Windows 沒有 PTY；kbu 在 Windows 上也開不了）「回報給 terminu session 吧」
 之後問：「或許我們可以在 config 中來設定 editor, 這樣可以更好解決 windows 上的問題?」說明 Windows 第一順位已經是 git 設的 editor、config 只在 gittu 與 git 要用不同 editor 時才有差，A 加 editor（同時回報 tdp 列進家族共用 key）、B 不加：「B」
 
+## GitHub 的 social preview（2026-11-24）
+
+user 照原話：「我發現我們少做了 social preview」
+
 ## 後續可擴充
 
 - 開工之後，依實際使用時發現的 GUI 和 TUI 不合的地方，回頭打磨細節。

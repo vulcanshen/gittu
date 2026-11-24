@@ -1,4 +1,4 @@
-id: 66
+id: 67
 from: v1.3.3
 to: v1.3.5
 tasks:
@@ -352,3 +352,9 @@ tasks:
       - "更新（tdp E1）：用 Scoop 裝的，gittu update 印出 scoop update gittu（terminu-go 的 SelfUpdate 做）"
       - "發版（harness project.2、project.7）：goreleaser 打開標著 Windows 的幾行（windows amd64、arm64，zip；scoop bucket vulcanshen/scoop-bucket）；release.yml 的測試加 windows-latest（不帶 -race）；install.ps1、uninstall.ps1 照家族 Windows 版 app 的寫法（怎麼寫 app 可以自行決定）；README 的需求、安裝、限制加上 Windows（tdp E7）"
       - "驗收：terminu-go 的測試畫面跑得了的照樣寫測試；console、Windows 的終端機、安裝與更新要在使用者的 Windows VM 上走一遍（work.yaml 的 user 作保）"
+  - id: 25
+    spec: 67
+    request: GitHub 的 social preview（使用者 2026-11-24：「我發現我們少做了 social preview」）
+    tdp: [harness project.3]
+    remark:
+      - "docs/social-preview.png，照家族其他成員的樣子（tetru、kbu、locku 的 social-preview，用同一個做法重做 tetru 的與原圖逐像素相同）：640×320 黑底，上面是 docs/icon.svg（kamonu 做的 G I T T 加 U 框，task 16）直接畫成 260×260，放在 (190, 8)；下面 52 列的帶狀裡置中寫 Tiny5 34pt 的 gittu（#cdd6f4，不反鋸齒）。tdp 沒管這張圖，docs/ 裡圖上沒寫的檔 app 可以自行決定（harness project.3）；在 GitHub repo 的 Settings → Social preview 上傳"
