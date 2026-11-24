@@ -352,6 +352,7 @@ review 判固定開 Notepad 違反 tdp textarea.1（要開使用者自己的 edi
 ## GitHub 的 social preview（2026-11-24）
 
 user 照原話：「我發現我們少做了 social preview」
+之後（2026-11-24）：「我想要調整一下我們 social preview 的風格……設計一個新的家族 social preview 風格嗎? 家族是 terminal tui tool, 所以應該是賽博龐克風」；看了 HUD、Horizon、Screen 三個方向：「B 的那個地平線反而是最離題的，A,C 都還行，單是都差強人意」；照網站介紹 app 的方式（真的畫面斜著跑出邊緣）做了 D：「我覺得挺棒的，但圖片其實呈現不會很大，TUI 畫面細節其實展現不出來」；比較整個畫面與只截一塊之後：「我覺得 before 比較好，但是角度可以用 after 的」；「空心大字留，但可以明顯一點」「我們左邊的 panel 用 '<' 縮小一點, 然後 focus 在 panel 3 上來取圖」；「空心大字太顯眼了」「'<' 更多一點……直接用我現在設定的寬度」；定案：「這張可以，很棒」
 
 ## 後續可擴充
 

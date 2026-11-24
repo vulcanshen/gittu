@@ -359,10 +359,12 @@ tasks:
       測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh、TestEditOnWindows（代替 editor 的是 sh 腳本）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）
     test: [TestEditOnWindows, TestNoEditorOnWindows, TestSplitCommand, TestDiffTakesCRLFAsGitDoes, TestConflictLinesWithoutCR, TestResolveHunks, TestMarkResolvedAsks]
   - id: 25
-    spec: 67
+    spec: 68
     implementation: |
-      docs/social-preview.png：rsvg-convert -w 260 -h 260 docs/icon.svg 畫成 260×260，magick 在 640×320 的黑底上放到 +190+8；
-      下面 640×52 的帶狀（+0+268）用 Tiny5-Regular.ttf 34pt、+antialias（不反鋸齒）、#cdd6f4、gravity center 寫 gittu；-strip 存成 PNG24
+      docs/social-preview.png（1280×640，2026-11-24 的家族新風格）：產生的腳本在 .local/social（不進 git；步驟寫在 .local/social/README.md，不是 repo 的 README）：
+      截圖：VHS（.local/social/shot.tape，跟 .local/demos/demo.tape 同一套 1300×800、JetBrainsMono Nerd Font 14、Catppuccin 設定；XDG_CONFIG_HOME、GITTU__STATE 指到 .local/demos，不寫使用者的 state.yaml），在 hotfix 上、< 十次（139 欄的左邊 46 → 26）、3 focus 到 [3]，Screenshot；
+      畫：gen.py 與 spread-final.py 寫 SVG（底、格線、光、掃描帶、空心大字、左邊的字與圖示），rsvg-convert 轉 PNG；magick 把截圖縮成 960×591、加 2px #7aa8ff 框、Perspective 斜放（0,0→575,40 等四角），再做一層金色模糊的光，疊起來、加掃描線與顆粒；
+      壓縮：magick -strip -define png:compression-level=9（約 976 KB）
       上傳：GitHub repo 的 Settings → Social preview（沒有 API，使用者在網頁上傳）
     test:
       - check: repo

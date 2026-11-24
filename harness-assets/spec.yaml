@@ -1,4 +1,4 @@
-id: 67
+id: 68
 from: v1.3.3
 to: v1.3.5
 tasks:
@@ -353,8 +353,9 @@ tasks:
       - "發版（harness project.2、project.7）：goreleaser 打開標著 Windows 的幾行（windows amd64、arm64，zip；scoop bucket vulcanshen/scoop-bucket）；release.yml 的測試加 windows-latest（不帶 -race）；install.ps1、uninstall.ps1 照家族 Windows 版 app 的寫法（怎麼寫 app 可以自行決定）；README 的需求、安裝、限制加上 Windows（tdp E7）"
       - "驗收：terminu-go 的測試畫面跑得了的照樣寫測試；console、Windows 的終端機、安裝與更新要在使用者的 Windows VM 上走一遍（work.yaml 的 user 作保）"
   - id: 25
-    spec: 67
+    spec: 68
     request: GitHub 的 social preview（使用者 2026-11-24：「我發現我們少做了 social preview」）
     tdp: [harness project.3]
     remark:
       - "docs/social-preview.png，照家族其他成員的樣子（tetru、kbu、locku 的 social-preview，用同一個做法重做 tetru 的與原圖逐像素相同）：640×320 黑底，上面是 docs/icon.svg（kamonu 做的 G I T T 加 U 框，task 16）直接畫成 260×260，放在 (190, 8)；下面 52 列的帶狀裡置中寫 Tiny5 34pt 的 gittu（#cdd6f4，不反鋸齒）。tdp 沒管這張圖，docs/ 裡圖上沒寫的檔 app 可以自行決定（harness project.3）；在 GitHub repo 的 Settings → Social preview 上傳"
+      - "2026-11-24 使用者要新的家族風格（賽博龐克、終端機 TUI），取代上一條的黑底圖示加名字：照網站（vulcanshen.github.io，跟那個 session 對過）的語彙，深色、細格線漸淡、冷藍光、掃描帶、顆粒，加 CRT 掃描線；網站定過的不要：方框卡片、粗色帶，金色只拿來強調（名字、光暈），家族藍在圖示上，洋紅、色差只當點綴。1280×640：左邊 terminu family 膠囊、~ $ gittu 提示字元、圖示加 Tiny5 金色的名字（淡淡的青、洋紅色差）、一句介紹、GITHUB.COM/VULCANSHEN/GITTU；右邊是 gittu 真的畫面（跟 demo 同一套 VHS 設定截的，左邊照使用者自己的寬度比例用 < 縮窄、focus 在 [3]），微微往後斜、跑出右緣，背後的金光打在格線上；最後面是很大的空心 gittu（線的不透明度 0.24）。每個 app 只換名字、圖示、一句介紹、提示字元、截圖。無損 PNG 約 976 KB（GitHub 上限 1 MB）"
