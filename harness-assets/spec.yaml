@@ -1,6 +1,6 @@
-id: 69
-from: v1.3.3
-to: v1.3.5
+id: 70
+from: v1.3.5
+to: v1.3.6
 tasks:
   - id: 1
     spec: 63
@@ -325,11 +325,11 @@ tasks:
       - "還沒設計，下一版做；要先跟使用者確認的：${{source}}、${{target}} 各是哪一個分支（例：[1] cursor 那個是 source、HEAD 所在是 target）、還有沒有別的變數（commit、檔案、repo 路徑）、在哪裡執行（Space menu 的哪一區）、輸出怎麼看（terminal popup）、要不要先 confirm"
       - "資料照 tdp E3 放在 gittu 的資料目錄（不是 config.yaml）；CUSTOM 是第三個畫面（tdp screen.3 的畫面 chip），在那裡新增、改、刪自訂的動作"
   - id: 23
-    spec: 69
+    spec: 70
     request: 調 panel 的大小並記下來：照 tdp screen.9（從 gittu 的 < > 收進 tdp，使用者 2026-11-26 在 tdp 定的規則），交給 terminu-go 做；state.yaml 裡 gittu 以前寫的 left 不讀（使用者 2026-11-26：「不管，也不讀，使用者自己重新設定寬高」）
-    tdp: [tdp E2, tdp E3, tdp L1, tdp L5, tdp M2, tdp M3, tdp M4, tdp M6, tdp P3, tdp note.7, tdp toast.2, tdp screen.6, tdp confirm]
+    tdp: [tdp screen.9, tdp E2, tdp E3, tdp L1, tdp L5, tdp M2, tdp M3, tdp M4, tdp M6, tdp P3, tdp note.7, tdp toast.2, tdp screen.6, tdp confirm]
     remark:
-      - "怎麼調由 terminu-go 做（tdp screen.9：在 tdp main c3dae91、f37bdd3，還沒發版，tdp v1.3.6 發版後加進 tdp 欄；review 時用 Read 讀 /Users/vulcan/Documents/sideproj/terminu 的 components/layout/screen-zh_TW.md；tgo v1.3.8-beta.1）：有 focus 的 panel 上 > < 寬窄 2 欄、+ - 高矮 1 列，= 讓整個畫面的線回到預設（Layout 就是預設）；沿著那條線的 panel 一起動；動不了時那個 panel 的邊上跳 Info toast；選單裡的 [>] Wider、[<] Narrower、[+] Taller、[-] Shorter（panel operation）與 [=] Default layout（global）由 tgo 加；調整不記進 App Log（tdp note.7）。方向跟 gittu 原本的 < >（照箭頭移左右那條線）相反：在右邊的 panel 上按 > 是讓它變寬"
+      - "怎麼調由 terminu-go 做（tdp screen.9：tdp main c3dae91、f37bdd3，tdp v1.3.6 發版；tgo v1.3.8-beta.1 試，v1.3.8 正式版，2026-11-26 升上去）：有 focus 的 panel 上 > < 寬窄 2 欄、+ - 高矮 1 列，= 讓整個畫面的線回到預設（Layout 就是預設）；沿著那條線的 panel 一起動；動不了時那個 panel 的邊上跳 Info toast；選單裡的 [>] Wider、[<] Narrower、[+] Taller、[-] Shorter（panel operation）與 [=] Default layout（global）由 tgo 加；調整不記進 App Log（tdp note.7）。方向跟 gittu 原本的 < >（照箭頭移左右那條線）相反：在右邊的 panel 上按 > 是讓它變寬"
       - "最小寬度（tdp screen.9：每個 panel 的最小尺寸由 app 定，60 欄時所有 panel 照樣並排，L1）：[1]、[2] 20 欄（分支名稱還讀得到），[3] 的位置（COMMITS、DIFF）40 欄；其他照 tgo 的 10×3。線推到任何一個跟著動的 panel 到最小就停：往右推時常常是 [4] 先到 10 欄"
       - "記在狀態檔 state.yaml 的 lines（tdp E3：刪了只是回到預設的是狀態；GITTU__STATE 指定別的目錄，tdp E2）：照 tgo 的 terminu.Lines 寫，畫面名 gittu 底下 widths 照終端機寬度、heights 照高度，線用它在 Layout 裡的預設位置當 key；使用者移過才寫，= 拿掉這個大小的；lines 以外的 key 照留。啟動時讀進 App.Lines，tgo 每次線動了叫 App.OnLines，gittu 寫回；寫不進去時 Error toast（Can't write state.yaml: <原因>）"
       - "tdp E3 讀狀態檔：讀不了時 MOVE ASIDE；lines 讀不懂（不是 tgo 的格式，只有手改檔案才會）時 KeepAside 備份成 state.yaml.bak、把 lines 拿掉重寫，Warning toast（MisfitNotice）；記著的線放不下時（版面或最小尺寸改了）tgo 直接用預設、不說（tdp screen.9，E3 的例外）；gittu 不讀的 key 留著，每次啟動 App Log 記 INFO Not read: <key> in <路徑>"

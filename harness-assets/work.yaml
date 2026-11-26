@@ -327,16 +327,17 @@ tasks:
     test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestUseSideAsksAfterAStash, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows, TestMarkAllGoneWhenEmpty]
 
   - id: 23
-    spec: 69
+    spec: 70
     implementation: |
-      terminu-go v1.3.8-beta.1 做調整：gittu 不再有自己的 < > 動作（split.go 拿掉；tgo 的 Run 不准 panel、畫面、global 用 > < + - =）；Screen.Layout（task 1）就是預設版面
+      terminu-go v1.3.8（v1.3.8-beta.1 起）做調整：gittu 不再有自己的 < > 動作（split.go 拿掉；tgo 的 Run 不准 panel、畫面、global 用 > < + - =）；Screen.Layout（task 1）就是預設版面
       最小寬度（screen.go 的 newScreen）：[1] CHANGES、[2] BRANCHES 的 Panel.MinWidth = leftLeast 20，[3] 位置的 COMMITS、DIFF 的 MinWidth = rightLeast 40（history.go 的常數）；其他照 tgo 的 10×3
       lines.go：state.yaml 在 GITTU__STATE，否則設定目錄（task 15）；啟動時 loadState（gittu.loadFiles，config.yaml 之後）readState：沒有檔、空檔、沒有 lines 時沒有線；
       YAML 讀不了、不是 mapping：tgo MoveAside；lines 用 yaml 解成 terminu.Lines 失敗：Misfit{Key: lines}，terminu.KeepAside 備份成 .bak 後 withoutLines 把 lines 拿掉重寫，MisfitNotice；備份做不出來時不重寫，Error 的 Notice 加 MisfitNotice(path, "", …)；
       lines 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it；舊的 left（gittu 以前讀過）寫 No longer used: left in <路徑>; delete it if you don't need it；讀到的 lines 交給 App.Lines
       放大時（task 17）Layout 只給有 focus 的 panel，tgo 照一個 panel 處理：> 跳 [3] is already full width（TestLinesAtTheirLeast），線不動、不寫 state
       App.OnLines = gittu.keepLines：writeLines 讀現在的檔（沒有就從空的開始，讀不了就不寫、回錯誤），用 yaml.Node 把 lines 換成 tgo 給的（沒有就加在最後；空的就拿掉 key），其他照舊，MkdirAll 後寫回（原本的權限，新檔 0644）；寫不進去時 Error toast Can't write state.yaml: <原因>
-    test: [TestLinesKeys, TestLinesKeptByWidth, TestLinesFollowTheTerminal, TestLinesAtTheirLeast, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
+      記著的線放不下時（版面或最小尺寸改了）：tgo 用預設、不跳 toast、不做 .bak，並叫一次 App.OnLines，gittu 照它給的寫回，那一筆就從 state.yaml 拿掉（tdp screen.9、screen-51）
+    test: [TestLinesKeys, TestLinesKeptByWidth, TestLinesFollowTheTerminal, TestLinesAtTheirLeast, TestLinesNoLongerFit, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
   - id: 24
     spec: 66
     implementation: |

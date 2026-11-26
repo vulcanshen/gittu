@@ -3126,3 +3126,28 @@ func TestConflictLinesWithoutCR(t *testing.T) {
 		t.Errorf("notes.txt %q", got)
 	}
 }
+
+// TestLinesNoLongerFit: a kept line that no longer fits takes the default and
+// is taken out of the state, with nothing said (tdp screen.9, E3's one
+// exception): terminu-go drops it and hands the lines to App.OnLines.
+func TestLinesNoLongerFit(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "state.yaml")
+	kept := "lines:\n  gittu:\n    widths:\n      120:\n        \"40\": 200\n"
+	if err := os.WriteFile(path, []byte(kept+"other: kept\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("the left is %d wide, want the default 40", w)
+	}
+	hasNot(t, d, "did not fit")
+	d.WaitFor(func() bool { b, _ := os.ReadFile(path); return !bytes.Contains(b, []byte("200")) }, 5*time.Second)
+	b, _ := os.ReadFile(path)
+	if bytes.Contains(b, []byte("200")) || !bytes.Contains(b, []byte("other: kept")) {
+		t.Errorf("state.yaml:\n%s", b)
+	}
+	if _, err := os.Stat(path + ".bak"); err == nil {
+		t.Error("a state.yaml.bak was made")
+	}
+}
