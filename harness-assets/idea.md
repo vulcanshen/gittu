@@ -349,6 +349,12 @@ review 判固定開 Notepad 違反 tdp textarea.1（要開使用者自己的 edi
 （edit、vim 要在 terminal popup 的 PTY 裡跑，terminu-go 在 Windows 沒有 PTY；kbu 在 Windows 上也開不了）「回報給 terminu session 吧」
 之後問：「或許我們可以在 config 中來設定 editor, 這樣可以更好解決 windows 上的問題?」說明 Windows 第一順位已經是 git 設的 editor、config 只在 gittu 與 git 要用不同 editor 時才有差，A 加 editor（同時回報 tdp 列進家族共用 key）、B 不加：「B」
 
+## panel 大小交給 terminu-go（2026-11-26）
+
+terminu session 轉來：調整 panel 大小從 gittu 的 < > 收進 tdp（screen.9，規則是使用者在 tdp 那邊定的）與 terminu-go v1.3.8-beta.1，
+gittu 換上去、拿掉自己寫的；方向跟 gittu 原本相反（> 讓有 focus 的 panel 變寬），每一條線都能動，+ - 調高度，= 回到預設。
+問 state.yaml 裡舊的 left 要轉成新的線還是不讀之後，user 照原話：「我記得你的問題 tdp 那邊的結論是，不管，也不讀，使用者自己重新設定寬高」
+
 ## GitHub 的 social preview（2026-11-24）
 
 user 照原話：「我發現我們少做了 social preview」

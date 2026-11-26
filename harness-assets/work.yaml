@@ -6,7 +6,7 @@ tasks:
       跟著帶頭 panel 換的（tgo v1.3.1-beta.2 的 Screen.Following = {2, 3, 4}、Screen.Leads）：[2] 帶頭是 COMMITS（histP，CURRENT／ALL 分頁，task 5）、DESCRIPTION、FILES；[1] 帶頭是 DIFF（task 11）、HISTORY（task 11）、nil（[5] 收起）；
       focus 換到帶頭的 panel（Tab、數字鍵、App.Focus）時 tgo 換上，移進 [3]、[4]、[5] 不換；號碼照位置，收起的 [5] 數字鍵不作用、Tab 跳過，footer 寫 Tab|1–5:panels；
       Panels 寫 [2] 帶頭的樣子（tgo v1.3.1 的 AddScreen 把每個帶頭 panel 的 Shows 也算進 Enter 的 Details：[1] 衝突檔的 Enter 找得到 [3] DIFF），AddScreen 之後 App.Focus([2])：打開時 focus 在 [2]、右邊是 COMMITS
-      Layout：左邊是 gittu.leftOf(寬度)（使用者用 < > 調過這個寬度時是記下的欄數，不然寬度的三分之一，60 欄時 20｜40；task 23），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
+      Layout：左邊是寬度的三分之一（預設，60 欄時 20｜40；使用者移過的線由 tgo 照 App.Lines 套在上面，task 23），[1] 在上、[2] 在下，高度 1:2（[1] 是 panel 區高度的三分之一）；右邊上面是 [3]，下面是 panel 區高度的三分之一給 [4]、[5]，左右 2:3（[4] 是右邊寬度的 2/5，task 6）；Screen.Hidden(4) 時 [4] 拿整個寬度；
       最低尺寸 60×24（tgo App.MinHeight = 24；寬度用預設 60），比它小時 tgo 畫 needs a terminal of at least 60×24；沒有設 NarrowBelow
       沒有 statusbar、沒有 STATUS 說明牌（2026-11-22 拿掉）：[1] 的位置列（List.Location、LocationGlyph，tgo 畫成 Lavender）每次 Layout 都重寫（statusScreen.located）：
       做到一半的 merge、rebase、cherry-pick、revert 時 Location 是 Merging:／Rebasing onto:／Cherry-picking:／Reverting: <對方>（gittu.state），
@@ -250,7 +250,7 @@ tasks:
       失敗時照 task 8：error popup <動作> FAILED 放 git 說原因的那一行，全文記進 App Log（tdp F5、components.5）：STAGE FAILED、RESOLVE FAILED、ABORT FAILED、CONTINUE FAILED
     test: [TestEditConflict, TestMarkResolvedAsks, TestMarkers, TestEditor, TestResolveHunks, TestUseSideWholeFile, TestUseSideAsksWhenChanged, TestChangedAfterConflict, TestAbortMerge, TestContinueRebase, TestConflictsResolve, TestLocationSaysTheMerge, TestHunkKeysStayOnChanges]
   - id: 15
-    spec: 61
+    spec: 69
     implementation: |
       啟動時（tgo App.Start）讀設定檔：GITTU__CONFIG，否則 $XDG_CONFIG_HOME/gittu，否則 ~/.config/gittu，裡面的 config.yaml；沒有檔、沒有這個 key 時 input_tab_width 是 4；
       讀到的值交給 tgo App.InputTabWidth（textarea 的 Tab、viewer 與 Pager 裡的 Tab）；其他 key 不管、不改
@@ -268,7 +268,7 @@ tasks:
       internal/ui/icon.svg 是它的副本（go:embed），terminu.NewSplash(icon, "gittu", version.Display(), "A git client for the terminal")；V 打開由 tgo 做
     test: [TestSplashIsDocsIcon, TestSplashOpens]
   - id: 17
-    spec: 61
+    spec: 69
     implementation: |
       畫面的 tgo Screen.Layout（screen.go）照有沒有放大排（historyScreen.zoomed）：沒放大照 task 1；放大時有 focus 的那一個佔滿 panel 區，其他給 0×0（tgo 不畫寬度不到 2 的 panel）
       [3] COMMITS 與 [4] DESCRIPTION 的 panel operation，同一個鍵 z 用 Hidden 分開：沒放大時 Zoom — to the whole screen（gittu.zoom），放大時 Unzoom — back to all the panels（gittu.unzoom）；下框 hint 寫 z:zoom 或 z:unzoom
@@ -327,18 +327,16 @@ tasks:
     test: [TestMarkFiles, TestWorkOnTheMarked, TestXDiscardsMany, TestRemoveAndIgnore, TestUseSideForTheMarked, TestUseSideAsksAfterAStash, TestMarkTheMarkedResolved, TestIgnoreLine, TestMarksGoWithTheirRows, TestMarkAllGoneWhenEmpty]
 
   - id: 23
-    spec: 61
+    spec: 69
     implementation: |
-      global operation（gittu.globalActions 的最後兩個，split.go）：< Narrow the left — by 2 columns, kept for this terminal width；> Widen the left — by 2 columns, kept for this terminal width；
-      tgo 把它們列在 global operation popup（[<]、[>] 寫在前面），沒有 popup 開著時在 panel 上直接按；放大時（task 17）、左邊已經到底（< 是 20 欄、> 是寬度 − 40 欄）時 Disabled
-      按一次：gittu.lefts[終端機的寬度（tgo App.Size）] = gittu.leftOf(寬度) ∓ 2（夾在 20 到寬度 − 40 之間），App Log 記 Info：Left <欄> of <寬度> columns，再寫進 state.yaml（writeLeft）
-      gittu.leftOf(w)：lefts 有 w 那一筆時用它，不然 w/3，夾在 20 到 w − 40 之間（w − 40 小於 20 時是 w/3：比最低尺寸小，tgo 不畫）；Layout（task 1）每次都照它排，所以開著時視窗寬度變了也跟著換
-      state.yaml 在 GITTU__STATE，否則設定目錄（task 15）；writeLeft：讀現在的檔（沒有就從空的開始，讀不了就不寫、回錯誤），用 yaml.Node 改 left 底下那一筆（沒有就加在最後；left 不是 key 對值時換成新的），其他照舊，MkdirAll 目錄後寫回（原本的權限，新檔 0644）；寫不進去時 Error toast Can't write state.yaml: <原因>
-      啟動時（gittu.loadFiles，task 15 之後）readState：沒有檔、空檔時 lefts 是空的；YAML 讀不了、不是 mapping：tgo MoveAside（Enter 之後 lefts 是空的）；
-      left 不是 mapping、裡面的寬度不是整數或小於 60、欄數不是整數或不在 20 到寬度 − 40 之間：Misfit（寬度是 60 以上的整數時 Now 是 leftOf 的預設，不然 Now 空的：taken out），
-      terminu.KeepAside 備份成 .bak 之後用 yaml.Node 把那幾筆（或整個 left）拿掉重寫，MisfitNotice(path, copy, misfits…)；備份做不出來時不重寫，Error 的 Notice 加 MisfitNotice(path, "", …)；這一次都不用那幾筆
-      left 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it
-    test: [TestSplitKeys, TestSplitKeptByWidth, TestSplitFollowsTheTerminal, TestSplitAtItsEnds, TestSplitDisabledWhenZoomed, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
+      terminu-go v1.3.8-beta.1 做調整：gittu 不再有自己的 < > 動作（split.go 拿掉；tgo 的 Run 不准 panel、畫面、global 用 > < + - =）；Screen.Layout（task 1）就是預設版面
+      最小寬度（screen.go 的 newScreen）：[1] CHANGES、[2] BRANCHES 的 Panel.MinWidth = leftLeast 20，[3] 位置的 COMMITS、DIFF 的 MinWidth = rightLeast 40（history.go 的常數）；其他照 tgo 的 10×3
+      lines.go：state.yaml 在 GITTU__STATE，否則設定目錄（task 15）；啟動時 loadState（gittu.loadFiles，config.yaml 之後）readState：沒有檔、空檔、沒有 lines 時沒有線；
+      YAML 讀不了、不是 mapping：tgo MoveAside；lines 用 yaml 解成 terminu.Lines 失敗：Misfit{Key: lines}，terminu.KeepAside 備份成 .bak 後 withoutLines 把 lines 拿掉重寫，MisfitNotice；備份做不出來時不重寫，Error 的 Notice 加 MisfitNotice(path, "", …)；
+      lines 以外的 key 不讀、不改，每次啟動 App Log 記 Info：Not read: <key> in <路徑>; delete it if you don't need it；舊的 left（gittu 以前讀過）寫 No longer used: left in <路徑>; delete it if you don't need it；讀到的 lines 交給 App.Lines
+      放大時（task 17）Layout 只給有 focus 的 panel，tgo 照一個 panel 處理：> 跳 [3] is already full width（TestLinesAtTheirLeast），線不動、不寫 state
+      App.OnLines = gittu.keepLines：writeLines 讀現在的檔（沒有就從空的開始，讀不了就不寫、回錯誤），用 yaml.Node 把 lines 換成 tgo 給的（沒有就加在最後；空的就拿掉 key），其他照舊，MkdirAll 後寫回（原本的權限，新檔 0644）；寫不進去時 Error toast Can't write state.yaml: <原因>
+    test: [TestLinesKeys, TestLinesKeptByWidth, TestLinesFollowTheTerminal, TestLinesAtTheirLeast, TestStateMisfit, TestStateCannotBeRead, TestStateUnreadKey, TestStateCannotBeWritten]
   - id: 24
     spec: 66
     implementation: |
@@ -353,7 +351,7 @@ tasks:
       設定、狀態的位置照舊用 os.UserHomeDir（Windows 是 %USERPROFILE%）；icon 寬度、更新（Scoop 印 scoop update gittu）由 terminu-go 做
       發版：.goreleaser.yaml 的 goos 加 windows、archives 的 format_overrides windows 用 zip、scoops（vulcanshen/scoop-bucket，skip_upload: auto，description 跟 brews 同一句），brews 的 caveats 寫 macOS, Linux (WSL too) and Windows；
       release.yml 測試的 matrix 加 windows-latest（go test ./...，不帶 -race）；install.sh 的 WINDOWS="yes"（unix 以外的 OS 叫人用 install.ps1）；
-      install.ps1：抓最新的 release，windows_<amd64|arm64>.zip 解開，gittu.exe 放到 %LOCALAPPDATA%\gittu，加進使用者的 PATH，印 Nerd Font、truecolor、Git for Windows 的提醒；
+      install.ps1：抓最新的 release（照 ccdrawu：HttpClient 不跟轉址，讀 github.com/vulcanshen/gittu/releases/latest 的 Location 取 tag，不用 GitHub 的 API：未登入每小時 60 次會 403；install.sh 照 harness 範本同樣讀轉址），windows_<amd64|arm64>.zip 解開，gittu.exe 放到 %LOCALAPPDATA%\gittu，加進使用者的 PATH，印 Nerd Font、truecolor、Git for Windows 的提醒；
       uninstall.ps1：刪掉 gittu.exe（資料夾空了也刪）、從 PATH 拿掉，問要不要刪設定目錄（GITTU__CONFIG、XDG_CONFIG_HOME\gittu 或 %USERPROFILE%\.config\gittu），GITTU__STATE 另外指定時也問；
       README 兩份：需求加 Windows 與 Git for Windows、Windows 不量 icon 寬度、Scoop 與 PowerShell 的安裝與移除、更新時 Scoop 的說法、Windows 的 editor 順序（git 設的、Microsoft Edit、vim）與 Windows 10 1809 起、設定的位置
       測試在 Windows 上跳過的（unixOnly）：TestEditConflict、TestEditorPausesRefresh、TestEditOnWindows（代替 editor 的是 sh 腳本）、TestStateCannotBeWritten（Windows 的資料夾權限擋不住寫）

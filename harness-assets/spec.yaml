@@ -1,4 +1,4 @@
-id: 68
+id: 69
 from: v1.3.3
 to: v1.3.5
 tasks:
@@ -240,7 +240,7 @@ tasks:
       - {note: "Mark resolved 只在還有衝突標記時 confirm（標記帶進 commit 的風險），標記清掉了直接 stage；tdp v1.3.2 的 F6-6 只放行「這一次會丟東西或做得比平常多」，帶著標記 stage 算不算，tdp 沒寫（2026-11-23 第二輪 review）。tdp 選 A（tdp main e9445cc，tdp v1.3.3 發版）：F6 的例外加上「會把明顯有問題的東西帶進它做出來的東西裡」，例子就是有衝突標記才問的 Mark resolved；gittu 不用改；terminu-go v1.3.3，2026-11-23 升上去", issue: "送給 tdp session（2026-11-23，F6-6 帶進去的東西）；tdp main e9445cc 照 A 改了，tdp v1.3.3 發版"}
       - "Windows 上 Edit 開哪一個 editor 見 task 24（使用者 2026-11-23）"
   - id: 15
-    spec: 61
+    spec: 69
     request: 設定與 terminu 家族其他 app 一樣（多行文字的 Tab 寬度）
     tdp: [tdp E2, tdp E3, tdp textarea, tdp note.2, tdp P5, tdp E3-38, tdp E1, tdp confirm, tdp toast, tdp note.7]
     remark:
@@ -250,7 +250,7 @@ tasks:
       - "設定檔裡 gittu 不讀的 key（例：打錯字）留著、重寫時也留著，不跳 toast；每次啟動在 App Log 記 INFO：Not read: <key> in <路徑>; delete it if you don't need it（tdp E3、E3-38，v1.2.17；gittu 從來只讀 input_tab_width，所以沒有 No longer used）"
       - "tdp v1.3.0：App.Notify 的每一件是一個 toast，疊起來（toast.2、toast.3、E3-37 改寫、E3-43 拿掉），不再把啟動時的幾件合成一個 toast；gittu 照樣只叫一次 Notify"
       - "改名（2026-11-19，gitreu → gittu）：設定的位置跟著換成 ~/.config/gittu、GITTU__CONFIG；gitreu 沒發過版、也不會自己建設定檔，沒有東西要照 tdp E3 的「換了位置時」搬"
-      - "gittu 沒有資料要存（tdp E3）：要看的 repo 由命令列給，分支圖的範圍不存（task 5）；2026-11-23 起有狀態 state.yaml：左右的寬度（task 23）；啟動時先讀 config.yaml 再讀 state.yaml，兩個都有事時照這個順序（MOVE ASIDE 一個一個問，toast 照發生的順序疊），App.Notify 照樣只叫一次"
+      - "gittu 沒有資料要存（tdp E3）：要看的 repo 由命令列給，分支圖的範圍不存（task 5）；2026-11-23 起有狀態 state.yaml：使用者移過的 panel 之間的線（task 23）；啟動時先讀 config.yaml 再讀 state.yaml，兩個都有事時照這個順序（MOVE ASIDE 一個一個問，toast 照發生的順序疊），App.Notify 照樣只叫一次"
   - id: 16
     spec: 13
     request: 跟 terminu 家族其他 app 一樣的 splash
@@ -259,12 +259,12 @@ tasks:
       - "splash 用 internal/ui 裡的副本（go:embed 讀不到 docs/），測試守住兩份一模一樣（tdp E6）；介紹一句 A git client for the terminal"
       - "改名之後的 icon 由使用者用 kamonu 做（2026-11-19）：U 框照 tdp principle/icon.svg，金色字母 G I T T 加上 U 框拼成 gittu（tdp S5）；docs/icon.svg 與 internal/ui/icon.svg 是同一份"
   - id: 17
-    spec: 61
+    spec: 69
     request: "[3] COMMITS 可以 zoom：按 z 滿版，再按一次還原（使用者 2026-11-23：「這樣右邊 panel 的 zoom 就不需要兩段式了，直接滿版 toggle 就好了」；2026-11-19 起原本分兩段：第一段還保留 panel 1 最小寬度，第二段完全展開、panel 1 完全被覆蓋）"
     tdp: [tdp screen.6, tdp terms.8, tdp P3, tdp M2, tdp M5, tdp K1, tdp K2, tdp note.7, tdp L4, tdp M6]
     remark:
       - "tdp screen.6：放大是 app 的功能，要不要有、用哪個鍵、怎麼放大，app 可以自行決定；沒有另外定的照預設（只畫有 focus 的 panel，Tab、數字鍵照樣換 panel，換到的也是放大的，再按一次還原）。gittu 照預設：[3] COMMITS 上按 z，只畫有 focus 的 panel、佔滿 panel 區；再按 z 還原"
-      - "2026-11-23 前分兩段（使用者 2026-11-19）：第一段左邊縮到最小寬度 20 欄、[3] 拿剩下的，第二段才佔滿；窄的終端機（不到 63 欄）沒有第一段。使用者 2026-11-23 改成用 < > 調左右的寬度（task 23），第一段拿掉：要 [3] 寬一點時按 <，調到的寬度還記得住"
+      - "2026-11-23 前分兩段（使用者 2026-11-19）：第一段左邊縮到最小寬度 20 欄、[3] 拿剩下的，第二段才佔滿；窄的終端機（不到 63 欄）沒有第一段。使用者 2026-11-23 改成用 < > 調左右的寬度（task 23），第一段拿掉：要 [3] 寬一點時按 <，調到的寬度還記得住；2026-11-26 起調 panel 大小照 tdp screen.9 由 tgo 做，在 [3] 上按 > 讓它變寬"
       - "放大時 Tab、數字鍵照樣換 panel，換到的也佔滿 panel 區（tdp screen.6 的預設）；每一塊拿得到 focus 的 panel（[1] CHANGES、[3] DIFF、[4] HISTORY 也算）放大時都有 z（Unzoom），不管 focus 在哪都按得回來；Tab 繞過收起的 [5]，到 [1] 時右邊照 task 1 換成 DIFF 與 HISTORY"
       - "放大不是模式（tdp terms.8：版面的切換沒有鍵換意思，Esc 不必退出它，由它自己的鍵還原）。它是 [3] 的 panel operation（tdp P3：作用在整個 panel 的版面），列在 Space menu：Zoom（to the whole screen）、Unzoom（back to all the panels）；同一個鍵 z 照有沒有放大用 Hidden 分開（tdp M6），下框 hint 寫 z:zoom 或 z:unzoom"
       - "記 App Log（tdp note.7：從 menu 或熱鍵執行的 panel operation，只看不改的也記）：Zoomed [3] to the whole screen、Back to all the panels"
@@ -325,18 +325,17 @@ tasks:
       - "還沒設計，下一版做；要先跟使用者確認的：${{source}}、${{target}} 各是哪一個分支（例：[1] cursor 那個是 source、HEAD 所在是 target）、還有沒有別的變數（commit、檔案、repo 路徑）、在哪裡執行（Space menu 的哪一區）、輸出怎麼看（terminal popup）、要不要先 confirm"
       - "資料照 tdp E3 放在 gittu 的資料目錄（不是 config.yaml）；CUSTOM 是第三個畫面（tdp screen.3 的畫面 chip），在那裡新增、改、刪自訂的動作"
   - id: 23
-    spec: 61
-    request: 用 < > 調左右的寬度：focus 在左側時 < 縮小左側、> 放大左側，在右側時 < 放大右側、> 縮小右側；照目前終端機的寬度記下來，之後打開 gittu 時寬度跟記過的一樣，就用記下的左右配比（使用者 2026-11-23；一種寬度記一筆，使用者選 A）
-    tdp: [tdp L1, tdp P3, tdp P5, tdp M3, tdp M4, tdp M5, tdp M6, tdp K1, tdp K12, tdp E2, tdp E3, tdp note.7, tdp screen.6, tdp toast, tdp confirm]
+    spec: 69
+    request: 調 panel 的大小並記下來：照 tdp screen.9（從 gittu 的 < > 收進 tdp，使用者 2026-11-26 在 tdp 定的規則），交給 terminu-go 做；state.yaml 裡 gittu 以前寫的 left 不讀（使用者 2026-11-26：「不管，也不讀，使用者自己重新設定寬高」）
+    tdp: [tdp E2, tdp E3, tdp L1, tdp L5, tdp M2, tdp M3, tdp M4, tdp M6, tdp P3, tdp note.7, tdp toast.2, tdp screen.6, tdp confirm]
     remark:
-      - "鍵：focus 在右側時的 >，使用者寫的是「縮小左側寬度」，照另外三句讀成縮小右側（2026-11-23 跟使用者說了這樣讀，使用者沒有改）：四句合起來，箭頭就是分隔線移動的方向，< 往左、> 往右，跟 focus 在哪無關"
-      - "全域動作（tdp P3：判斷一個動作進哪一區只看作用對象，這裡是整個畫面左右怎麼分，不是哪一塊 panel）：global operation popup 裡的 [<] Narrow the left、[>] Widen the left（tdp M5：熱鍵不在 label 裡時放前面），沒有 popup 開著時在 panel 上直接按（tdp M4 的 global 熱鍵）；熱鍵 app 可以自行決定（tdp P5），< > 不是 core key（tdp K1）也不是移動的鍵（tdp K12），gittu 的 panel 沒有用到它們"
-      - "一次 2 欄。左邊最窄 20 欄（60 欄時 1:2 的寬度，分支名稱還讀得到；原本 zoom 第一段的寬度，task 17），右邊最窄 40 欄（60 欄時的寬度，[3]、[4]、[5] 排得下；tdp L1：60 欄要能用、所有 panel 並排，panel 怎麼拆 app 可以自行決定）：60 欄時兩邊都到底了，調不了。到底的那一邊、放大時（task 17）用 Disabled 停用（tdp M6），熱鍵不作用"
-      - "右邊的 [4]、[5] 照樣 2:3（task 1），跟著右邊變寬變窄；左邊的 [1]、[2] 一起變，高度照樣 1:2"
-      - "記在狀態檔 state.yaml（tdp E3：刪了只是回到預設的是狀態，放在設定目錄裡，GITTU__STATE 指定另一個目錄；tdp E2）：left 底下一種終端機寬度一筆，值是左邊的欄數，例 left: {77: 25, 155: 60}；按一次寫一次，只改那一筆，其他筆與 gittu 不讀的 key 照留；寫不進去時 Error toast（Can't write state.yaml: <原因>），這次開著照樣用調好的寬度"
-      - "怎麼用：每次排版照終端機現在的寬度找記下的那一筆，沒有就是三分之一（task 1）；開著時視窗寬度變了也一樣，換成那個寬度記下的，沒有就三分之一"
-      - "tdp E3 讀狀態檔：讀不了（YAML 壞了、不是 key 對值）時開 MOVE ASIDE confirm（tgo App.MoveAside）；值不合規則（left 不是 key 對值、寬度不是整數或小於 60、左邊的欄數不是整數或超出那個寬度的範圍，只有手改檔案才會）時先 KeepAside 備份成 state.yaml.bak，再把那幾筆拿掉重寫，Warning toast（tgo MisfitNotice），每一筆一個 WARN（寬度是 60 以上的整數時寫 using <三分之一>，不然寫 taken out）；gittu 不讀的 key 留著，每次啟動 App Log 一筆 INFO Not read"
-      - "記 App Log（tdp note.7：從 menu 或熱鍵執行的 global operation）：Left 22 of 77 columns"
+      - "怎麼調由 terminu-go 做（tdp screen.9：在 tdp main c3dae91、f37bdd3，還沒發版，tdp v1.3.6 發版後加進 tdp 欄；review 時用 Read 讀 /Users/vulcan/Documents/sideproj/terminu 的 components/layout/screen-zh_TW.md；tgo v1.3.8-beta.1）：有 focus 的 panel 上 > < 寬窄 2 欄、+ - 高矮 1 列，= 讓整個畫面的線回到預設（Layout 就是預設）；沿著那條線的 panel 一起動；動不了時那個 panel 的邊上跳 Info toast；選單裡的 [>] Wider、[<] Narrower、[+] Taller、[-] Shorter（panel operation）與 [=] Default layout（global）由 tgo 加；調整不記進 App Log（tdp note.7）。方向跟 gittu 原本的 < >（照箭頭移左右那條線）相反：在右邊的 panel 上按 > 是讓它變寬"
+      - "最小寬度（tdp screen.9：每個 panel 的最小尺寸由 app 定，60 欄時所有 panel 照樣並排，L1）：[1]、[2] 20 欄（分支名稱還讀得到），[3] 的位置（COMMITS、DIFF）40 欄；其他照 tgo 的 10×3。線推到任何一個跟著動的 panel 到最小就停：往右推時常常是 [4] 先到 10 欄"
+      - "記在狀態檔 state.yaml 的 lines（tdp E3：刪了只是回到預設的是狀態；GITTU__STATE 指定別的目錄，tdp E2）：照 tgo 的 terminu.Lines 寫，畫面名 gittu 底下 widths 照終端機寬度、heights 照高度，線用它在 Layout 裡的預設位置當 key；使用者移過才寫，= 拿掉這個大小的；lines 以外的 key 照留。啟動時讀進 App.Lines，tgo 每次線動了叫 App.OnLines，gittu 寫回；寫不進去時 Error toast（Can't write state.yaml: <原因>）"
+      - "tdp E3 讀狀態檔：讀不了時 MOVE ASIDE；lines 讀不懂（不是 tgo 的格式，只有手改檔案才會）時 KeepAside 備份成 state.yaml.bak、把 lines 拿掉重寫，Warning toast（MisfitNotice）；記著的線放不下時（版面或最小尺寸改了）tgo 直接用預設、不說（tdp screen.9，E3 的例外）；gittu 不讀的 key 留著，每次啟動 App Log 記 INFO Not read: <key> in <路徑>"
+      - "舊的 left（gittu 2026-11-23 到這次之間照 < > 寫的左右寬度）不讀也不轉（使用者 2026-11-26，tdp 那邊的結論）：照 tdp E3 不再用的 key，留在檔案裡、每次啟動 App Log 記 INFO No longer used: left in <路徑>; delete it if you don't need it（gittu 以前讀過，所以不是 Not read），使用者重新調；README 與 CHANGELOG 寫明"
+      - "放大時（task 17：gittu 的 Layout 只給有 focus 的那一個整個畫面，其他 0×0）tgo 只看到一個 panel，它就是全寬又全高（tdp screen.9）：> < 跳 [N] is already full width、+ - 跳 [N] is already full height，線不動、不記"
+      - "2026-11-23 到 2026-11-26 的做法（gittu 自己寫的，已拿掉）：global 的 [<] Narrow the left、[>] Widen the left，照箭頭移左右那條線 2 欄，left: {寬度: 左邊欄數} 記在 state.yaml，App Log 記 Left N of W columns"
   - id: 24
     spec: 66
     request: Windows 版：gittu 在 Windows 上也能用；Windows 上用 editor 解衝突時照順序開：使用者在 git 設的 editor → Microsoft Edit → vim → 都沒有時跳視窗請使用者安裝 edit 或 vim（使用者 2026-11-23：「我們在 windows 上呼叫 edit > vim > 跳警告視窗說請安裝 edit 或 vim https://learn.microsoft.com/en-us/windows/edit/」；先前開 Notepad、不開 editor 兩種做法見 remark）

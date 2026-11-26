@@ -2,6 +2,13 @@
 
 Each release names the version of terminu design (tdp) it follows.
 
+## Unreleased
+
+- Every line between the panels moves, from the panel you are on: `>` and `<` make it wider and narrower, `+` and `-`
+  taller and shorter, `=` puts every line back; kept by terminal width and height in `state.yaml`. `>` on a panel on
+  the right now widens it, where `<` and `>` used to move the left's line the way they pointed. The `left` key they
+  kept in `state.yaml` is no longer used: the lines are kept under `lines` now, so set them again, and delete it
+
 ## v0.1.1 — tdp v1.3.5
 
 - Windows 10 1809 and later (amd64, arm64): Scoop, a PowerShell install script and `gittu update`. A conflicted file

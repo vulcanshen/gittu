@@ -58,9 +58,14 @@ type historyScreen struct {
 	zoomed bool
 }
 
-// leftLeast is the left's least width, [1] and [2]: what they have at 60
-// columns, branch names still readable (tdp L1; task 23).
-const leftLeast = 20
+// The least widths the user can move the lines to (tdp screen.9; task 23):
+// the left's, [1] and [2], what they have at 60 columns, branch names still
+// readable; the right's, [3] over [4] and [5], what it has at 60 columns,
+// all three still laid out (tdp L1).
+const (
+	leftLeast  = 20
+	rightLeast = 40
+)
 
 func newHistoryScreen(g *gittu) *historyScreen {
 	h := &historyScreen{g: g}

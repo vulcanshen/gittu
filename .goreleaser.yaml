@@ -73,8 +73,8 @@ brews:
     caveats: |
       Run `gittu` in a git repository to start, or `gittu <path>`.
       It runs the git you have installed. It keeps one setting in
-      ~/.config/gittu/config.yaml, and the width of the left in
-      ~/.config/gittu/state.yaml.
+      ~/.config/gittu/config.yaml, and where you moved the lines between
+      the panels in ~/.config/gittu/state.yaml.
 
       A Nerd Font terminal profile and a truecolor (24-bit) terminal are
       required. macOS, Linux (WSL too) and Windows.

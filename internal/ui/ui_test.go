@@ -2780,37 +2780,47 @@ func TestFilesLocationFitsAt60(t *testing.T) {
 	has(t, d, loc)
 }
 
-// --- task 23: the left's width ---
+// --- task 23: moving the lines between the panels (tdp screen.9, the lib) ---
 
-// TestSplitKeys: < and > move the line between the left and the right by
-// two columns, whichever panel has the focus, and keep it in the state.
-func TestSplitKeys(t *testing.T) {
+// TestLinesKeys: > and < make the focused panel wider and narrower by two
+// columns, + and - taller and shorter by a row; the lines go where the user
+// moved them in the state, under lines; = puts them back and takes them out.
+// Moving a line is not in the App Log (tdp note.7).
+func TestLinesKeys(t *testing.T) {
 	dir := t.TempDir()
-	g, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
-	d.Press(">")
+	path := filepath.Join(dir, "state.yaml")
+	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
+	d.Press(">") // on [2]: the left wider
 	if w := leftWidth(d); w != 42 {
-		t.Fatalf("> made the left %d wide, want 42", w)
+		t.Fatalf("> on [2] made the left %d wide, want 42", w)
 	}
-	d.Press("3", "<", "<") // on the right: the same way
+	d.Press("3", ">", ">") // on [3]: [3] wider, so the left narrower
 	if w := leftWidth(d); w != 38 {
-		t.Fatalf("< < on [3] made the left %d wide, want 38", w)
+		t.Fatalf("> > on [3] made the left %d wide, want 38", w)
 	}
-	if r := g.layout(120, 31); r[placeChanges].W != 38 || r[placeMain].X != 38 || r[placeLeft].W != 82*2/5 {
-		t.Errorf("rects %+v", r)
+	d.Press("+") // [3] taller
+	b, _ := os.ReadFile(path)
+	for _, want := range []string{"lines:", "gittu:", "widths:", "120:", `"40": 38`, "heights:", "32:", `"21": 22`} {
+		if !bytes.Contains(b, []byte(want)) {
+			t.Errorf("state.yaml has no %s:\n%s", want, b)
+		}
 	}
-	b, _ := os.ReadFile(filepath.Join(dir, "state.yaml"))
-	if !bytes.Contains(b, []byte("120: 38")) {
-		t.Errorf("state.yaml:\n%s", b)
+	d.Press("Space")
+	has(t, d, "[>] Wider", "[<] Narrower", "[+] Taller", "[-] Shorter")
+	d.Press("Esc", "=")
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("= left the left %d wide, want 40", w)
 	}
-	d.Press("Space", "k", "Enter") // the global row, then the global operation popup
-	has(t, d, "[<] Narrow the left", "[>] Widen the left")
-	d.Press("Esc", "Esc", "!")
-	has(t, d, "Left 42 of 120 columns", "Left 38 of 120 columns")
+	if b, _ := os.ReadFile(path); bytes.Contains(b, []byte("lines")) {
+		t.Errorf("state.yaml after =:\n%s", b)
+	}
+	d.Press("!")
+	hasNot(t, d, "Left ", "40 of 120")
 }
 
-// TestSplitKeptByWidth: the width set for a terminal is used when gittu opens
-// on a terminal that wide again; another width has a third (the user: A).
-func TestSplitKeptByWidth(t *testing.T) {
+// TestLinesKeptByWidth: the lines kept for a terminal are used when gittu
+// opens on a terminal that wide again; another width has the default.
+func TestLinesKeptByWidth(t *testing.T) {
 	dir := t.TempDir()
 	r := gittest.Sample(t)
 	_, d := startWithState(t, r, dir, 120, 32)
@@ -2825,93 +2835,73 @@ func TestSplitKeptByWidth(t *testing.T) {
 	}
 }
 
-// TestSplitFollowsTheTerminal: the terminal made wider or narrower while gittu
-// is open takes the width kept for its new width.
-func TestSplitFollowsTheTerminal(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "state.yaml"), []byte("left:\n  100: 50\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
-	if w := leftWidth(d); w != 40 {
-		t.Fatalf("at 120 columns the left is %d wide", w)
-	}
+// TestLinesFollowTheTerminal: the terminal made narrower while gittu is open
+// takes the default for its new width, and the kept lines when it is back.
+func TestLinesFollowTheTerminal(t *testing.T) {
+	_, d := startWithState(t, gittest.Sample(t), t.TempDir(), 120, 32)
+	d.Press(">", ">", ">")
 	d.Resize(100, 32)
-	if w := leftWidth(d); w != 50 {
-		t.Errorf("at 100 columns the left is %d wide, want 50", w)
+	if w := leftWidth(d); w != 33 {
+		t.Errorf("at 100 columns the left is %d wide, want a third", w)
 	}
 	d.Resize(120, 32)
-	if w := leftWidth(d); w != 40 {
-		t.Errorf("back at 120 columns the left is %d wide", w)
+	if w := leftWidth(d); w != 46 {
+		t.Errorf("back at 120 columns the left is %d wide, want 46", w)
 	}
 }
 
-// TestSplitAtItsEnds: the left stops at 20 columns and the right at 40; at 60
-// columns neither moves; zoomed, neither does.
-func TestSplitAtItsEnds(t *testing.T) {
+// TestLinesAtTheirLeast: the left stops at 20 columns; to the right the line
+// stops as soon as a panel it moves is at its least ([4] here, before the
+// right is down to 40); a press past either says so on the panel (tdp
+// screen.9); zoomed, the panel is already the whole width.
+func TestLinesAtTheirLeast(t *testing.T) {
 	dir := t.TempDir()
 	_, d := startWithState(t, gittest.Sample(t), dir, 80, 32)
-	d.Press("<", "<", "<", "<")
+	for range 6 {
+		d.Press("<")
+	}
 	if w := leftWidth(d); w != leftLeast {
 		t.Errorf("the left went to %d", w)
 	}
-	for range 12 {
+	has(t, d, "[2] is at its minimum width")
+	for range 14 {
 		d.Press(">")
 	}
-	if w := leftWidth(d); w != 80-rightLeast {
+	if w := leftWidth(d); w > 80-rightLeast || w <= leftLeast {
 		t.Errorf("the right went to %d", 80-w)
 	}
-	_, d = startWithState(t, gittest.Sample(t), t.TempDir(), 60, 32)
-	d.Press("<", ">")
-	if w := leftWidth(d); w != 20 {
-		t.Errorf("at 60 columns the left went to %d", w)
-	}
-	d.Press("Tab", "z", ">", "z")
-	if w := leftWidth(d); w != 20 {
+	has(t, d, "[4] is at its minimum width")
+	_, d = startWithState(t, gittest.Sample(t), t.TempDir(), 120, 32)
+	d.Press("3", "z", ">")
+	has(t, d, "[3] is already full width")
+	d.Press("z")
+	if w := leftWidth(d); w != 40 {
 		t.Errorf("> while zoomed made the left %d wide", w)
 	}
 }
 
-// TestSplitDisabledWhenZoomed: zoomed, < and > do nothing, and say so in the
-// global operation popup (tdp M6).
-func TestSplitDisabledWhenZoomed(t *testing.T) {
-	dir := t.TempDir()
-	g, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
-	d.Press("Tab", "z", ">", "<", "z")
-	if w := leftWidth(d); w != 40 {
-		t.Errorf("the left is %d wide after < and > zoomed", w)
-	}
-	if _, err := os.Stat(filepath.Join(dir, "state.yaml")); err == nil {
-		t.Error("state.yaml written while zoomed")
-	}
-	g.history.zoomed = true
-	for _, a := range g.splitActions() {
-		if !a.Disabled() {
-			t.Errorf("%s is on while zoomed", a.Label)
-		}
-	}
-}
-
+// TestStateMisfit: a lines key gittu can't read is kept in state.yaml.bak and
+// taken out of the file, the rest left as it was (tdp E3).
 func TestStateMisfit(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "state.yaml")
-	if err := os.WriteFile(path, []byte("left:\n  120: 50\n  100: 90\n  abc: 3\nother: kept\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("lines: [1, 2]\nother: kept\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
 	has(t, d, "did not fit", "state.yaml.bak")
-	if w := leftWidth(d); w != 50 {
-		t.Errorf("the left is %d wide, want 50", w)
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("the left is %d wide, want 40", w)
 	}
 	b, _ := os.ReadFile(path)
-	if !bytes.Contains(b, []byte("120: 50")) || !bytes.Contains(b, []byte("other: kept")) || bytes.Contains(b, []byte("90")) || bytes.Contains(b, []byte("abc")) {
+	if !bytes.Contains(b, []byte("other: kept")) || bytes.Contains(b, []byte("lines")) {
 		t.Errorf("state.yaml:\n%s", b)
 	}
-	if bak, _ := os.ReadFile(path + ".bak"); !bytes.Contains(bak, []byte("100: 90")) {
+	if bak, _ := os.ReadFile(path + ".bak"); !bytes.Contains(bak, []byte("lines: [1, 2]")) {
 		t.Errorf("state.yaml.bak:\n%s", bak)
 	}
 	d.Press("!")
-	has(t, d, `left.100 "90" did not fit; using "33"`, "left.abc did not fit; taken out")
+	has(t, d, "lines did not fit; taken out")
 }
 
 // TestStateCannotBeRead: config.yaml and state.yaml both broken ask one after
@@ -2922,7 +2912,7 @@ func TestStateCannotBeRead(t *testing.T) {
 		t.Fatal(err)
 	}
 	path := filepath.Join(dir, "state.yaml")
-	if err := os.WriteFile(path, []byte("left: [\n"), 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("lines: [\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("GITTU__CONFIG", cfg)
@@ -2942,36 +2932,37 @@ func TestStateCannotBeRead(t *testing.T) {
 		t.Errorf("the left is %d wide", w)
 	}
 	d.Press(">")
-	if b, _ := os.ReadFile(path); !bytes.Contains(b, []byte("120: 42")) {
+	if b, _ := os.ReadFile(path); !bytes.Contains(b, []byte(`"40": 42`)) {
 		t.Errorf("state.yaml:\n%s", b)
 	}
 }
 
-// TestStateUnreadKey: a key gittu never read stays in the file, no toast, an
-// INFO at every start (tdp E3).
+// TestStateUnreadKey: a key gittu does not read stays in the file, no toast,
+// an INFO at every start (tdp E3); the left gittu wrote before tdp had the
+// rule is said to be no longer used, and the user sets it again (the user,
+// 2026-11-26).
 func TestStateUnreadKey(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "state.yaml")
-	want := []byte("refesh: 5\nleft:\n  120: 44\n")
-	if err := os.WriteFile(path, want, 0o644); err != nil {
+	if err := os.WriteFile(path, []byte("refesh: 5\nleft:\n  120: 44\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	_, d := startWithState(t, gittest.Sample(t), dir, 120, 32)
 	hasNot(t, d, "did not fit")
-	if w := leftWidth(d); w != 44 {
-		t.Errorf("the left is %d wide, want 44", w)
+	if w := leftWidth(d); w != 40 {
+		t.Errorf("the left is %d wide, want 40: left is not read", w)
 	}
 	d.Press(">")
 	b, _ := os.ReadFile(path)
-	if !bytes.Contains(b, []byte("refesh: 5")) || !bytes.Contains(b, []byte("120: 46")) {
+	if !bytes.Contains(b, []byte("refesh: 5")) || !bytes.Contains(b, []byte("120: 44")) || !bytes.Contains(b, []byte(`"40": 42`)) {
 		t.Errorf("state.yaml:\n%s", b)
 	}
 	d.Press("!")
-	has(t, d, "Not read: refesh in ")
+	has(t, d, "Not read: refesh in ", "No longer used: left in ")
 }
 
 // TestStateCannotBeWritten: a state directory gittu can't write in gives an
-// Error toast; the left is moved all the same.
+// Error toast; the line is moved all the same.
 func TestStateCannotBeWritten(t *testing.T) {
 	unixOnly(t, "a folder's mode does not keep a Windows user from writing in it")
 	dir := t.TempDir()

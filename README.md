@@ -97,7 +97,7 @@ It installs to `%LOCALAPPDATA%\gittu` and adds it to your `PATH`.
 
 `gittu` opens the repository the current directory is in; `gittu <path>` opens the one `<path>` is in. Outside a
 repository it says so and quits. gittu changes your repository only when you run an operation, and writes nothing of
-its own but `state.yaml`, when you move the line between the left and the right (see Settings and data).
+its own but `state.yaml`, when you move the lines between the panels (see Settings and data).
 
 ### Update
 
@@ -138,7 +138,7 @@ gittu
 Move with `j`/`k`, press `Space` to see what you can do with the branch or commit under the cursor; the files of the
 commit under the cursor are below the graph. `Tab` goes to the next panel, `1` to the files to commit (the right then
 shows their diff; `s` stages or unstages one), `2` back to the branches and the graph. `z` puts a panel on the whole
-screen, `<` and `>` move the line between the left and the right. `?` lists every key, `q` quits.
+screen, `>` `<` `+` `-` make the panel you are on wider, narrower, taller or shorter. `?` lists every key, `q` quits.
 
 ## Usage
 
@@ -151,10 +151,11 @@ or a merge, rebase, cherry-pick or revert under way, or what git is doing (Pushi
 files of the commit under the cursor. After `[1]`: the diff of the file under its cursor, then the commits that
 changed it, `[5]` hidden. Going into `[3]`, `[4]` or `[5]` changes nothing.
 
-`<` and `>` move the line between the left and the right two columns the way they point, whichever panel you are on.
-gittu remembers where you put it for that terminal width and uses it whenever it opens on a terminal that wide again;
-any other width starts with the left a third of it. The left keeps at least 20 columns and the right 40, so at 60
-columns the line stays where it is.
+On a panel, `>` and `<` make it two columns wider or narrower, `+` and `-` a row taller or shorter: the line on its
+side moves, and every panel along that line with it. `=` puts every line back. gittu remembers where you put them for
+that terminal width and height, and uses them whenever it opens on a terminal that size again; any other size starts
+with the left a third of the width. The left keeps at least 20 columns, so at 60 columns it stays where it is. The
+panel's `Space` menu has them as Wider, Narrower, Taller and Shorter, the global operations Default layout.
 
 ### The branches and the graph
 
@@ -209,8 +210,8 @@ fetched, then the current branch pulled), `[P]`ush,
 `[f]`etch, `[b]`ranch at HEAD, `[M]`erge a branch, `[t]`ag HEAD, `[S]`tash, Discard all, `[R]`efresh, and while a merge,
 rebase, cherry-pick or revert is under way, `[A]`bort it or Continue. Their keys work on the panels too, where a panel
 does not use the same key for its own: on `[2]` and `[3]`, `c` checks out, and Commit is in the global operations; on
-`[2]`, `b` rebases, and Branch is in the global operations; on `[1]`, `t` and `b` are for a conflict's blocks, and do nothing on the files. `[<]` Narrow the left and `[>]` Widen the left are there
-too, the keys that move the line between the left and the right.
+`[2]`, `b` rebases, and Branch is in the global operations; on `[1]`, `t` and `b` are for a conflict's blocks, and do nothing on the files. `[=]` Default layout is there
+too, every line between the panels back where it was.
 
 gittu reads the repository again every 3 seconds, so what you change outside it shows, and the App Log (`!`) says
 what changed.
@@ -235,18 +236,24 @@ It is a key every terminu family app shares. A `config.yaml` gittu cannot read i
 `config.yaml.bak`, or gittu quits; a value that is not a whole number above 0 is kept in `config.yaml.bak` and written
 back as 4. A key gittu does not read (a typo) is left in the file, and the App Log (`!`) says so at every start.
 
-Its state is `state.yaml` in the same directory (`GITTU__STATE` names another): the width of the left for each terminal
-width you moved the line on with `<` and `>`. gittu writes it each time you press them; delete it and every width
-starts with a third again.
+Its state is `state.yaml` in the same directory (`GITTU__STATE` names another): where you moved the lines between the
+panels, by terminal width for the upright ones and height for the level ones. gittu writes it each time you move one;
+`=` takes this size's out, and deleting the file puts every size back to the default.
 
 ```yaml
-left:
-  77: 25    # on a terminal 77 columns wide, the left is 25 columns
-  155: 60
+lines:
+  gittu:
+    widths:
+      120:
+        "40": 46   # on a terminal 120 columns wide, the line at 40 is at 46
+    heights:
+      32:
+        "21": 23   # 32 rows high, the line at row 21 is at 23
 ```
 
-A `state.yaml` gittu cannot read is offered to be moved aside as `config.yaml` is; a width gittu cannot use is kept in
-`state.yaml.bak` and taken out of the file.
+A `state.yaml` gittu cannot read is offered to be moved aside as `config.yaml` is; `lines` that gittu cannot read is
+kept in `state.yaml.bak` and taken out of the file. A line kept that no longer fits is dropped, with nothing said. The
+`left` key an older gittu wrote is not read any more: move the lines again, and delete it.
 
 ## Limits
 

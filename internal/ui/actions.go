@@ -651,7 +651,7 @@ func (g *gittu) globalActions() []terminu.Action {
 					conflicts: g.conflictsSaid(strings.ToUpper(op[:1]) + op[1:])}, "Continuing…", func() error { return g.repo.Continue(op) })
 			}})
 	}
-	return append(acts, g.splitActions()...)
+	return acts
 }
 
 func (g *gittu) hasStaged() bool {

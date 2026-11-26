@@ -17,15 +17,32 @@ if (-not [Environment]::Is64BitOperatingSystem) {
 }
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") { "arm64" } else { "amd64" }
 
-# Get latest version
+# Get latest version: where github.com/$repo/releases/latest points, the
+# redirect not followed (as ccdrawu's), never a pre-release. Not GitHub's API:
+# to a network not signed in it answers 60 times an hour, then says 403.
 Write-Host "Fetching latest release..."
-$release = Invoke-RestMethod "https://api.github.com/repos/$repo/releases/latest"
-$version = $release.tag_name -replace "^v", ""
+Add-Type -AssemblyName System.Net.Http
+$handler = New-Object System.Net.Http.HttpClientHandler
+$handler.AllowAutoRedirect = $false
+$client = New-Object System.Net.Http.HttpClient($handler)
+try {
+    $location = $client.GetAsync("https://github.com/$repo/releases/latest").Result.Headers.Location
+} catch {
+    $location = $null
+} finally {
+    $client.Dispose()
+}
+if (-not $location -or "$location" -notmatch "/releases/tag/(v?([^/]+))$") {
+    Write-Host "Error: no release of $app found at https://github.com/$repo/releases" -ForegroundColor Red
+    exit 1
+}
+$tag = $Matches[1]
+$version = $Matches[2]
 Write-Host "Latest version: $version"
 
 # Download
 $fileName = "${app}_${version}_windows_${arch}.zip"
-$downloadUrl = "https://github.com/$repo/releases/download/$($release.tag_name)/$fileName"
+$downloadUrl = "https://github.com/$repo/releases/download/$tag/$fileName"
 $tempDir = Join-Path $env:TEMP "$app-install"
 New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
 $tempFile = Join-Path $tempDir $fileName

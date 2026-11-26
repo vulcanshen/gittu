@@ -36,6 +36,14 @@ func (g *gittu) newScreen() {
 			{Panel: h.branchP, Shows: []*terminu.Panel{h.histP, h.descP, h.filesP}},
 			{Panel: s.filesP, Shows: []*terminu.Panel{s.diffP, s.logP, nil}},
 		}}
+	// How narrow the lines may make them (tdp screen.9; task 23): the left
+	// and the right at their least (history.go).
+	for _, p := range []*terminu.Panel{s.filesP, h.branchP} {
+		p.MinWidth = leftLeast
+	}
+	for _, p := range []*terminu.Panel{h.histP, s.diffP} {
+		p.MinWidth = rightLeast
+	}
 	g.a.AddScreen(g.screen)
 	g.a.Focus(h.branchP)
 }
@@ -44,9 +52,9 @@ func (g *gittu) newScreen() {
 func (g *gittu) commitsShown() bool { return g.screen.Panels[placeMain] == g.history.histP }
 
 // layout is the panels, or, zoomed, the focused panel alone on the whole
-// area, the others drawn nowhere (tdp screen.6). The left is as wide as the
-// user set it for the terminal's width, else a third (task 23); [1] above
-// [2], 1:2 (the user). On the right [3], then a third of the height for [4] and
+// area, the others drawn nowhere (tdp screen.6). By default the left is a
+// third; [1] above [2], 1:2 (the user). The user moves the lines from there
+// (tdp screen.9, terminu-go; task 23). On the right [3], then a third of the height for [4] and
 // [5] side by side, 2:3: [5]'s paths take the room, [4] zooms to be read
 // (the user); [4] the whole width while [5] is hidden. Every draw writes
 // [1]'s location row again: what git does changes it.
@@ -61,7 +69,7 @@ func (g *gittu) layout(w, ht int) []terminu.Rect {
 			}
 		}
 	} else {
-		left := g.leftOf(w)
+		left := w / 3
 		top := ht / 3
 		rects[placeChanges] = terminu.Rect{X: 0, Y: 0, W: left, H: top}
 		rects[placeBranches] = terminu.Rect{X: 0, Y: top, W: left, H: ht - top}

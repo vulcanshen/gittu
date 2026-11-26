@@ -85,7 +85,7 @@ irm https://raw.githubusercontent.com/vulcanshen/gittu/main/install.ps1 | iex
 ### 第一次啟動
 
 `gittu` 打開目前目錄所在的 repo；`gittu <路徑>` 打開那個路徑所在的 repo。不在 repo 裡時說一聲就結束。只有你執行操作時，
-gittu 才會改動你的 repo；它自己只寫 `state.yaml`，而且只在你調左右寬度的時候（見「設定與資料」）。
+gittu 才會改動你的 repo；它自己只寫 `state.yaml`，而且只在你調 panel 大小的時候（見「設定與資料」）。
 
 ### 更新
 
@@ -125,7 +125,7 @@ gittu
 
 用 `j`、`k` 移動，按 `Space` 看對 cursor 那個分支或 commit 能做什麼；cursor 那個 commit 改了哪些檔，就列在分支圖下面。`Tab` 換到下一個
 面板，`1` 到要 commit 的檔案（右邊跟著換成它們的差異；`s` stage 或 unstage 一個檔），`2` 回到分支與分支圖。`z` 把一個面板放大到整個
-畫面，`<`、`>` 調左右的寬度。`?` 列出所有按鍵，`q` 離開。
+畫面，`>` `<` `+` `-` 把你所在的 panel 調寬、調窄、調高、調矮。`?` 列出所有按鍵，`q` 離開。
 
 ## 使用方式與按鍵
 
@@ -137,8 +137,10 @@ cherry-pick、revert 做到一半時寫它，git 在跑時寫在做什麼（Push
 分支圖，加上 cursor 那個 commit 的訊息與檔案；最後在 `[1]`，是 cursor 那個檔的差異，加上改過它的 commit，`[5]` 收起來。移到
 `[3]`、`[4]`、`[5]` 裡不會換。
 
-`<`、`>` 把左右中間那條線往箭頭的方向移兩欄，focus 在哪一塊 panel 都一樣。gittu 會照終端機的寬度記住你調到哪裡，下次在一樣寬
-的終端機打開就照記下的排；沒調過的寬度，左邊是三分之一。左邊至少留 20 欄、右邊至少 40 欄，所以 60 欄寬時那條線不會動。
+在 panel 上，`>`、`<` 讓它寬兩欄、窄兩欄，`+`、`-` 讓它高一列、矮一列：動的是它旁邊那條線，沿著那條線的 panel 都一起動。
+`=` 讓每一條線回到原位。gittu 會照終端機的寬度與高度記住你調到哪裡，下次在一樣大的終端機打開就照記下的排；沒調過的大小，左邊是寬度的
+三分之一。左邊至少留 20 欄，所以 60 欄寬時左邊不會再窄。panel 的 `Space` 選單裡是 Wider、Narrower、Taller、Shorter，global
+operation 裡是 Default layout。
 
 ### 分支與分支圖
 
@@ -183,7 +185,7 @@ stage 起來；Ignore 把檔案加進 `.gitignore`，git 原本有追蹤的就�
 
 每個 `Space` 選單裡的 `Global operation`，列出對整個 repo 的動作：`[c]`ommit、Amend、`[p]`ull、Pull all（每個 remote 都 fetch，再 pull 目前的分支）、`[P]`ush、`[f]`etch、
 在 HEAD `[b]`ranch、`[M]`erge 一個分支、在 HEAD 打 `[t]`ag、`[S]`tash、Discard all、`[R]`efresh；merge、rebase、cherry-pick、
-revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行；在 `[1]` 上 `t`、`b` 是解衝突區塊用的，在檔案清單上按了不作用。調左右寬度的 `[<]` Narrow the left 與 `[>]` Widen the left 也在這裡。
+revert 做到一半時，還有 `[A]`bort 與 Continue。這些鍵在 panel 上也能直接按，panel 自己用了同一個鍵時以 panel 的為準：在 `[2]`、`[3]` 上 `c` 是 checkout，Commit 從 global operation 執行；在 `[2]` 上 `b` 是 rebase，Branch 從 global operation 執行；在 `[1]` 上 `t`、`b` 是解衝突區塊用的，在檔案清單上按了不作用。讓 panel 之間的每一條線回到原位的 `[=]` Default layout 也在這裡。
 
 gittu 每 3 秒重新讀一次 repo，在外面改了東西，畫面也會跟著變，App Log（`!`）會寫出改了什麼。
 
@@ -204,16 +206,22 @@ input_tab_width: 4   # commit 訊息裡按 Tab 插入幾個空白，差異裡的
 這是 terminu 家族每個 app 共用的 key。讀不了的 `config.yaml`，gittu 會問要不要移到 `config.yaml.bak`，不要就離開；值不是
 大於 0 的整數時，原本的檔留在 `config.yaml.bak`，值改回 4。gittu 不讀的 key（例：打錯字）留在檔案裡，每次啟動 App Log（`!`）會寫出來。
 
-狀態是同一個目錄裡的 `state.yaml`（`GITTU__STATE` 指定別的目錄）：用 `<`、`>` 調過的每一種終端機寬度，左邊各是幾欄。每按一次
-就寫一次；刪掉它，每一種寬度都回到三分之一。
+狀態是同一個目錄裡的 `state.yaml`（`GITTU__STATE` 指定別的目錄）：你把 panel 之間的線移到哪裡，直的照終端機寬度、橫的照
+高度記。每移一次就寫一次；`=` 把這個大小記的拿掉，刪掉整個檔，每一種大小都回到預設。
 
 ```yaml
-left:
-  77: 25    # 終端機 77 欄寬時，左邊 25 欄
-  155: 60
+lines:
+  gittu:
+    widths:
+      120:
+        "40": 46   # 終端機 120 欄寬時，原本在第 40 欄的線移到 46
+    heights:
+      32:
+        "21": 23   # 32 列高時，原本在第 21 列的線移到 23
 ```
 
-讀不了的 `state.yaml` 跟 `config.yaml` 一樣會問要不要移開；gittu 用不了的那一筆，原本的檔留在 `state.yaml.bak`，那一筆從檔案裡拿掉。
+讀不了的 `state.yaml` 跟 `config.yaml` 一樣會問要不要移開；gittu 讀不了的 `lines`，原本的檔留在 `state.yaml.bak`，`lines` 從檔案裡
+拿掉。記著的線放不下時，直接用預設，不另外說。舊版 gittu 寫的 `left` 不再讀：線請重新調一次，再把它刪掉。
 
 ## 限制
 
